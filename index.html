@@ -26,11 +26,35 @@
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
+      --border-gradient: linear-gradient(180deg, rgba(79, 70, 229, 0.35) 0%, rgba(236, 72, 153, 0.35) 50%, rgba(6, 182, 212, 0.35) 100%);
+      --border-gradient-h: linear-gradient(90deg, rgba(79, 70, 229, 0.35) 0%, rgba(236, 72, 153, 0.35) 50%, rgba(6, 182, 212, 0.35) 100%);
       --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
       --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
       --radius: 16px;
-      --sidebar-w: 240px;
+      --sidebar-w: 205px;
+    }
+
+    body.theme-sunset {
+      --bg: #1e1b4b;
+      --surface: #2e2a72;
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+      --border: #4338ca;
+      --border-gradient: linear-gradient(180deg, rgba(245, 158, 11, 0.5) 0%, rgba(236, 72, 153, 0.5) 50%, rgba(139, 92, 246, 0.5) 100%);
+      --border-gradient-h: linear-gradient(90deg, rgba(245, 158, 11, 0.5) 0%, rgba(236, 72, 153, 0.5) 50%, rgba(139, 92, 246, 0.5) 100%);
+      --primary-light: #3730a3;
+    }
+
+    body.theme-night {
+      --bg: #0b0f19;
+      --surface: #131b2e;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e293b;
+      --border-gradient: linear-gradient(180deg, rgba(79, 70, 229, 0.45) 0%, rgba(6, 182, 212, 0.45) 100%);
+      --border-gradient-h: linear-gradient(90deg, rgba(79, 70, 229, 0.45) 0%, rgba(6, 182, 212, 0.45) 100%);
+      --primary-light: #1e1b4b;
     }
 
     * {
@@ -39,6 +63,7 @@
       padding: 0;
       font-family: 'Plus Jakarta Sans', sans-serif;
       -webkit-tap-highlight-color: transparent;
+      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.15s ease;
     }
 
     body {
@@ -47,7 +72,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding-bottom: 74px;
+      padding-bottom: 90px;
     }
 
     body.modal-open {
@@ -91,19 +116,20 @@
       animation: badgePulse 3s infinite ease-in-out;
     }
 
-    /* Persistent Desktop Sidebar */
+    /* Narrow Persistent Desktop Sidebar with Gradient Accent Border */
     .desktop-sidebar {
       display: none;
       width: var(--sidebar-w);
       background: var(--surface);
-      border-right: 1px solid var(--border);
       height: 100vh;
       position: sticky;
       top: 0;
       flex-direction: column;
-      padding: 18px 12px;
+      padding: 16px 10px;
       z-index: 60;
       flex-shrink: 0;
+      border-right: 1.5px solid transparent;
+      border-image: var(--border-gradient) 1;
     }
 
     @media (min-width: 900px) {
@@ -115,28 +141,28 @@
     .sidebar-brand {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 8px;
+      margin-bottom: 18px;
       cursor: pointer;
-      padding: 0 8px;
+      padding: 0 4px;
     }
 
     .brand-icon {
       background: linear-gradient(135deg, var(--primary), var(--accent-pink));
       color: #ffffff;
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+      font-size: 1rem;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
     }
 
     .sidebar-brand span {
       font-weight: 800;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       color: var(--text-main);
       letter-spacing: -0.5px;
     }
@@ -144,7 +170,7 @@
     .sidebar-menu {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
       flex: 1;
       overflow-y: auto;
       scrollbar-width: none;
@@ -154,13 +180,13 @@
     .sidebar-btn {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 9px 12px;
-      border-radius: 12px;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 700;
       cursor: pointer;
       text-align: left;
@@ -171,13 +197,13 @@
     .sidebar-btn:hover {
       background: var(--primary-light);
       color: var(--primary);
-      transform: translateX(4px);
+      transform: translateX(3px);
     }
 
     .sidebar-btn.active {
       background: var(--primary);
       color: #ffffff !important;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
     }
 
     .sidebar-btn.active i {
@@ -185,8 +211,8 @@
     }
 
     .sidebar-btn i {
-      font-size: 1.05rem;
-      width: 22px;
+      font-size: 0.95rem;
+      width: 18px;
       text-align: center;
       transition: transform 0.2s ease;
     }
@@ -203,19 +229,24 @@
       min-width: 0;
     }
 
-    /* Header */
+    /* Header with Gradient Accent Border */
     header {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 50;
       box-shadow: var(--shadow-sm);
+      border-bottom: 1.5px solid transparent;
+      border-image: var(--border-gradient-h) 1;
+    }
+
+    body.theme-night header, body.theme-sunset header {
+      background: rgba(19, 27, 46, 0.92);
     }
 
     .header-inner {
-      max-width: 1440px;
+      max-width: 1540px;
       margin: 0 auto;
       padding: 10px 16px;
       display: flex;
@@ -241,7 +272,7 @@
 
     .search-box {
       flex: 1;
-      max-width: 600px;
+      max-width: 500px;
       position: relative;
     }
 
@@ -250,7 +281,7 @@
       background: var(--bg);
       border: 1.5px solid var(--border);
       border-radius: 9999px;
-      padding: 9px 16px 9px 38px;
+      padding: 8px 16px 8px 38px;
       font-size: 0.88rem;
       font-weight: 500;
       color: var(--text-main);
@@ -259,7 +290,7 @@
     }
 
     .search-box input:focus {
-      background: #ffffff;
+      background: var(--surface);
       border-color: var(--primary);
       box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
     }
@@ -298,8 +329,7 @@
       align-items: center;
       gap: 10px;
       cursor: pointer;
-      border-bottom: 1px solid #f1f5f9;
-      transition: background 0.15s ease;
+      border-bottom: 1px solid var(--border);
     }
 
     .suggestion-item:hover {
@@ -311,7 +341,7 @@
       height: 50px;
       border-radius: 6px;
       object-fit: cover;
-      background: #e2e8f0;
+      background: var(--bg);
       flex-shrink: 0;
     }
 
@@ -339,42 +369,100 @@
     }
 
     .header-actions {
-      display: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
     }
 
-    @media (min-width: 900px) {
-      .header-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
+    /* Interactive Theme Pop-Up */
+    .theme-toggle-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 7px 12px;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .theme-popup-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px;
+      box-shadow: var(--shadow-xl);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      width: 140px;
+    }
+
+    .theme-popup-menu.active {
+      display: flex;
+    }
+
+    .theme-option-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .theme-option-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .theme-option-btn.selected {
+      background: var(--primary);
+      color: #ffffff;
     }
 
     .btn-action {
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text-main);
-      padding: 8px 16px;
+      padding: 7px 14px;
       border-radius: 9999px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 700;
-      display: inline-flex;
+      display: none;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       cursor: pointer;
-      transition: all 0.2s ease;
+    }
+
+    @media (min-width: 900px) {
+      .btn-action {
+        display: inline-flex;
+      }
     }
 
     .btn-action.random-btn {
       background: linear-gradient(135deg, var(--accent), #d97706);
       color: #ffffff;
       border: none;
-      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
     }
 
-    /* Main Container */
     main {
-      max-width: 1440px;
+      max-width: 1540px;
       margin: 0 auto;
       padding: 14px;
       width: 100%;
@@ -382,8 +470,8 @@
     }
 
     .disclaimer-banner {
-      background: #f1f5f9;
-      border: 1px dashed #cbd5e1;
+      background: var(--surface);
+      border: 1px dashed var(--border);
       border-radius: 10px;
       padding: 8px 14px;
       margin-bottom: 14px;
@@ -398,7 +486,7 @@
       color: var(--accent);
     }
 
-    /* Live Hero Carousel Spotlight */
+    /* Hero Carousel */
     .hero-spotlight {
       position: relative;
       width: 100%;
@@ -414,7 +502,7 @@
 
     @media (min-width: 768px) {
       .hero-spotlight {
-        min-height: 440px;
+        min-height: 420px;
       }
     }
 
@@ -425,20 +513,8 @@
       height: 100%;
       object-fit: cover;
       object-position: top center;
-      filter: brightness(0.6);
-      transition: opacity 0.6s ease;
-    }
-
-    .hero-video-preview {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      opacity: 0.85;
-      pointer-events: none;
-      z-index: 2;
-      transition: opacity 0.8s ease;
+      filter: brightness(0.65);
+      transition: opacity 0.4s ease;
     }
 
     .hero-overlay {
@@ -460,7 +536,7 @@
 
     @media (min-width: 768px) {
       .hero-content {
-        padding: 34px 28px;
+        padding: 30px 24px;
         gap: 20px;
       }
     }
@@ -498,16 +574,16 @@
     .hero-text-block {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       flex: 1;
     }
 
     .hero-tag {
       background: linear-gradient(135deg, var(--primary), var(--accent-pink));
       color: #ffffff;
-      padding: 4px 12px;
+      padding: 3px 10px;
       border-radius: 9999px;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 800;
       width: fit-content;
       text-transform: uppercase;
@@ -532,7 +608,7 @@
       align-items: center;
       gap: 12px;
       color: #cbd5e1;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
     }
 
@@ -546,17 +622,11 @@
     .hero-overview {
       color: #e2e8f0;
       font-size: 0.82rem;
-      line-height: 1.45;
+      line-height: 1.4;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-    }
-
-    @media (min-width: 768px) {
-      .hero-overview {
-        -webkit-line-clamp: 3;
-      }
     }
 
     .hero-actions {
@@ -570,30 +640,23 @@
       background: var(--primary);
       color: #ffffff;
       border: none;
-      padding: 9px 20px;
+      padding: 8px 18px;
       border-radius: 9999px;
-      font-size: 0.86rem;
+      font-size: 0.84rem;
       font-weight: 800;
       display: inline-flex;
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
-      transition: all 0.18s ease;
-    }
-
-    .btn-hero-play:hover {
-      background: var(--primary-hover);
-      transform: scale(1.03);
     }
 
     .btn-hero-info {
       background: rgba(255, 255, 255, 0.2);
       color: #ffffff;
       border: 1px solid rgba(255, 255, 255, 0.3);
-      padding: 9px 16px;
+      padding: 8px 14px;
       border-radius: 9999px;
-      font-size: 0.86rem;
+      font-size: 0.84rem;
       font-weight: 700;
       backdrop-filter: blur(4px);
       cursor: pointer;
@@ -614,16 +677,15 @@
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.4);
       cursor: pointer;
-      transition: all 0.2s ease;
     }
 
     .hero-dot.active {
-      width: 24px;
+      width: 22px;
       border-radius: 9999px;
       background: var(--primary);
     }
 
-    /* Actors Section */
+    /* Actors Horizontal Scroll */
     .actors-section {
       margin-bottom: 24px;
       display: flex;
@@ -647,40 +709,41 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 76px;
+      width: 85px;
       flex-shrink: 0;
       cursor: pointer;
       text-align: center;
-      gap: 5px;
-      transition: transform 0.2s ease;
-    }
-
-    .actor-avatar-card:hover {
-      transform: translateY(-4px);
+      gap: 4px;
     }
 
     .actor-circle-img {
-      width: 62px;
-      height: 62px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       object-fit: cover;
-      background: #e2e8f0;
-      border: 2px solid var(--surface);
+      background: var(--bg);
+      border: 2px solid var(--border);
       box-shadow: var(--shadow-md);
-      transition: border-color 0.2s ease;
-    }
-
-    .actor-avatar-card:hover .actor-circle-img {
-      border-color: var(--primary);
     }
 
     .actor-name-text {
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       font-weight: 700;
       color: var(--text-main);
       line-height: 1.2;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .actor-known-sub {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      line-height: 1.1;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
@@ -708,7 +771,6 @@
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.15s ease;
       flex-shrink: 0;
     }
 
@@ -718,11 +780,11 @@
       border-color: var(--primary);
     }
 
-    /* Shelves & Clickable Section Headers */
+    /* Shelves with Subtle Border Accent */
     .shelves-container {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
       margin-bottom: 24px;
     }
 
@@ -731,40 +793,44 @@
       flex-direction: column;
       gap: 8px;
       position: relative;
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 12px;
+      border: 1.5px solid transparent;
+      border-image: var(--border-gradient-h) 1;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      background-size: cover;
+      background-position: center top;
     }
 
     .shelf-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: relative;
+      z-index: 2;
     }
 
     .shelf-title {
-      font-size: 1rem;
+      font-size: 0.96rem;
       font-weight: 800;
       color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      transition: all 0.18s ease;
-      user-select: none;
-    }
-
-    .shelf-title:hover {
-      color: var(--primary);
-      transform: translateX(4px);
     }
 
     .shelf-title .view-all-hint {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
       color: var(--primary);
       display: inline-flex;
       align-items: center;
       gap: 3px;
-      opacity: 0.85;
       margin-left: 6px;
+      cursor: pointer;
     }
 
     .shelf-nav-arrow {
@@ -775,7 +841,7 @@
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text-main);
       box-shadow: var(--shadow-md);
@@ -791,44 +857,41 @@
       }
     }
 
-    .shelf-nav-arrow.left { left: -12px; }
-    .shelf-nav-arrow.right { right: -12px; }
+    .shelf-nav-arrow.left { left: 4px; }
+    .shelf-nav-arrow.right { right: 4px; }
 
     .shelf-scroll {
       display: flex;
       gap: 10px;
       overflow-x: auto;
-      padding: 4px 2px 8px;
+      padding: 4px 2px 6px;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       scroll-behavior: smooth;
+      position: relative;
+      z-index: 2;
     }
     .shelf-scroll::-webkit-scrollbar {
       display: none;
     }
 
-    /* 3 per row on Mobile, 6 per row on Big Desktop */
+    /* 3 per row on Mobile, 7 per row on Big Desktop */
     .shelf-card {
-      width: calc((100vw - 48px) / 3.2);
+      width: calc((100vw - 64px) / 3.2);
       max-width: 180px;
-      min-width: 100px;
+      min-width: 95px;
       flex-shrink: 0;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       gap: 5px;
-      transition: transform 0.2s ease;
       position: relative;
-    }
-
-    .shelf-card:hover {
-      transform: translateY(-4px);
     }
 
     @media (min-width: 900px) {
       .shelf-card {
-        width: calc((100% - 60px) / 6.2);
-        min-width: 135px;
+        width: calc((100% - 60px) / 7.2);
+        min-width: 120px;
       }
     }
 
@@ -838,7 +901,7 @@
       aspect-ratio: 2 / 3;
       border-radius: 12px;
       overflow: hidden;
-      background: #e2e8f0;
+      background: var(--bg);
       border: 1px solid var(--border);
     }
 
@@ -846,15 +909,10 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.35s ease;
-    }
-
-    .shelf-card:hover .shelf-poster img {
-      transform: scale(1.06);
     }
 
     .shelf-card-title {
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       font-weight: 700;
       color: var(--text-main);
       line-height: 1.2;
@@ -895,10 +953,9 @@
       display: flex;
       align-items: center;
       gap: 3px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
 
-    /* Grid Layout: 3 on mobile, 6 on desktop */
+    /* Grid Layout: 3 on Mobile, 7 on Desktop */
     .section-title {
       font-size: 1.1rem;
       font-weight: 800;
@@ -917,8 +974,8 @@
 
     @media (min-width: 900px) {
       .media-grid {
-        grid-template-columns: repeat(6, 1fr);
-        gap: 14px;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 12px;
       }
     }
 
@@ -932,19 +989,13 @@
       cursor: pointer;
       position: relative;
       box-shadow: var(--shadow-sm);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    .media-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-md);
     }
 
     .poster-wrap {
       position: relative;
       width: 100%;
       aspect-ratio: 2 / 3;
-      background: #e2e8f0;
+      background: var(--bg);
       overflow: hidden;
     }
 
@@ -952,11 +1003,6 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.35s ease;
-    }
-
-    .media-card:hover .poster-wrap img {
-      transform: scale(1.06);
     }
 
     .badge-pill {
@@ -1013,6 +1059,7 @@
       flex-direction: column;
       flex: 1;
       justify-content: space-between;
+      background: var(--surface);
     }
 
     .card-title {
@@ -1043,21 +1090,171 @@
       gap: 3px;
     }
 
-    /* Mobile Bottom Navigation */
+    /* Interactive Calendar View Styles */
+    .calendar-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .cal-filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: var(--surface);
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .cal-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .cal-tab-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .cal-tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 640px) {
+      .calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .calendar-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .cal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      position: relative;
+    }
+
+    .cal-poster {
+      width: 75px;
+      aspect-ratio: 2 / 3;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--bg);
+    }
+
+    .cal-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .cal-date-badge {
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 0.72rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .cal-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cal-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn-cal-reminder {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-cal-reminder.active {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .btn-cal-trailer {
+      background: var(--bg);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Floating Glass Mobile Bottom Navigation */
     .mobile-nav {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 64px;
-      background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid var(--border);
+      bottom: 12px;
+      left: 14px;
+      right: 14px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid transparent;
+      border-image: var(--border-gradient-h) 1;
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: space-around;
       z-index: 60;
-      box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+
+    body.theme-night .mobile-nav, body.theme-sunset .mobile-nav {
+      background: rgba(19, 27, 46, 0.85);
     }
 
     @media (min-width: 900px) {
@@ -1072,25 +1269,25 @@
       align-items: center;
       justify-content: center;
       color: var(--text-muted);
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 700;
       background: none;
       border: none;
-      gap: 3px;
+      gap: 2px;
       cursor: pointer;
       flex: 1;
       height: 100%;
     }
 
     .m-nav-item i {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
     }
 
     .m-nav-item.active {
       color: var(--primary);
     }
 
-    /* Mobile More Drawer Sheet */
+    /* Mobile Drawer */
     .more-sheet-backdrop {
       position: fixed;
       inset: 0;
@@ -1223,8 +1420,8 @@
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: #f1f5f9;
-      border: none;
+      background: var(--bg);
+      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1262,34 +1459,6 @@
       gap: 10px;
     }
 
-    .quick-player-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .btn-quick-nextplay {
-      background: var(--primary-light);
-      color: var(--primary);
-      border: 1px solid #c7d2fe;
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
-    }
-
-    .btn-quick-nextplay:hover {
-      background: var(--primary);
-      color: #ffffff;
-    }
-
     .server-bar {
       display: none;
       align-items: center;
@@ -1308,7 +1477,6 @@
     .server-tag {
       font-size: 0.72rem;
       font-weight: 800;
-      text-transform: uppercase;
       color: var(--text-muted);
       flex-shrink: 0;
     }
@@ -1320,6 +1488,7 @@
       background: var(--bg);
       font-size: 0.75rem;
       font-weight: 700;
+      color: var(--text-main);
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
@@ -1373,7 +1542,8 @@
       border: 1px solid var(--border);
       font-size: 0.78rem;
       font-weight: 600;
-      background: #ffffff;
+      background: var(--surface);
+      color: var(--text-main);
       outline: none;
     }
 
@@ -1387,11 +1557,12 @@
 
     .ep-btn {
       padding: 6px 2px;
-      background: #ffffff;
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 0.72rem;
       font-weight: 700;
+      color: var(--text-main);
       cursor: pointer;
       text-align: center;
     }
@@ -1402,7 +1573,6 @@
       border-color: var(--primary);
     }
 
-    /* Details Section */
     .details-section {
       padding: 0 16px 24px;
       display: flex;
@@ -1413,7 +1583,7 @@
     .overview-text {
       font-size: 0.85rem;
       line-height: 1.5;
-      color: #334155;
+      color: var(--text-main);
     }
 
     .block-heading-wrap {
@@ -1436,7 +1606,7 @@
     .art-toggle-group {
       display: flex;
       gap: 4px;
-      background: #e2e8f0;
+      background: var(--bg);
       padding: 2px;
       border-radius: 8px;
     }
@@ -1453,7 +1623,7 @@
     }
 
     .art-toggle-btn.active {
-      background: #ffffff;
+      background: var(--surface);
       color: var(--primary);
       box-shadow: var(--shadow-sm);
     }
@@ -1475,15 +1645,9 @@
       flex-shrink: 0;
       border-radius: 10px;
       overflow: hidden;
-      background: #e2e8f0;
+      background: var(--bg);
       border: 1px solid var(--border);
       cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      transition: transform 0.2s ease;
-    }
-
-    .art-card:hover {
-      transform: scale(1.03);
     }
 
     .art-card.landscape { width: 170px; aspect-ratio: 16 / 9; }
@@ -1528,7 +1692,7 @@
       object-fit: cover;
       background: #e2e8f0;
       margin-bottom: 4px;
-      border: 2px solid #ffffff;
+      border: 2px solid var(--surface);
       box-shadow: var(--shadow-sm);
     }
 
@@ -1604,7 +1768,7 @@
       align-items: center;
       gap: 10px;
       cursor: pointer;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid var(--border);
       color: var(--text-main);
     }
 
@@ -1650,16 +1814,15 @@
     .facts-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      font-size: 0.85rem;
-      color: #334155;
+      gap: 8px;
+      font-size: 0.84rem;
     }
 
     .fact-row {
       display: flex;
       justify-content: space-between;
       padding: 8px 12px;
-      background: #f8fafc;
+      background: var(--bg);
       border-radius: 8px;
       border: 1px solid var(--border);
     }
@@ -1669,7 +1832,6 @@
       color: var(--text-muted);
     }
 
-    /* Custom Non-Intrusive Toast Confirmation */
     .toast-alert {
       position: fixed;
       bottom: 84px;
@@ -1695,68 +1857,6 @@
     .toast-alert.active {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
-    }
-
-    /* Revisit Next Play Reminder Drawer */
-    .reminder-banner {
-      position: fixed;
-      bottom: 80px;
-      right: 18px;
-      width: 320px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: var(--shadow-xl);
-      padding: 14px;
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 90;
-      animation: badgePulse 0.4s ease;
-    }
-
-    @media (min-width: 900px) {
-      .reminder-banner {
-        bottom: 24px;
-      }
-    }
-
-    .reminder-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      font-weight: 800;
-      color: var(--text-main);
-    }
-
-    .reminder-items-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: 160px;
-      overflow-y: auto;
-    }
-
-    .reminder-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg);
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 0.75rem;
-      font-weight: 700;
-    }
-
-    .reminder-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 4px;
-      border-top: 1px solid var(--border);
-      font-size: 0.72rem;
-      color: var(--text-muted);
     }
 
     .lightbox-backdrop {
@@ -1845,9 +1945,13 @@
         <i class="fa-solid fa-fire" style="color: #f59e0b;"></i>
         <span>Trending</span>
       </button>
+      <button class="sidebar-btn" id="sideCalendar" onclick="selectType('calendar')" tabindex="0">
+        <i class="fa-solid fa-calendar-days" style="color: #10b981;"></i>
+        <span>Movie Calendar</span>
+      </button>
       <button class="sidebar-btn" id="sideLatest" onclick="selectType('latest')" tabindex="0">
         <i class="fa-solid fa-bolt" style="color: #06b6d4;"></i>
-        <span>Latests</span>
+        <span>Latests Releases</span>
       </button>
       <button class="sidebar-btn" id="sideMovie" onclick="selectType('movie')" tabindex="0">
         <i class="fa-solid fa-film" style="color: #3b82f6;"></i>
@@ -1911,6 +2015,27 @@
         </div>
 
         <div class="header-actions">
+          <button class="theme-toggle-btn" onclick="toggleThemeDropdown(event)" id="themeToggleBtn" tabindex="0">
+            <i class="fa-solid fa-sun" id="themeIcon"></i>
+            <span id="themeLabel">Day</span>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.65rem; margin-left:2px;"></i>
+          </button>
+          
+          <div class="theme-popup-menu" id="themePopupMenu">
+            <button class="theme-option-btn selected" id="opt-theme-day" onclick="selectThemeMode('day')" tabindex="0">
+              <i class="fa-solid fa-sun" style="color:#f59e0b;"></i> Day Mode
+            </button>
+            <button class="theme-option-btn" id="opt-theme-sunset" onclick="selectThemeMode('sunset')" tabindex="0">
+              <i class="fa-solid fa-cloud-sun" style="color:#ec4899;"></i> Sundown
+            </button>
+            <button class="theme-option-btn" id="opt-theme-night" onclick="selectThemeMode('night')" tabindex="0">
+              <i class="fa-solid fa-moon" style="color:#6366f1;"></i> Night Mode
+            </button>
+            <button class="theme-option-btn" id="opt-theme-auto" onclick="selectThemeMode('auto')" tabindex="0">
+              <i class="fa-solid fa-clock" style="color:#10b981;"></i> Auto (6:30pm)
+            </button>
+          </div>
+
           <button class="btn-action random-btn" onclick="triggerRandomizer()" tabindex="0">
             <i class="fa-solid fa-shuffle"></i>
             <span>Surprise Me</span>
@@ -1922,13 +2047,12 @@
     <main id="mainContainer">
       <div class="disclaimer-banner">
         <i class="fa-solid fa-shield-halved"></i>
-        <span>Notice: Media streams are provided via third-party web scrapers. This site does not host or store files on its servers.[cite: 1]</span>
+        <span>Notice: Media streams are provided via third-party web scrapers. This site does not host or store files on its servers.</span>
       </div>
 
-      <!-- Live Hero Carousel with Compact Artwork & Continuous Live Previews -->
+      <!-- Live Hero Carousel -->
       <section class="hero-spotlight" id="heroSpotlight">
         <img src="" id="heroBgImg" class="hero-bg" alt="Hero Featured Backdrop" />
-        <iframe id="heroVideoPreview" class="hero-video-preview" allow="autoplay; encrypted-media" src=""></iframe>
         <div class="hero-overlay"></div>
         <div class="hero-indicators" id="heroIndicators"></div>
         <div class="hero-content">
@@ -1936,7 +2060,7 @@
             <img src="" id="heroMiniPoster" alt="Poster Thumbnail" />
           </div>
           <div class="hero-text-block">
-            <span class="hero-tag pulse-badge" id="heroTag">Live Spotlight</span>
+            <span class="hero-tag pulse-badge" id="heroTag">Featured Spotlight</span>
             <h1 class="hero-title" id="heroTitle">Loading Feature...</h1>
             <div class="hero-meta">
               <span class="rating-badge"><i class="fa-solid fa-star"></i> <span id="heroRating">--</span></span>
@@ -1959,10 +2083,10 @@
       <!-- Top Actors & Actresses Horizontal Scroll -->
       <div class="actors-section" id="actorsShowcaseSection">
         <div class="shelf-header">
-          <h3 class="shelf-title" onclick="selectType('actors_page')">
+          <h3 class="shelf-title" onclick="selectType('actors_page')" tabindex="0">
             <i class="fa-solid fa-star" style="color: var(--accent);"></i>
             <span>Top Actors & Actresses</span>
-            <span class="view-all-hint">Explore All Stars <i class="fa-solid fa-arrow-right"></i></span>
+            <span class="view-all-hint" tabindex="0">Explore All Stars <i class="fa-solid fa-arrow-right"></i></span>
           </h3>
         </div>
         <div class="actors-scroll" id="actorsScrollContainer"></div>
@@ -1974,14 +2098,26 @@
       <div class="shelf-section" id="recentlyWatchedShelf" style="display: none; margin-bottom: 24px;">
         <div class="shelf-header">
           <h3 class="shelf-title"><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent);"></i> Continue Watching</h3>
-          <button onclick="clearHistory()" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; font-weight:700; cursor:pointer;" tabindex="0">Clear[cite: 2]</button>
+          <button onclick="clearHistory()" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; font-weight:700; cursor:pointer;" tabindex="0">Clear</button>
         </div>
-        <button class="shelf-nav-arrow left" onclick="scrollShelf('recentlyWatchedContainer', -300)"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="shelf-nav-arrow left" onclick="scrollShelf('recentlyWatchedContainer', -300)" tabindex="0"><i class="fa-solid fa-chevron-left"></i></button>
         <div class="shelf-scroll" id="recentlyWatchedContainer"></div>
-        <button class="shelf-nav-arrow right" onclick="scrollShelf('recentlyWatchedContainer', 300)"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="shelf-nav-arrow right" onclick="scrollShelf('recentlyWatchedContainer', 300)" tabindex="0"><i class="fa-solid fa-chevron-right"></i></button>
       </div>
 
       <div class="shelves-container" id="curatedShelvesContainer"></div>
+
+      <!-- Movie Release Calendar Section -->
+      <div id="calendarViewContainer" style="display: none;">
+        <div class="cal-filter-bar">
+          <div class="cal-tabs">
+            <button class="cal-tab-btn active" id="calTabAll" onclick="filterCalendar('all')" tabindex="0">All Future Debuts</button>
+            <button class="cal-tab-btn" id="calTabReminders" onclick="filterCalendar('must_watch')" tabindex="0"><i class="fa-solid fa-bell"></i> Must Watch (<span id="mustWatchCount">0</span>)</button>
+          </div>
+          <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">Upcoming Theatrical & Streaming Schedule</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
 
       <h2 class="section-title" id="feedTitle">
         <i class="fa-solid fa-compass" style="color: var(--primary);"></i> Discover Catalog
@@ -1995,11 +2131,15 @@
     </main>
   </div>
 
-  <!-- Mobile Bottom Navigation -->
+  <!-- Floating Glass Mobile Bottom Navigation -->
   <nav class="mobile-nav">
     <button class="m-nav-item active" id="mTabAll" onclick="selectType('all')" tabindex="0">
       <i class="fa-solid fa-fire" style="color: #f59e0b;"></i>
       <span>Trending</span>
+    </button>
+    <button class="m-nav-item" id="mTabCalendar" onclick="selectType('calendar')" tabindex="0">
+      <i class="fa-solid fa-calendar-days" style="color: #10b981;"></i>
+      <span>Calendar</span>
     </button>
     <button class="m-nav-item" id="mTabLatest" onclick="selectType('latest')" tabindex="0">
       <i class="fa-solid fa-bolt" style="color: #06b6d4;"></i>
@@ -2009,12 +2149,8 @@
       <i class="fa-solid fa-film" style="color: #3b82f6;"></i>
       <span>Movies</span>
     </button>
-    <button class="m-nav-item" id="mTabTv" onclick="selectType('tv')" tabindex="0">
-      <i class="fa-solid fa-tv" style="color: #6366f1;"></i>
-      <span>TV Shows</span>
-    </button>
     <button class="m-nav-item" id="mTabMore" onclick="openMoreSheet()" tabindex="0">
-      <i class="fa-solid fa-grip" style="color: #10b981;"></i>
+      <i class="fa-solid fa-grip" style="color: #8b5cf6;"></i>
       <span>More</span>
     </button>
   </nav>
@@ -2024,60 +2160,50 @@
     <div class="more-sheet">
       <div class="more-sheet-header">
         <span>Explore All Hubs</span>
-        <button class="btn-circle" onclick="closeMoreSheet(null)"><i class="fa-solid fa-xmark"></i></button>
+        <button class="btn-circle" onclick="closeMoreSheet(null)" tabindex="0"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <button class="sheet-nav-item" onclick="selectType('actors_page'); closeMoreSheet(null);">
-        <i class="fa-solid fa-star" style="color:#eab308;"></i>
-        <span>Top Actors & Actresses</span>
+      <button class="sheet-nav-item" onclick="selectType('tv'); closeMoreSheet(null);" tabindex="0">
+        <i class="fa-solid fa-tv" style="color:#6366f1;"></i>
+        <span>TV Shows</span>
       </button>
-      <button class="sheet-nav-item" onclick="selectType('anime'); closeMoreSheet(null);">
+      <button class="sheet-nav-item" onclick="selectType('actors_page'); closeMoreSheet(null);" tabindex="0">
+        <i class="fa-solid fa-star" style="color:#eab308;"></i>
+        <span>Top Stars</span>
+      </button>
+      <button class="sheet-nav-item" onclick="selectType('anime'); closeMoreSheet(null);" tabindex="0">
         <i class="fa-solid fa-dragon" style="color:#ec4899;"></i>
         <span>Anime Universe</span>
       </button>
-      <button class="sheet-nav-item" onclick="selectType('favorites'); closeMoreSheet(null);">
+      <button class="sheet-nav-item" onclick="selectType('favorites'); closeMoreSheet(null);" tabindex="0">
         <i class="fa-solid fa-heart" style="color:#ef4444;"></i>
         <span>Saved Favorites</span>
       </button>
-      <button class="sheet-nav-item" onclick="selectType('nextplay'); closeMoreSheet(null);">
+      <button class="sheet-nav-item" onclick="selectType('nextplay'); closeMoreSheet(null);" tabindex="0">
         <i class="fa-solid fa-list-check" style="color:#10b981;"></i>
         <span>Next Play (What to Watch Next)</span>
       </button>
-      <button class="sheet-nav-item" onclick="selectType('cartoon'); closeMoreSheet(null);">
+      <button class="sheet-nav-item" onclick="selectType('cartoon'); closeMoreSheet(null);" tabindex="0">
         <i class="fa-solid fa-shapes" style="color:#f97316;"></i>
         <span>Cartoons Hub</span>
       </button>
-      <button class="sheet-nav-item" onclick="selectType('animation'); closeMoreSheet(null);">
+      <button class="sheet-nav-item" onclick="selectType('animation'); closeMoreSheet(null);" tabindex="0">
         <i class="fa-solid fa-wand-magic-sparkles" style="color:#d946ef;"></i>
         <span>Animation</span>
       </button>
-      <button class="sheet-nav-item" onclick="selectType('reality'); closeMoreSheet(null);">
+      <button class="sheet-nav-item" onclick="selectType('reality'); closeMoreSheet(null);" tabindex="0">
         <i class="fa-solid fa-comments" style="color:#06b6d4;"></i>
         <span>Talk & Reality Shows</span>
       </button>
-      <button class="sheet-nav-item" onclick="triggerRandomizer(); closeMoreSheet(null);">
+      <button class="sheet-nav-item" onclick="triggerRandomizer(); closeMoreSheet(null);" tabindex="0">
         <i class="fa-solid fa-shuffle" style="color:#f59e0b;"></i>
         <span>Surprise Me Randomizer</span>
       </button>
     </div>
   </div>
 
-  <!-- Revisit Next Play Reminder Toast Drawer -->
-  <div class="reminder-banner" id="reminderBanner">
-    <div class="reminder-header">
-      <span><i class="fa-solid fa-bell" style="color:var(--accent);"></i> In Your Next Play:</span>
-      <button onclick="dismissReminder()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.9rem;"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="reminder-items-list" id="reminderItemsList"></div>
-    <div class="reminder-actions">
-      <span onclick="toggleDisableReminders()" style="cursor:pointer; text-decoration:underline;" id="disableReminderText">Don't show again</span>
-      <button onclick="selectType('nextplay'); dismissReminder();" style="background:var(--primary); color:#ffffff; border:none; padding:4px 10px; border-radius:6px; font-weight:700; cursor:pointer;">Open List</button>
-    </div>
-  </div>
-
-  <!-- Non-Intrusive Floating Toast -->
   <div class="toast-alert" id="toastAlert">
     <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 1.1rem;"></i>
-    <span id="toastMessage">Added to Next Play playlist!</span>
+    <span id="toastMessage">Done</span>
   </div>
 
   <button class="btn-scroll-top" id="btnScrollTop" onclick="scrollToTop()" tabindex="0">
@@ -2088,7 +2214,12 @@
   <div class="modal-backdrop" id="modalBackdrop">
     <div class="modal-window" id="modalWindow">
       <div class="modal-nav">
-        <span class="modal-heading" id="modalMediaTitle">Loading...[cite: 2]</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn-circle" id="modalBackNavBtn" onclick="handleModalBackAction()" style="display:none;" tabindex="0">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <span class="modal-heading" id="modalMediaTitle">Loading...</span>
+        </div>
         <div class="modal-actions-top">
           <button class="btn-circle fav" id="modalFavBtn" onclick="toggleFavoriteFromModal()" tabindex="0">
             <i class="fa-solid fa-heart"></i>
@@ -2109,35 +2240,29 @@
       </div>
 
       <div class="player-dock">
-        <div class="quick-player-bar">
-          <button class="btn-quick-nextplay" id="btnModalQuickNextPlay" onclick="toggleNextPlayFromModal()">
-            <i class="fa-solid fa-plus"></i> Add to Next Play
-          </button>
-
-          <!-- Desktop Server Bar -->
-          <div class="server-bar">
-            <span class="server-tag"><i class="fa-solid fa-server"></i> Server:[cite: 2]</span>
-            <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')" tabindex="0">VixSrc (Autoplay)</button>
-            <button class="srv-btn" id="btn-videasy" onclick="manualSwitchServer('videasy')" tabindex="0">Videasy</button>
-            <button class="srv-btn" id="btn-vidfast" onclick="manualSwitchServer('vidfast')" tabindex="0">VidFast</button>
-            <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')" tabindex="0">VidLink</button>
-            <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')" tabindex="0">SuperEmbed</button>
-            <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')" tabindex="0">VidAPI</button>
-          </div>
+        <!-- Desktop Server Bar -->
+        <div class="server-bar">
+          <span class="server-tag"><i class="fa-solid fa-server"></i> Playing from: (if player fails use another)</span>
+          <button class="srv-btn active" id="btn-videasy" onclick="manualSwitchServer('videasy')" tabindex="0">Videasy (Primary)</button>
+          <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')" tabindex="0">SuperEmbed</button>
+          <button class="srv-btn" id="btn-vidfast" onclick="manualSwitchServer('vidfast')" tabindex="0">VidFast</button>
+          <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')" tabindex="0">VidLink</button>
+          <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')" tabindex="0">VidAPI</button>
+          <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')" tabindex="0">VixSrc</button>
         </div>
 
         <!-- Mobile Server Box -->
         <div class="mobile-server-selector" onclick="openServerSheet()" tabindex="0">
           <span>
             <i class="fa-solid fa-server" style="color:var(--primary);"></i>
-            <span id="mobServerLabel">Server: VixSrc (Autoplay)</span>
+            <span id="mobServerLabel">Playing from: Videasy (Primary)</span>
           </span>
           <i class="fa-solid fa-chevron-down chevron"></i>
         </div>
 
         <div class="tv-control-suite" id="tvControlSuite">
           <div class="tv-suite-top">
-            <label style="font-size: 0.8rem; font-weight: 700;">Season:[cite: 2]</label>
+            <label style="font-size: 0.8rem; font-weight: 700;">Season:</label>
             <select id="seasonDropdown" onchange="handleSeasonChange()" tabindex="0"></select>
           </div>
           <div class="episodes-grid" id="episodesGrid"></div>
@@ -2145,7 +2270,7 @@
       </div>
 
       <div class="details-section">
-        <p class="overview-text" id="modalOverview">Loading synopsis...[cite: 2]</p>
+        <p class="overview-text" id="modalOverview">Loading synopsis...</p>
 
         <div id="partsSection" style="display: none;">
           <div class="block-heading-wrap">
@@ -2164,8 +2289,8 @@
               <span>Official Artworks & Wallpapers</span>
             </div>
             <div class="art-toggle-group">
-              <button class="art-toggle-btn active" id="artLandscapeBtn" onclick="toggleArtworkView('backdrops')" tabindex="0">Landscapes[cite: 2]</button>
-              <button class="art-toggle-btn" id="artPortraitBtn" onclick="toggleArtworkView('posters')" tabindex="0">Portraits[cite: 2]</button>
+              <button class="art-toggle-btn active" id="artLandscapeBtn" onclick="toggleArtworkView('backdrops')" tabindex="0">Landscapes</button>
+              <button class="art-toggle-btn" id="artPortraitBtn" onclick="toggleArtworkView('posters')" tabindex="0">Portraits</button>
             </div>
           </div>
           <div class="artworks-row" id="artworksContainer"></div>
@@ -2175,7 +2300,7 @@
           <div class="block-heading-wrap">
             <div class="block-heading">
               <i class="fa-solid fa-users"></i>
-              <span>Cast & Characters</span>
+              <span>Who's in this film</span>
             </div>
           </div>
           <div class="cast-row" id="castContainer"></div>
@@ -2183,9 +2308,10 @@
 
         <div>
           <div class="block-heading-wrap">
-            <div class="block-heading">
+            <div class="block-heading" onclick="expandSimilarUnlimited()" tabindex="0">
               <i class="fa-solid fa-film"></i>
-              <span>More Like This (Click to Play)</span>
+              <span id="similarTitleHeader">You definitely should also watch...</span>
+              <span class="view-all-hint" tabindex="0">More <i class="fa-solid fa-chevron-right"></i></span>
             </div>
           </div>
           <div class="similar-row" id="similarContainer"></div>
@@ -2199,25 +2325,25 @@
     <div class="more-sheet">
       <div class="more-sheet-header">
         <span>Select Video Server</span>
-        <button class="btn-circle" onclick="closeServerSheet(null)"><i class="fa-solid fa-xmark"></i></button>
+        <button class="btn-circle" onclick="closeServerSheet(null)" tabindex="0"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <button class="sheet-nav-item active" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
-        <span>VixSrc (Autoplay)</span>
+      <button class="sheet-nav-item active" id="sheet-videasy" onclick="selectServerFromSheet('videasy')" tabindex="0">
+        <span>Videasy (Primary)</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-videasy" onclick="selectServerFromSheet('videasy')">
-        <span>Videasy</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-vidfast" onclick="selectServerFromSheet('vidfast')">
-        <span>VidFast</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-vidlink" onclick="selectServerFromSheet('vidlink')">
-        <span>VidLink</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-superembed" onclick="selectServerFromSheet('superembed')">
+      <button class="sheet-nav-item" id="sheet-superembed" onclick="selectServerFromSheet('superembed')" tabindex="0">
         <span>SuperEmbed</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
+      <button class="sheet-nav-item" id="sheet-vidfast" onclick="selectServerFromSheet('vidfast')" tabindex="0">
+        <span>VidFast</span>
+      </button>
+      <button class="sheet-nav-item" id="sheet-vidlink" onclick="selectServerFromSheet('vidlink')" tabindex="0">
+        <span>VidLink</span>
+      </button>
+      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')" tabindex="0">
         <span>VidAPI</span>
+      </button>
+      <button class="sheet-nav-item" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')" tabindex="0">
+        <span>VixSrc</span>
       </button>
     </div>
   </div>
@@ -2246,7 +2372,7 @@
     <div class="info-modal-content">
       <div class="info-modal-header">
         <h3 id="infoModalTitle">Title Info</h3>
-        <button class="btn-circle" onclick="closeInfoModal(null)"><i class="fa-solid fa-xmark"></i></button>
+        <button class="btn-circle" onclick="closeInfoModal(null)" tabindex="0"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div id="infoModalBody"></div>
     </div>
@@ -2257,10 +2383,10 @@
     <div class="lightbox-content">
       <img src="" id="lightboxImg" class="lightbox-img" alt="Artwork High Res Preview" />
       <div class="lightbox-actions">
-        <a href="" target="_blank" download id="lightboxDownloadBtn" class="btn-download-full">
+        <a href="" target="_blank" download id="lightboxDownloadBtn" class="btn-download-full" tabindex="0">
           <i class="fa-solid fa-download"></i> Download Full HD
         </a>
-        <button class="btn-close-lightbox" onclick="closeLightbox(null)">
+        <button class="btn-close-lightbox" onclick="closeLightbox(null)" tabindex="0">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -2273,17 +2399,27 @@
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    // Provider List
-    const PROVIDERS = ['vixsrc', 'videasy', 'vidfast', 'vidlink', 'superembed', 'vidapi'];
+    // Provider List: Videasy #1, VixSrc last
+    const PROVIDERS = ['videasy', 'superembed', 'vidfast', 'vidlink', 'vidapi', 'vixsrc'];
     const PROVIDER_NAMES = {
-      vixsrc: 'VixSrc (Autoplay)',
-      videasy: 'Videasy',
+      videasy: 'Videasy (Primary)',
+      superembed: 'SuperEmbed',
       vidfast: 'VidFast',
       vidlink: 'VidLink',
-      superembed: 'SuperEmbed',
-      vidapi: 'VidAPI'
+      vidapi: 'VidAPI',
+      vixsrc: 'VixSrc'
     };
     let currentProviderIndex = 0;
+
+    // In-Memory Query Cache
+    const sessionCache = {};
+    async function cachedFetch(url) {
+      if (sessionCache[url]) return sessionCache[url];
+      const res = await fetch(url);
+      const data = await res.json();
+      sessionCache[url] = data;
+      return data;
+    }
 
     // App State
     let currentType = 'all'; 
@@ -2291,21 +2427,25 @@
     let currentPersonId = null;
     let searchQuery = '';
     let currentPage = 1;
-    let totalPages = 1;
+    let totalPages = 1000;
     let isLoading = false;
     let loadedIds = new Set();
     
-    // Dynamic Hero Carousel State
+    // Dynamic Hero State
     let heroItems = [];
     let currentHeroIndex = 0;
     let heroCarouselInterval = null;
+
+    // Modal Navigation History Stack
+    let modalHistoryStack = [];
 
     // Local Storage
     let favoritesList = JSON.parse(localStorage.getItem('humble_favorites')) || [];
     let watchHistory = JSON.parse(localStorage.getItem('humble_history')) || [];
     let nextPlayList = JSON.parse(localStorage.getItem('humble_nextplay')) || [];
     let watchTimestamps = JSON.parse(localStorage.getItem('humble_timestamps')) || {};
-    let remindersDisabled = localStorage.getItem('humble_disable_reminders') === 'true';
+    let mustWatchCalendar = JSON.parse(localStorage.getItem('humble_must_watch')) || [];
+    let themeMode = localStorage.getItem('humble_theme_mode') || 'auto';
 
     // Context Menu State
     let contextItem = null;
@@ -2319,6 +2459,9 @@
     let currentArtworkType = 'backdrops';
     let cachedArtworks = { backdrops: [], posters: [] };
 
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Expanded Core & Extended Genre Definitions
     const GENRES = [
       { id: null, name: 'All' },
       { id: 28, name: 'Action' },
@@ -2330,16 +2473,21 @@
       { id: 14, name: 'Fantasy' },
       { id: 27, name: 'Horror' },
       { id: 878, name: 'Sci-Fi' },
-      { id: 53, name: 'Thriller' }
+      { id: 53, name: 'Thriller' },
+      { id: 9648, name: 'Mystery' },
+      { id: 10751, name: 'Family' },
+      { id: 10752, name: 'War' },
+      { id: 99, name: 'Documentary' },
+      { id: 10402, name: 'Music' },
+      { id: 37, name: 'Western' }
     ];
 
-    // High-Converting Copywriter Shelves
     const SHELF_CONFIGS = {
       all: [
         { title: 'Adrenaline Overdrive Blockbusters', icon: 'fa-fire-flame-curved', color: '#f59e0b', endpoint: `${TMDB_BASE}/trending/all/week?api_key=${apiKey}`, type: 'all' },
-        { title: 'Mind Benders & Unpredictable Plots', icon: 'fa-brain', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=9648,878&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'High-Stakes Heists & Crime Sagas', icon: 'fa-gun', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=80,53&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'Unstoppable Anime & Shonen Battles', icon: 'fa-dragon', color: '#ec4899', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Mind Benders & Unpredictable Plots', icon: 'fa-brain', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=9648,878&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
+        { title: 'High-Stakes Heists & Crime Sagas', icon: 'fa-gun', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=80,53&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
+        { title: 'Unstoppable Anime & Shonen Battles', icon: 'fa-dragon', color: '#ec4899', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
         { title: 'Binge Till Sunrise: Global Hit Series', icon: 'fa-tv', color: '#3b82f6', endpoint: `${TMDB_BASE}/trending/tv/week?api_key=${apiKey}`, type: 'tv' },
         { title: '90s & 2000s Timeless Nostalgia Vault', icon: 'fa-clock-rotate-left', color: '#10b981', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=1990-01-01&primary_release_date.lte=2008-12-31&sort_by=popularity.desc`, type: 'movie' },
         { title: 'Oscar Royalty & Highest Rated Ever', icon: 'fa-crown', color: '#eab308', endpoint: `${TMDB_BASE}/movie/top_rated?api_key=${apiKey}`, type: 'movie' }
@@ -2347,46 +2495,46 @@
       latest: [
         { title: 'Brand New In Theaters & Digital', icon: 'fa-film', color: '#3b82f6', endpoint: `${TMDB_BASE}/movie/now_playing?api_key=${apiKey}`, type: 'movie' },
         { title: 'Fresh Episodes Airing This Week', icon: 'fa-tv', color: '#6366f1', endpoint: `${TMDB_BASE}/tv/on_the_air?api_key=${apiKey}`, type: 'tv' },
-        { title: 'Latest Anime Releases', icon: 'fa-dragon', color: '#ec4899', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=ja&sort_by=first_air_date.desc`, type: 'tv' },
-        { title: 'Brand New Animated Features', icon: 'fa-wand-magic-sparkles', color: '#d946ef', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&sort_by=primary_release_date.desc`, type: 'movie' },
-        { title: 'Latest Cartoons & Family Fun', icon: 'fa-shapes', color: '#f97316', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=en&sort_by=first_air_date.desc`, type: 'tv' }
+        { title: 'Latest Anime Releases', icon: 'fa-dragon', color: '#ec4899', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=first_air_date.desc`, type: 'tv' },
+        { title: 'Brand New Animated Features', icon: 'fa-wand-magic-sparkles', color: '#d946ef', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&primary_release_date.lte=${todayStr}&sort_by=primary_release_date.desc`, type: 'movie' },
+        { title: 'Latest Cartoons & Family Fun', icon: 'fa-shapes', color: '#f97316', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=first_air_date.desc`, type: 'tv' }
       ],
       movie: [
-        { title: 'Heart-Pounding Action & Chaos', icon: 'fa-explosion', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=28&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'Midnight Terror & Psychological Horror', icon: 'fa-ghost', color: '#6366f1', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=27&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'Interstellar Journeys & Cyberpunk Sci-Fi', icon: 'fa-rocket', color: '#06b6d4', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=878&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'Laugh-Out-Loud Date Night Hits', icon: 'fa-face-laugh-squint', color: '#f59e0b', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=35,10749&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'Modern Masterpieces & Award Winners', icon: 'fa-award', color: '#10b981', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&vote_average.gte=7.8&vote_count.gte=1000&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'Undercover Detectives & Mob Sagas', icon: 'fa-shield-halved', color: '#64748b', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=80&sort_by=popularity.desc`, type: 'movie' }
+        { title: 'Heart-Pounding Action & Chaos', icon: 'fa-explosion', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=28&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
+        { title: 'Midnight Terror & Psychological Horror', icon: 'fa-ghost', color: '#6366f1', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=27&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
+        { title: 'Interstellar Journeys & Cyberpunk Sci-Fi', icon: 'fa-rocket', color: '#06b6d4', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=878&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
+        { title: 'Laugh-Out-Loud Date Night Hits', icon: 'fa-face-laugh-squint', color: '#f59e0b', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=35,10749&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
+        { title: 'Modern Masterpieces & Award Winners', icon: 'fa-award', color: '#10b981', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&vote_average.gte=7.8&vote_count.gte=1000&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
+        { title: 'Undercover Detectives & Mob Sagas', icon: 'fa-shield-halved', color: '#64748b', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=80&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' }
       ],
       tv: [
         { title: 'Viral TV Phenomena Everyone Talks About', icon: 'fa-tv', color: '#4f46e5', endpoint: `${TMDB_BASE}/trending/tv/week?api_key=${apiKey}`, type: 'tv' },
-        { title: 'Dark Secrets & Edge-of-Your-Seat Thrillers', icon: 'fa-user-secret', color: '#334155', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=9648&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'High-Fantasy Realms & Sci-Fi Epics', icon: 'fa-dungeon', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=10765&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Late-Night Sitcoms & Adult Cartoons', icon: 'fa-beer-mug-empty', color: '#f59e0b', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,35&with_original_language=en&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Dark Secrets & Edge-of-Your-Seat Thrillers', icon: 'fa-user-secret', color: '#334155', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=9648&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'High-Fantasy Realms & Sci-Fi Epics', icon: 'fa-dungeon', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=10765&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Late-Night Sitcoms & Adult Cartoons', icon: 'fa-beer-mug-empty', color: '#f59e0b', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,35&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
         { title: 'Top-Rated All-Time Miniseries Legends', icon: 'fa-ranking-star', color: '#10b981', endpoint: `${TMDB_BASE}/tv/top_rated?api_key=${apiKey}`, type: 'tv' }
       ],
       cartoon: [
         { title: 'Saturday Morning Classics We Miss', icon: 'fa-tv', color: '#ec4899', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=en&first_air_date.lte=2015-01-01&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Cartoon Network & Nickelodeon Hits', icon: 'fa-shapes', color: '#3b82f6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=en&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Action-Packed Animated Heroes', icon: 'fa-mask', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,10759&with_original_language=en&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Disney & Pixar Big Screen Treasures', icon: 'fa-wand-magic-sparkles', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&with_original_language=en&sort_by=popularity.desc`, type: 'movie' }
+        { title: 'Cartoon Network & Nickelodeon Hits', icon: 'fa-shapes', color: '#3b82f6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Action-Packed Animated Heroes', icon: 'fa-mask', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,10759&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Disney & Pixar Big Screen Treasures', icon: 'fa-wand-magic-sparkles', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&with_original_language=en&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' }
       ],
       animation: [
-        { title: 'Peak Global Feature Animations', icon: 'fa-cube', color: '#06b6d4', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'Studio Ghibli & Hand-Drawn Magic', icon: 'fa-leaf', color: '#10b981', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&with_original_language=ja&vote_average.gte=7.8&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'Futuristic Cyberpunk Animated Worlds', icon: 'fa-microchip', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16,878&sort_by=popularity.desc`, type: 'movie' }
+        { title: 'Peak Global Feature Animations', icon: 'fa-cube', color: '#06b6d4', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
+        { title: 'Studio Ghibli & Hand-Drawn Magic', icon: 'fa-leaf', color: '#10b981', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&with_original_language=ja&vote_average.gte=7.8&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
+        { title: 'Futuristic Cyberpunk Animated Worlds', icon: 'fa-microchip', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16,878&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' }
       ],
       anime: [
-        { title: 'Epic Shonen Sagas & God-Level Battles', icon: 'fa-fire-flame-curved', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,10759&with_original_language=ja&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Isekai Worlds & Reincarnation Quests', icon: 'fa-dungeon', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,10765&with_original_language=ja&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Dark Psychological Thrillers & Mind Games', icon: 'fa-brain', color: '#3b82f6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,9648&with_original_language=ja&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Blockbuster Anime Movies & Legends', icon: 'fa-film', color: '#f59e0b', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc`, type: 'movie' }
+        { title: 'Epic Shonen Sagas & God-Level Battles', icon: 'fa-fire-flame-curved', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,10759&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Isekai Worlds & Reincarnation Quests', icon: 'fa-dungeon', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,10765&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Dark Psychological Thrillers & Mind Games', icon: 'fa-brain', color: '#3b82f6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,9648&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Blockbuster Anime Movies & Legends', icon: 'fa-film', color: '#f59e0b', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&with_original_language=ja&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' }
       ],
       reality: [
-        { title: 'Celebrity Spill & Late Night Talk', icon: 'fa-microphone-lines', color: '#06b6d4', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=10767,35&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'High-Stakes Competitions & Survival', icon: 'fa-trophy', color: '#eab308', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=10764&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Wild True Crime & Investigation Docs', icon: 'fa-fingerprint', color: '#64748b', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=99&sort_by=popularity.desc`, type: 'tv' }
+        { title: 'Celebrity Spill & Late Night Talk', icon: 'fa-microphone-lines', color: '#06b6d4', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=10767,35&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'High-Stakes Competitions & Survival', icon: 'fa-trophy', color: '#eab308', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=10764&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Wild True Crime & Investigation Docs', icon: 'fa-fingerprint', color: '#64748b', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=99&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' }
       ]
     };
 
@@ -2404,9 +2552,11 @@
     const modalMediaTitle = document.getElementById('modalMediaTitle');
     const modalOverview = document.getElementById('modalOverview');
     const modalFavBtn = document.getElementById('modalFavBtn');
+    const modalBackNavBtn = document.getElementById('modalBackNavBtn');
     const castContainer = document.getElementById('castContainer');
     const artworksContainer = document.getElementById('artworksContainer');
     const similarContainer = document.getElementById('similarContainer');
+    const similarTitleHeader = document.getElementById('similarTitleHeader');
     const partsSection = document.getElementById('partsSection');
     const partsTitle = document.getElementById('partsTitle');
     const partsContainer = document.getElementById('partsContainer');
@@ -2429,7 +2579,6 @@
     const heroSpotlight = document.getElementById('heroSpotlight');
     const heroBgImg = document.getElementById('heroBgImg');
     const heroMiniPoster = document.getElementById('heroMiniPoster');
-    const heroVideoPreview = document.getElementById('heroVideoPreview');
     const heroTitle = document.getElementById('heroTitle');
     const heroRating = document.getElementById('heroRating');
     const heroYear = document.getElementById('heroYear');
@@ -2442,11 +2591,16 @@
     const actorsScrollContainer = document.getElementById('actorsScrollContainer');
     const toastAlert = document.getElementById('toastAlert');
     const toastMessage = document.getElementById('toastMessage');
-    const reminderBanner = document.getElementById('reminderBanner');
-    const reminderItemsList = document.getElementById('reminderItemsList');
+    const calendarViewContainer = document.getElementById('calendarViewContainer');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const mustWatchCount = document.getElementById('mustWatchCount');
+    const themePopupMenu = document.getElementById('themePopupMenu');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeLabel = document.getElementById('themeLabel');
 
     // Init App
     document.addEventListener('DOMContentLoaded', () => {
+      applyThemeMode(themeMode);
       buildGenreChips();
       loadHeroFeatured();
       loadTopActorsShowcase();
@@ -2458,8 +2612,18 @@
       setupScrollToTop();
       setupSpatialDPad();
       setupGlobalClicks();
-      checkNextPlayReminder();
+      updateSimilarTitleResponsive();
     });
+
+    window.addEventListener('resize', updateSimilarTitleResponsive);
+
+    function updateSimilarTitleResponsive() {
+      if (window.innerWidth < 768) {
+        similarTitleHeader.textContent = "Also watch this...";
+      } else {
+        similarTitleHeader.textContent = "You definitely should also watch...";
+      }
+    }
 
     function setupGlobalClicks() {
       document.addEventListener('click', (e) => {
@@ -2469,7 +2633,58 @@
         if (!e.target.closest('.context-menu')) {
           contextMenu.classList.remove('active');
         }
+        if (!e.target.closest('#themeToggleBtn') && !e.target.closest('#themePopupMenu')) {
+          themePopupMenu.classList.remove('active');
+        }
       });
+    }
+
+    function toggleThemeDropdown(e) {
+      e.stopPropagation();
+      themePopupMenu.classList.toggle('active');
+    }
+
+    function selectThemeMode(mode) {
+      themePopupMenu.classList.remove('active');
+      applyThemeMode(mode);
+      showToast(`Theme set to ${themeLabel.textContent}`);
+    }
+
+    function applyThemeMode(mode) {
+      themeMode = mode;
+      localStorage.setItem('humble_theme_mode', mode);
+      document.body.classList.remove('theme-night', 'theme-sunset');
+      document.querySelectorAll('.theme-option-btn').forEach(b => b.classList.remove('selected'));
+
+      const activeOpt = document.getElementById(`opt-theme-${mode}`);
+      if (activeOpt) activeOpt.classList.add('selected');
+
+      if (mode === 'day') {
+        themeIcon.className = 'fa-solid fa-sun';
+        themeLabel.textContent = 'Day';
+      } else if (mode === 'night') {
+        document.body.classList.add('theme-night');
+        themeIcon.className = 'fa-solid fa-moon';
+        themeLabel.textContent = 'Night';
+      } else if (mode === 'sunset') {
+        document.body.classList.add('theme-sunset');
+        themeIcon.className = 'fa-solid fa-cloud-sun';
+        themeLabel.textContent = 'Sundown';
+      } else {
+        const now = new Date();
+        const hrs = now.getHours();
+        const mins = now.getMinutes();
+        const totalMinutes = hrs * 60 + mins;
+
+        if (totalMinutes >= 1110 || totalMinutes <= 360) {
+          document.body.classList.add('theme-sunset');
+          themeIcon.className = 'fa-solid fa-cloud-sun';
+          themeLabel.textContent = 'Auto (Sun)';
+        } else {
+          themeIcon.className = 'fa-solid fa-clock';
+          themeLabel.textContent = 'Auto';
+        }
+      }
     }
 
     function showToast(msg) {
@@ -2477,57 +2692,15 @@
       toastAlert.classList.add('active');
       setTimeout(() => {
         toastAlert.classList.remove('active');
-      }, 2500);
+      }, 2200);
     }
 
-    // Next Play Reminder System
-    function checkNextPlayReminder() {
-      if (remindersDisabled || nextPlayList.length === 0) return;
-      setTimeout(() => {
-        reminderItemsList.innerHTML = '';
-        nextPlayList.slice(0, 3).forEach((item, idx) => {
-          const div = document.createElement('div');
-          div.className = 'reminder-item';
-          div.innerHTML = `
-            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px;">${item.title || item.name}</span>
-            <i class="fa-solid fa-trash" style="color:var(--accent-red); cursor:pointer;" onclick="removeNextPlayItem(${item.id})"></i>
-          `;
-          reminderItemsList.appendChild(div);
-        });
-        reminderBanner.style.display = 'flex';
-      }, 25000);
-    }
-
-    function dismissReminder() {
-      reminderBanner.style.display = 'none';
-    }
-
-    function toggleDisableReminders() {
-      remindersDisabled = true;
-      localStorage.setItem('humble_disable_reminders', 'true');
-      dismissReminder();
-      showToast('Next Play reminder popups disabled');
-    }
-
-    function removeNextPlayItem(id) {
-      nextPlayList = nextPlayList.filter(p => p.id !== id);
-      localStorage.setItem('humble_nextplay', JSON.stringify(nextPlayList));
-      showToast('Removed from Next Play');
-      if (nextPlayList.length === 0) {
-        dismissReminder();
-      } else {
-        checkNextPlayReminder();
-      }
-      if (currentType === 'nextplay') renderNextPlay();
-    }
-
-    // Unlimited Multi-Genre Hero Carousel with Fast Preload
     async function loadHeroFeatured() {
       try {
-        const randPage = Math.floor(Math.random() * 5) + 1;
+        const randPage = Math.floor(Math.random() * 4) + 1;
         const [resMovies, resTV] = await Promise.all([
-          fetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=${randPage}`).then(r => r.json()),
-          fetch(`${TMDB_BASE}/trending/tv/week?api_key=${apiKey}&page=${randPage}`).then(r => r.json())
+          cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=${randPage}`),
+          cachedFetch(`${TMDB_BASE}/trending/tv/week?api_key=${apiKey}&page=${randPage}`)
         ]);
 
         const combined = [...(resMovies.results || []), ...(resTV.results || [])]
@@ -2576,23 +2749,6 @@
 
       heroWatchBtn.onclick = () => openMediaModal(item, isMovie ? 'movie' : 'tv');
       heroInfoBtn.onclick = () => showFunFacts(item);
-
-      // Fast Trailer Preload for live preview
-      fetch(`${TMDB_BASE}/${isMovie ? 'movie' : 'tv'}/${item.id}/videos?api_key=${apiKey}`)
-        .then(r => r.json())
-        .then(vData => {
-          const trailer = (vData.results || []).find(v => (v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube');
-          if (trailer) {
-            heroVideoPreview.src = `https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&mute=1&controls=0&loop=1&playlist=${trailer.key}&playsinline=1&enablejsapi=1`;
-            heroVideoPreview.style.opacity = '0.85';
-          } else {
-            heroVideoPreview.src = '';
-            heroVideoPreview.style.opacity = '0';
-          }
-        }).catch(() => {
-          heroVideoPreview.src = '';
-          heroVideoPreview.style.opacity = '0';
-        });
     }
 
     function startHeroInterval() {
@@ -2605,22 +2761,26 @@
       }, 9000);
     }
 
-    // Top Actors Showcase
     async function loadTopActorsShowcase() {
       try {
-        const res = await fetch(`${TMDB_BASE}/person/popular?api_key=${apiKey}&page=1`);
-        const data = await res.json();
+        const twoHourBlock = Math.floor(Date.now() / (2 * 60 * 60 * 1000));
+        const pageToLoad = (twoHourBlock % 5) + 1;
+        const data = await cachedFetch(`${TMDB_BASE}/person/popular?api_key=${apiKey}&page=${pageToLoad}`);
         const actors = (data.results || []).filter(p => p.profile_path).slice(0, 18);
 
         actorsScrollContainer.innerHTML = '';
         actors.forEach(person => {
           const avatar = `${IMAGE_BASE}${person.profile_path}`;
+          const topWork = (person.known_for && person.known_for[0]) ? (person.known_for[0].title || person.known_for[0].name) : '';
+          const knownText = topWork ? `Known for ${topWork}` : 'Leading Actor';
+
           const card = document.createElement('div');
           card.className = 'actor-avatar-card';
           card.setAttribute('tabindex', '0');
           card.innerHTML = `
             <img src="${avatar}" class="actor-circle-img" alt="${person.name}" loading="lazy" />
             <span class="actor-name-text">${person.name}</span>
+            <span class="actor-known-sub">${knownText}</span>
           `;
 
           card.addEventListener('click', () => {
@@ -2634,6 +2794,7 @@
       }
     }
 
+    // Fully Functional Genre Category Chips
     function buildGenreChips() {
       genresContainer.innerHTML = '';
       GENRES.forEach((genre, idx) => {
@@ -2645,6 +2806,8 @@
           document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
           currentGenre = genre.id;
+          searchQuery = '';
+          searchInput.value = '';
           fetchCatalog(true);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -2655,33 +2818,46 @@
     function selectType(type) {
       currentType = type;
       currentPersonId = null;
+      currentGenre = null;
       searchQuery = '';
       searchInput.value = '';
       searchSuggestions.classList.remove('active');
 
+      document.querySelectorAll('.genre-chip').forEach((c, idx) => {
+        c.classList.toggle('active', idx === 0);
+      });
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      // Desktop Sidebar Sync
       document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
       const activeSideBtn = document.getElementById(`side${type.charAt(0).toUpperCase() + type.slice(1)}`);
       if (activeSideBtn) activeSideBtn.classList.add('active');
 
-      // Mobile Bottom Nav Sync
       document.querySelectorAll('.m-nav-item').forEach(btn => btn.classList.remove('active'));
       const activeMobBtn = document.getElementById(`mTab${type.charAt(0).toUpperCase() + type.slice(1)}`);
       if (activeMobBtn) activeMobBtn.classList.add('active');
 
-      // Top Stars Dedicated Page
+      calendarViewContainer.style.display = 'none';
+
+      if (type === 'calendar') {
+        heroSpotlight.style.display = 'none';
+        actorsShowcaseSection.style.display = 'none';
+        recentlyWatchedShelf.style.display = 'none';
+        curatedShelvesContainer.innerHTML = '';
+        renderMovieCalendar();
+        return;
+      }
+
       if (type === 'actors_page') {
         heroSpotlight.style.display = 'none';
         actorsShowcaseSection.style.display = 'none';
         recentlyWatchedShelf.style.display = 'none';
         curatedShelvesContainer.innerHTML = '';
-        renderTopStarsPage();
+        starsPageNum = 1;
+        renderTopStarsPage(true);
         return;
       }
 
-      // Hero Spotlight and Continue Watching main page only
       if (type === 'all') {
         heroSpotlight.style.display = 'flex';
         actorsShowcaseSection.style.display = 'flex';
@@ -2704,22 +2880,149 @@
       }
     }
 
-    async function renderTopStarsPage() {
-      feedTitle.innerHTML = `<i class="fa-solid fa-star" style="color: var(--accent);"></i> Top Stars & Celebrities`;
+    async function renderMovieCalendar() {
+      feedTitle.innerHTML = `<i class="fa-solid fa-calendar-days" style="color: var(--accent-green);"></i> Upcoming Movie Releases (${new Date().getFullYear()})`;
       mediaGrid.innerHTML = '';
-      loadedIds.clear();
+      calendarViewContainer.style.display = 'block';
+      mustWatchCount.textContent = mustWatchCalendar.length;
+
+      calendarGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; color:var(--primary);"></i></div>';
+
+      try {
+        const [p1, p2, p3] = await Promise.all([
+          cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=${todayStr}&sort_by=primary_release_date.asc&page=1`),
+          cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=${todayStr}&sort_by=primary_release_date.asc&page=2`),
+          cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=${todayStr}&sort_by=primary_release_date.asc&page=3`)
+        ]);
+
+        const items = [...(p1.results || []), ...(p2.results || []), ...(p3.results || [])]
+          .filter(i => i.poster_path && i.release_date && i.release_date >= todayStr);
+
+        window._cachedUpcoming = items;
+        filterCalendar('all');
+      } catch (err) {
+        calendarGrid.innerHTML = '<p style="color:var(--text-muted);">Failed to load calendar events.</p>';
+      }
+    }
+
+    function filterCalendar(mode) {
+      document.querySelectorAll('.cal-tab-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = mode === 'all' ? document.getElementById('calTabAll') : document.getElementById('calTabReminders');
+      if (activeBtn) activeBtn.classList.add('active');
+
+      calendarGrid.innerHTML = '';
+      const items = window._cachedUpcoming || [];
+
+      const displayList = mode === 'must_watch' 
+        ? items.filter(i => mustWatchCalendar.includes(i.id))
+        : items;
+
+      if (displayList.length === 0) {
+        calendarGrid.innerHTML = `
+          <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);">
+            <i class="fa-solid fa-calendar-xmark" style="font-size:2.5rem; margin-bottom:10px;"></i>
+            <p>${mode === 'must_watch' ? 'No movies added to your Must Watch reminder list yet.' : 'No scheduled future releases recorded.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      displayList.forEach(item => {
+        const poster = `${IMAGE_BASE}${item.poster_path}`;
+        const isMustWatch = mustWatchCalendar.includes(item.id);
+        const relDate = item.release_date || 'Upcoming Debut';
+
+        const card = document.createElement('div');
+        card.className = 'cal-card';
+        card.innerHTML = `
+          <img src="${poster}" class="cal-poster" alt="${item.title}" />
+          <div class="cal-info">
+            <div>
+              <span class="cal-date-badge"><i class="fa-solid fa-calendar-check"></i> ${relDate}</span>
+              <h4 class="cal-title">${item.title}</h4>
+              <p style="font-size:0.72rem; color:var(--text-muted); line-height:1.3; margin-top:3px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${item.overview || 'No synopsis available.'}</p>
+            </div>
+            <div class="cal-actions">
+              <button class="btn-cal-reminder ${isMustWatch ? 'active' : ''}" onclick="toggleMustWatchReminder(${item.id}, '${item.title.replace(/'/g, "\\'")}')" tabindex="0">
+                <i class="fa-solid fa-bell"></i> ${isMustWatch ? 'Marked' : 'Must Watch'}
+              </button>
+              <button class="btn-cal-trailer" onclick="playTrailerLightbox(${item.id}, 'movie')" tabindex="0">
+                <i class="fa-solid fa-play"></i> Trailer
+              </button>
+            </div>
+          </div>
+        `;
+        calendarGrid.appendChild(card);
+      });
+    }
+
+    function toggleMustWatchReminder(id, title) {
+      const idx = mustWatchCalendar.indexOf(id);
+      if (idx > -1) {
+        mustWatchCalendar.splice(idx, 1);
+        showToast(`Removed "${title}" from Must Watch calendar`);
+      } else {
+        mustWatchCalendar.push(id);
+        showToast(`Marked "${title}" to Must Watch list!`);
+      }
+      localStorage.setItem('humble_must_watch', JSON.stringify(mustWatchCalendar));
+      mustWatchCount.textContent = mustWatchCalendar.length;
+      filterCalendar(document.getElementById('calTabReminders').classList.contains('active') ? 'must_watch' : 'all');
+    }
+
+    async function playTrailerLightbox(id, type) {
+      try {
+        const vData = await cachedFetch(`${TMDB_BASE}/${type}/${id}/videos?api_key=${apiKey}`);
+        const trailer = (vData.results || []).find(v => (v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube');
+        if (trailer) {
+          infoModalTitle.textContent = 'Official Trailer';
+          infoModalBody.innerHTML = `
+            <div style="position:relative; width:100%; aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:#000;">
+              <iframe src="https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1" style="position:absolute; width:100%; height:100%; border:none;" allowfullscreen></iframe>
+            </div>
+          `;
+          openInfoModal();
+        } else {
+          showToast('No video trailer available for this release.');
+        }
+      } catch (e) {
+        showToast('Trailer playback failed');
+      }
+    }
+
+    let starsPageNum = 1;
+    async function renderTopStarsPage(reset = false) {
+      feedTitle.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+          <span><i class="fa-solid fa-star" style="color: var(--accent);"></i> Top Stars Worldwide</span>
+          <button onclick="reRandomizeStarsPage()" style="background:var(--primary); color:#ffffff; border:none; padding:6px 14px; border-radius:9999px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;" tabindex="0">
+            <i class="fa-solid fa-shuffle"></i> Randomize Stars
+          </button>
+        </div>
+      `;
+      if (reset) {
+        mediaGrid.innerHTML = '';
+        loadedIds.clear();
+      }
+
       isLoading = true;
       loadingSpinner.classList.add('active');
 
       try {
-        const res = await fetch(`${TMDB_BASE}/person/popular?api_key=${apiKey}&page=1`);
-        const data = await res.json();
+        const data = await cachedFetch(`${TMDB_BASE}/person/popular?api_key=${apiKey}&page=${starsPageNum}`);
         const actors = (data.results || []).filter(p => p.profile_path);
 
         actors.forEach(person => {
+          if (loadedIds.has('p_' + person.id)) return;
+          loadedIds.add('p_' + person.id);
+
           const avatar = `${IMAGE_BASE}${person.profile_path}`;
+          const topWork = (person.known_for && person.known_for[0]) ? (person.known_for[0].title || person.known_for[0].name) : '';
+          const knownText = topWork ? `Known for ${topWork}` : 'Featured Star';
+
           const card = document.createElement('div');
           card.className = 'media-card';
+          card.setAttribute('tabindex', '0');
           card.innerHTML = `
             <div class="poster-wrap">
               <img src="${avatar}" alt="${person.name}" loading="lazy" />
@@ -2728,15 +3031,16 @@
             </div>
             <div class="card-body">
               <div class="card-title">${person.name}</div>
-              <div class="card-footer">
-                <span>Known for ${person.known_for_department || 'Acting'}</span>
-                <span class="play-link"><i class="fa-solid fa-arrow-right"></i> Filmography</span>
+              <div class="card-footer" style="flex-direction:column; align-items:flex-start; gap:2px;">
+                <span style="color:var(--text-muted); font-size:0.68rem; font-weight:600; line-height:1.2; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;">${knownText}</span>
+                <span class="play-link" style="margin-top:3px;"><i class="fa-solid fa-film"></i> View Filmography</span>
               </div>
             </div>
           `;
           card.onclick = () => filterByActor(person.id, person.name);
           mediaGrid.appendChild(card);
         });
+        starsPageNum++;
       } catch (err) {
         console.error(err);
       } finally {
@@ -2745,11 +3049,16 @@
       }
     }
 
+    function reRandomizeStarsPage() {
+      starsPageNum = Math.floor(Math.random() * 8) + 1;
+      renderTopStarsPage(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function resetToHome() {
       selectType('all');
     }
 
-    // Dedicated Category Sub-Page Viewer (Triggered from Clickable Headers)
     async function openDedicatedCategory(title, endpoint, type) {
       currentPersonId = null;
       searchQuery = '';
@@ -2758,6 +3067,7 @@
       heroSpotlight.style.display = 'none';
       recentlyWatchedShelf.style.display = 'none';
       actorsShowcaseSection.style.display = 'none';
+      calendarViewContainer.style.display = 'none';
       
       feedTitle.innerHTML = `<i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> ${title}`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2768,9 +3078,11 @@
       loadingSpinner.classList.add('active');
 
       try {
-        const res = await fetch(endpoint);
-        const data = await res.json();
-        const results = data.results || [];
+        const data = await cachedFetch(endpoint);
+        const results = (data.results || []).filter(i => {
+          const date = i.release_date || i.first_air_date;
+          return !date || date <= todayStr;
+        });
         renderItems(results);
       } catch (e) {
         console.error(e);
@@ -2795,12 +3107,13 @@
         const shelfScrollId = `shelfScroll_${currentType}_${index}`;
         const shelfElem = document.createElement('div');
         shelfElem.className = 'shelf-section';
+        shelfElem.id = `shelfSec_${currentType}_${index}`;
         shelfElem.innerHTML = `
           <div class="shelf-header">
-            <h3 class="shelf-title" onclick="openDedicatedCategory('${shelf.title.replace(/'/g, "\\'")}', '${shelf.endpoint}', '${shelf.type}')">
+            <h3 class="shelf-title" onclick="openDedicatedCategory('${shelf.title.replace(/'/g, "\\'")}', '${shelf.endpoint}', '${shelf.type}')" tabindex="0">
               <i class="fa-solid ${shelf.icon}" style="color: ${shelf.color};"></i>
               <span>${shelf.title}</span>
-              <span class="view-all-hint">View All <i class="fa-solid fa-chevron-right"></i></span>
+              <span class="view-all-hint" tabindex="0">View All <i class="fa-solid fa-chevron-right"></i></span>
             </h3>
           </div>
           <button class="shelf-nav-arrow left" onclick="scrollShelf('${shelfScrollId}', -300)" tabindex="0"><i class="fa-solid fa-chevron-left"></i></button>
@@ -2813,13 +3126,23 @@
         `;
         curatedShelvesContainer.appendChild(shelfElem);
 
-        fetch(shelf.endpoint)
-          .then(res => res.json())
+        cachedFetch(shelf.endpoint)
           .then(data => {
-            const items = (data.results || []).filter(i => i.poster_path).slice(0, 18);
+            const items = (data.results || []).filter(i => {
+              if (!i.poster_path) return false;
+              const date = i.release_date || i.first_air_date;
+              return !date || date <= todayStr;
+            }).slice(0, 18);
+
             const scrollContainer = document.getElementById(shelfScrollId);
             if (!scrollContainer) return;
             scrollContainer.innerHTML = '';
+
+            const leadBackdrop = items.find(i => i.backdrop_path);
+            if (leadBackdrop) {
+              const bgUrl = `${IMAGE_BASE}${leadBackdrop.backdrop_path}`;
+              shelfElem.style.backgroundImage = `linear-gradient(180deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 255, 255, 0.96) 100%), url('${bgUrl}')`;
+            }
 
             items.forEach((item, cardIdx) => {
               const poster = `${IMAGE_BASE}${item.poster_path}`;
@@ -2861,47 +3184,53 @@
       }
 
       if (currentType === 'latest') {
-        return `${TMDB_BASE}/movie/now_playing?api_key=${apiKey}&page=${page}`;
+        const genreParam = currentGenre ? `&with_genres=${currentGenre}` : '';
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.lte=${todayStr}&sort_by=primary_release_date.desc&page=${page}${genreParam}`;
       }
 
       if (currentType === 'cartoon') {
         const genreParam = currentGenre ? `&with_genres=16,${currentGenre}` : '&with_genres=16';
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_original_language=en${genreParam}&sort_by=popularity.desc&page=${page}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_original_language=en${genreParam}&first_air_date.lte=${todayStr}&sort_by=popularity.desc&page=${page}`;
       }
 
       if (currentType === 'animation') {
         const genreParam = currentGenre ? `&with_genres=16,${currentGenre}` : '&with_genres=16';
-        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}${genreParam}&sort_by=popularity.desc&page=${page}`;
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}${genreParam}&primary_release_date.lte=${todayStr}&sort_by=popularity.desc&page=${page}`;
       }
 
       if (currentType === 'anime') {
         const genreParam = currentGenre ? `&with_genres=16,${currentGenre}` : '&with_genres=16';
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_original_language=ja${genreParam}&sort_by=popularity.desc&page=${page}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_original_language=ja${genreParam}&first_air_date.lte=${todayStr}&sort_by=popularity.desc&page=${page}`;
       }
 
       if (currentType === 'reality') {
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=10767|10764&sort_by=popularity.desc&page=${page}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=10767|10764&first_air_date.lte=${todayStr}&sort_by=popularity.desc&page=${page}`;
       }
 
       if (currentType === 'movie') {
         const genreParam = currentGenre ? `&with_genres=${currentGenre}` : '';
-        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=popularity.desc&page=${page}${genreParam}`;
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.lte=${todayStr}&sort_by=popularity.desc&page=${page}${genreParam}`;
       }
 
       if (currentType === 'tv') {
         const genreParam = currentGenre ? `&with_genres=${currentGenre}` : '';
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=popularity.desc&page=${page}${genreParam}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&first_air_date.lte=${todayStr}&sort_by=popularity.desc&page=${page}${genreParam}`;
       }
 
       if (currentGenre) {
-        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=${currentGenre}&sort_by=popularity.desc&page=${page}`;
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=${currentGenre}&primary_release_date.lte=${todayStr}&sort_by=popularity.desc&page=${page}`;
       }
 
       return `${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=${page}`;
     }
 
     async function fetchCatalog(reset = false) {
-      if (currentType === 'favorites' || currentType === 'nextplay' || currentType === 'actors_page') return;
+      if (currentType === 'favorites' || currentType === 'nextplay' || currentType === 'calendar') return;
+      if (currentType === 'actors_page') {
+        renderTopStarsPage(false);
+        return;
+      }
+
       if (isLoading) return;
       if (reset) {
         currentPage = 1;
@@ -2910,18 +3239,18 @@
         updateHeaderTitle();
       }
 
-      if (currentPage > totalPages && !reset) return;
-
       isLoading = true;
       loadingSpinner.classList.add('active');
 
       try {
         const url = buildEndpoint(currentPage);
-        const res = await fetch(url);
-        const data = await res.json();
+        const data = await cachedFetch(url);
 
-        totalPages = data.total_pages || 1;
-        const results = data.results || [];
+        totalPages = data.total_pages || 1000;
+        const results = (data.results || []).filter(i => {
+          const date = i.release_date || i.first_air_date;
+          return !date || date <= todayStr;
+        });
         renderItems(results);
         currentPage++;
       } catch (err) {
@@ -2937,6 +3266,9 @@
         feedTitle.innerHTML = `<i class="fa-solid fa-user-tag" style="color: var(--primary);"></i> Actor Filmography`;
       } else if (searchQuery) {
         feedTitle.innerHTML = `<i class="fa-solid fa-magnifying-glass" style="color: var(--primary);"></i> Results for "${searchQuery}"`;
+      } else if (currentGenre) {
+        const genreObj = GENRES.find(g => g.id === currentGenre);
+        feedTitle.innerHTML = `<i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> ${genreObj ? genreObj.name : 'Category'} Catalog`;
       } else if (currentType === 'latest') {
         feedTitle.innerHTML = `<i class="fa-solid fa-bolt" style="color: var(--accent-cyan);"></i> Latests Releases`;
       } else if (currentType === 'cartoon') {
@@ -3067,11 +3399,6 @@
       if (currentType === 'nextplay') renderNextPlay();
     }
 
-    function toggleNextPlayFromModal() {
-      if (!activeMedia) return;
-      toggleNextPlay(activeMedia);
-    }
-
     function renderNextPlay() {
       mediaGrid.innerHTML = '';
       loadedIds.clear();
@@ -3081,7 +3408,7 @@
         mediaGrid.innerHTML = `
           <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
             <i class="fa-solid fa-list-check" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 12px;"></i>
-            <p>Your Next Play playlist is empty. Long press or click "+ Add to Next Play" to queue titles!</p>
+            <p>Your Next Play playlist is empty. Long press on any movie to queue titles!</p>
           </div>
         `;
         return;
@@ -3097,8 +3424,8 @@
 
       try {
         const [detailsRes, keywordsRes] = await Promise.all([
-          fetch(`${TMDB_BASE}/${type}/${item.id}?api_key=${apiKey}`).then(r => r.json()),
-          fetch(`${TMDB_BASE}/${type}/${item.id}/keywords?api_key=${apiKey}`).then(r => r.json())
+          cachedFetch(`${TMDB_BASE}/${type}/${item.id}?api_key=${apiKey}`),
+          cachedFetch(`${TMDB_BASE}/${type}/${item.id}/keywords?api_key=${apiKey}`)
         ]);
 
         const budget = detailsRes.budget ? `$${(detailsRes.budget / 1000000).toFixed(1)} Million` : 'Not Publicly Disclosed';
@@ -3134,8 +3461,7 @@
       openInfoModal();
 
       try {
-        const res = await fetch(`${TMDB_BASE}/${type}/${item.id}/recommendations?api_key=${apiKey}`);
-        const data = await res.json();
+        const data = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/recommendations?api_key=${apiKey}`);
         const list = (data.results || []).slice(0, 6);
 
         if (list.length === 0) {
@@ -3146,7 +3472,7 @@
         infoModalBody.innerHTML = `
           <div style="display:flex; flex-direction:column; gap:12px;">
             <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
-            <button id="btnWantMoreSimilar" style="background:var(--primary); color:#ffffff; border:none; padding:10px 16px; border-radius:12px; font-weight:800; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <button id="btnWantMoreSimilar" style="background:var(--primary); color:#ffffff; border:none; padding:10px 16px; border-radius:12px; font-weight:800; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" tabindex="0">
               <i class="fa-solid fa-sparkles"></i> Want More? Explore Full Similar Universe
             </button>
           </div>
@@ -3156,7 +3482,7 @@
         list.forEach(sim => {
           const poster = sim.poster_path ? `${IMAGE_BASE}${sim.poster_path}` : 'https://via.placeholder.com/150';
           const card = document.createElement('div');
-          card.style.cssText = 'display:flex; flex-direction:column; gap:4px; align-items:center; cursor:pointer; background:#f8fafc; padding:6px; border-radius:8px; border:1px solid var(--border);';
+          card.style.cssText = 'display:flex; flex-direction:column; gap:4px; align-items:center; cursor:pointer; background:var(--bg); padding:6px; border-radius:8px; border:1px solid var(--border);';
           card.setAttribute('tabindex', '0');
           card.innerHTML = `
             <img src="${poster}" style="width:100%; aspect-ratio:2/3; border-radius:6px; object-fit:cover;" />
@@ -3176,6 +3502,12 @@
       } catch (e) {
         infoModalBody.innerHTML = '<p style="color:var(--text-muted);">Failed to load recommendations.</p>';
       }
+    }
+
+    function expandSimilarUnlimited() {
+      if (!activeMedia) return;
+      closePlayerModal();
+      openDedicatedCategory(`You Definitely Should Also Watch (${activeMedia.title || activeMedia.name})`, `${TMDB_BASE}/${activeMedia.computedType}/${activeMedia.id}/recommendations?api_key=${apiKey}`, activeMedia.computedType);
     }
 
     function openInfoModal() {
@@ -3205,8 +3537,7 @@
 
         debounce = setTimeout(async () => {
           try {
-            const res = await fetch(`${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(val)}`);
-            const data = await res.json();
+            const data = await cachedFetch(`${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(val)}`);
             const results = (data.results || []).slice(0, 6);
 
             if (results.length === 0) {
@@ -3275,10 +3606,8 @@
         if (e && e.currentTarget) e.currentTarget.classList.remove('active');
         showToast('Removed from Saved Favorites');
       } else {
-        fetch(`${TMDB_BASE}/movie/${id}?api_key=${apiKey}`).then(r => r.json()).then(data => {
-          if (!data.id) {
-            return fetch(`${TMDB_BASE}/tv/${id}?api_key=${apiKey}`).then(r2 => r2.json());
-          }
+        cachedFetch(`${TMDB_BASE}/movie/${id}?api_key=${apiKey}`).then(data => {
+          if (!data.id) return cachedFetch(`${TMDB_BASE}/tv/${id}?api_key=${apiKey}`);
           return data;
         }).then(item => {
           favoritesList.unshift(item);
@@ -3393,7 +3722,7 @@
 
     function setupInfiniteScroll() {
       window.addEventListener('scroll', () => {
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600) {
           fetchCatalog(false);
         }
       });
@@ -3413,18 +3742,23 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Modal Player Setup (Instant Playback Optimizations)
-    async function openMediaModal(item, type, prefSeason = 1, prefEpisode = 1) {
+    async function openMediaModal(item, type, prefSeason = 1, prefEpisode = 1, fromBack = false) {
+      if (activeMedia && !fromBack) {
+        modalHistoryStack.push({ media: activeMedia, season: activeSeason, episode: activeEpisode });
+      }
+
       activeMedia = { ...item, computedType: type };
       activeSeason = prefSeason;
       activeEpisode = prefEpisode;
       seasonDataCache = {};
-      currentProviderIndex = 0; // Default to VixSrc for rapid start
+      currentProviderIndex = 0;
 
       modalWindow.scrollTop = 0;
 
       modalMediaTitle.textContent = item.title || item.name || 'Media Player';
       modalOverview.textContent = item.overview || 'No synopsis available for this title.';
+
+      modalBackNavBtn.style.display = modalHistoryStack.length > 0 ? 'flex' : 'none';
 
       const isFav = favoritesList.some(f => f.id === item.id);
       modalFavBtn.classList.toggle('active', isFav);
@@ -3448,26 +3782,30 @@
       document.body.classList.add('modal-open');
     }
 
+    function handleModalBackAction() {
+      if (modalHistoryStack.length === 0) return;
+      const prev = modalHistoryStack.pop();
+      openMediaModal(prev.media, prev.media.computedType, prev.season, prev.episode, true);
+    }
+
     function closePlayerModal() {
       modalBackdrop.classList.remove('active');
       document.body.classList.remove('modal-open');
+      modalHistoryStack = [];
       playerFrame.src = '';
     }
 
-    // Franchise Parts
     async function loadFranchiseParts(id, type) {
       partsSection.style.display = 'none';
       partsContainer.innerHTML = '';
       if (type !== 'movie') return;
 
       try {
-        const res = await fetch(`${TMDB_BASE}/movie/${id}?api_key=${apiKey}`);
-        const movieDetails = await res.json();
+        const movieDetails = await cachedFetch(`${TMDB_BASE}/movie/${id}?api_key=${apiKey}`);
 
         if (movieDetails.belongs_to_collection) {
           const colId = movieDetails.belongs_to_collection.id;
-          const colRes = await fetch(`${TMDB_BASE}/collection/${colId}?api_key=${apiKey}`);
-          const colData = await colRes.json();
+          const colData = await cachedFetch(`${TMDB_BASE}/collection/${colId}?api_key=${apiKey}`);
           const parts = (colData.parts || []).sort((a, b) => (a.release_date || '').localeCompare(b.release_date || ''));
 
           if (parts.length > 1) {
@@ -3492,9 +3830,7 @@
                 <div class="shelf-sub" style="color:var(--primary);">${year}</div>
               `;
 
-              card.addEventListener('click', () => {
-                openMediaModal(part, 'movie');
-              });
+              attachCardInteractions(card, part, 'movie');
               partsContainer.appendChild(card);
             });
           }
@@ -3504,7 +3840,6 @@
       }
     }
 
-    // Artworks
     async function loadMediaArtworks(id, type) {
       artworksContainer.innerHTML = '';
       cachedArtworks = { backdrops: [], posters: [] };
@@ -3513,8 +3848,7 @@
       document.getElementById('artPortraitBtn').classList.remove('active');
 
       try {
-        const res = await fetch(`${TMDB_BASE}/${type}/${id}/images?api_key=${apiKey}`);
-        const data = await res.json();
+        const data = await cachedFetch(`${TMDB_BASE}/${type}/${id}/images?api_key=${apiKey}`);
         cachedArtworks.backdrops = (data.backdrops || []).slice(0, 16);
         cachedArtworks.posters = (data.posters || []).slice(0, 16);
         renderArtworksGallery();
@@ -3588,12 +3922,10 @@
       document.body.removeChild(a);
     }
 
-    // Cast Loading
     async function loadCastData(id, type) {
       castContainer.innerHTML = '';
       try {
-        const res = await fetch(`${TMDB_BASE}/${type}/${id}/credits?api_key=${apiKey}`);
-        const data = await res.json();
+        const data = await cachedFetch(`${TMDB_BASE}/${type}/${id}/credits?api_key=${apiKey}`);
         const cast = (data.cast || []).slice(0, 14);
 
         cast.forEach(person => {
@@ -3622,17 +3954,14 @@
       }
     }
 
-    // Similar Titles
     async function loadSimilarTitles(id, type) {
       similarContainer.innerHTML = '';
       try {
-        const res = await fetch(`${TMDB_BASE}/${type}/${id}/recommendations?api_key=${apiKey}`);
-        let data = await res.json();
+        let data = await cachedFetch(`${TMDB_BASE}/${type}/${id}/recommendations?api_key=${apiKey}`);
         let items = data.results || [];
 
         if (items.length === 0) {
-          const simRes = await fetch(`${TMDB_BASE}/${type}/${id}/similar?api_key=${apiKey}`);
-          const simData = await simRes.json();
+          const simData = await cachedFetch(`${TMDB_BASE}/${type}/${id}/similar?api_key=${apiKey}`);
           items = simData.results || [];
         }
 
@@ -3659,9 +3988,7 @@
             <div class="shelf-sub"><span>${year}</span></div>
           `;
 
-          card.addEventListener('click', () => {
-            openMediaModal(sim, type);
-          });
+          attachCardInteractions(card, sim, type);
           similarContainer.appendChild(card);
         });
       } catch (e) {
@@ -3678,15 +4005,14 @@
       heroSpotlight.style.display = 'none';
       recentlyWatchedShelf.style.display = 'none';
       actorsShowcaseSection.style.display = 'none';
+      calendarViewContainer.style.display = 'none';
       window.scrollTo({ top: 0, behavior: 'smooth' });
       fetchCatalog(true);
     }
 
-    // TV Seasons & Episodes
     async function loadTvSeasons(tvId) {
       try {
-        const res = await fetch(`${TMDB_BASE}/tv/${tvId}?api_key=${apiKey}`);
-        const data = await res.json();
+        const data = await cachedFetch(`${TMDB_BASE}/tv/${tvId}?api_key=${apiKey}`);
         seasonDropdown.innerHTML = '';
 
         const seasons = (data.seasons || []).filter(s => s.season_number > 0);
@@ -3710,8 +4036,7 @@
 
       try {
         if (!seasonDataCache[seasonNum]) {
-          const res = await fetch(`${TMDB_BASE}/tv/${tvId}/season/${seasonNum}?api_key=${apiKey}`);
-          seasonDataCache[seasonNum] = await res.json();
+          seasonDataCache[seasonNum] = await cachedFetch(`${TMDB_BASE}/tv/${tvId}/season/${seasonNum}?api_key=${apiKey}`);
         }
         episodeCount = (seasonDataCache[seasonNum].episodes || []).length || 12;
       } catch (e) {
@@ -3742,22 +4067,22 @@
       addToHistory(activeMedia, activeSeason, activeEpisode);
     }
 
-    // Fast Server Stream Router
+    // Videasy #1, Autoplays automatically via clean embed flags
     function getProviderUrl(providerName) {
       if (!activeMedia) return '';
       const id = activeMedia.id;
       const isTv = activeMedia.computedType === 'tv';
 
       switch (providerName) {
-        case 'vixsrc':
-          return isTv 
-            ? `https://vixsrc.to/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=1`
-            : `https://vixsrc.to/movie/${id}?autoplay=1`;
-
         case 'videasy':
           return isTv
-            ? `https://player.videasy.net/tv/${id}/${activeSeason}/${activeEpisode}`
-            : `https://player.videasy.net/movie/${id}`;
+            ? `https://player.videasy.net/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=1`
+            : `https://player.videasy.net/movie/${id}?autoplay=1`;
+
+        case 'superembed':
+          return isTv
+            ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${activeSeason}&e=${activeEpisode}&autoplay=1`
+            : `https://multiembed.mov/?video_id=${id}&tmdb=1&autoplay=1`;
 
         case 'vidfast':
           return isTv
@@ -3769,18 +4094,18 @@
             ? `https://vidlink.pro/tv/${id}/${activeSeason}/${activeEpisode}?primaryColor=4f46e5&autoplay=true`
             : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true`;
 
-        case 'superembed':
-          return isTv
-            ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${activeSeason}&e=${activeEpisode}&autoplay=1`
-            : `https://multiembed.mov/?video_id=${id}&tmdb=1&autoplay=1`;
-
         case 'vidapi':
           return isTv
             ? `https://vidapi.ru/embed/tv/${id}/${activeSeason}/${activeEpisode}`
             : `https://vidapi.ru/embed/movie/${id}`;
 
+        case 'vixsrc':
+          return isTv 
+            ? `https://vixsrc.to/tv/${id}/${activeSeason}/${activeEpisode}`
+            : `https://vixsrc.to/movie/${id}`;
+
         default:
-          return `https://vixsrc.to/movie/${id}?autoplay=1`;
+          return `https://player.videasy.net/movie/${id}?autoplay=1`;
       }
     }
 
@@ -3798,7 +4123,7 @@
       if (activeBtn) activeBtn.classList.add('active');
 
       if (mobServerLabel) {
-        mobServerLabel.textContent = `Server: ${PROVIDER_NAMES[activeName] || activeName}`;
+        mobServerLabel.textContent = `Playing from: ${PROVIDER_NAMES[activeName] || activeName}`;
       }
       document.querySelectorAll('.sheet-nav-item').forEach(el => el.classList.remove('active'));
       const sheetItem = document.getElementById(`sheet-${activeName}`);
@@ -3840,12 +4165,13 @@
       }
     }
 
-    // Spatial D-Pad & Keyboard Controls
+    // Precise Spatial D-Pad Vector Navigation with Escape from Input Support
     function setupSpatialDPad() {
       window.addEventListener('keydown', (e) => {
         const isModalOpen = modalBackdrop.classList.contains('active');
         const activeEl = document.activeElement;
 
+        // Escape or Backspace Navigation
         if (e.key === 'Escape' || (e.key === 'Backspace' && activeEl && activeEl.tagName !== 'INPUT')) {
           if (lightboxBackdrop.classList.contains('active')) {
             closeLightbox(null);
@@ -3868,18 +4194,29 @@
             return;
           }
           if (isModalOpen) {
-            closePlayerModal();
+            if (modalHistoryStack.length > 0) {
+              handleModalBackAction();
+            } else {
+              closePlayerModal();
+            }
             e.preventDefault();
             return;
           }
         }
 
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-          if (activeEl && activeEl.tagName === 'INPUT') return;
+          // If in input and user presses Down, blur and navigate downward
+          if (activeEl && activeEl.tagName === 'INPUT') {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              activeEl.blur();
+            } else {
+              return;
+            }
+          }
 
           const scope = isModalOpen ? modalWindow : document.body;
-          const focusables = Array.from(scope.querySelectorAll('[tabindex="0"], button, select, input'))
-            .filter(el => el.offsetParent !== null && !el.disabled);
+          const focusables = Array.from(scope.querySelectorAll('[tabindex="0"], button:not([disabled]), select:not([disabled]), input:not([disabled]), a[href]'))
+            .filter(el => el.offsetParent !== null && window.getComputedStyle(el).display !== 'none');
 
           if (focusables.length === 0) return;
 
@@ -3892,26 +4229,47 @@
           }
 
           const currentRect = activeEl.getBoundingClientRect();
+          const cX = currentRect.left + currentRect.width / 2;
+          const cY = currentRect.top + currentRect.height / 2;
+
           let bestTarget = null;
-          let minDistance = Infinity;
+          let minScore = Infinity;
 
           focusables.forEach(target => {
             if (target === activeEl) return;
             const targetRect = target.getBoundingClientRect();
+            const tX = targetRect.left + targetRect.width / 2;
+            const tY = targetRect.top + targetRect.height / 2;
 
-            let isValidDirection = false;
-            if (e.key === 'ArrowRight') isValidDirection = targetRect.left >= currentRect.left + 5;
-            if (e.key === 'ArrowLeft') isValidDirection = targetRect.right <= currentRect.right - 5;
-            if (e.key === 'ArrowDown') isValidDirection = targetRect.top >= currentRect.top + 5;
-            if (e.key === 'ArrowUp') isValidDirection = targetRect.bottom <= currentRect.bottom - 5;
+            const dx = tX - cX;
+            const dy = tY - cY;
 
-            if (isValidDirection) {
-              const dx = (targetRect.left + targetRect.width / 2) - (currentRect.left + currentRect.width / 2);
-              const dy = (targetRect.top + targetRect.height / 2) - (currentRect.top + currentRect.height / 2);
-              const distance = Math.hypot(dx, dy);
+            let inDirection = false;
+            let primaryDist = 0;
+            let crossDist = 0;
 
-              if (distance < minDistance) {
-                minDistance = distance;
+            if (e.key === 'ArrowUp') {
+              inDirection = targetRect.bottom <= currentRect.top + 6;
+              primaryDist = currentRect.top - targetRect.bottom;
+              crossDist = Math.abs(tX - cX);
+            } else if (e.key === 'ArrowDown') {
+              inDirection = targetRect.top >= currentRect.bottom - 6;
+              primaryDist = targetRect.top - currentRect.bottom;
+              crossDist = Math.abs(tX - cX);
+            } else if (e.key === 'ArrowLeft') {
+              inDirection = targetRect.right <= currentRect.left + 6;
+              primaryDist = currentRect.left - targetRect.right;
+              crossDist = Math.abs(tY - cY);
+            } else if (e.key === 'ArrowRight') {
+              inDirection = targetRect.left >= currentRect.right - 6;
+              primaryDist = targetRect.left - currentRect.right;
+              crossDist = Math.abs(tY - cY);
+            }
+
+            if (inDirection) {
+              const score = (primaryDist * 1.6) + (crossDist * 0.7);
+              if (score < minScore) {
+                minScore = score;
                 bestTarget = target;
               }
             }
@@ -3928,8 +4286,7 @@
 
     async function triggerRandomizer() {
       const randomPage = Math.floor(Math.random() * 5) + 1;
-      const res = await fetch(`${TMDB_BASE}/movie/top_rated?api_key=${apiKey}&page=${randomPage}`);
-      const data = await res.json();
+      const data = await cachedFetch(`${TMDB_BASE}/movie/top_rated?api_key=${apiKey}&page=${randomPage}`);
       const items = (data.results || []).filter(i => i.poster_path);
 
       if (items.length > 0) {
