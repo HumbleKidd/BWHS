@@ -102,7 +102,6 @@
       padding: 0;
       font-family: 'Plus Jakarta Sans', sans-serif;
       -webkit-tap-highlight-color: transparent;
-      transition: background-color 0.25s ease, color 0.15s ease;
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
@@ -2320,7 +2319,7 @@
     .row-slider-track {
       display: none;
       width: 100%;
-      height: 6px;
+      height: 7px;
       background: var(--surface-subtle);
       border-radius: 9999px;
       position: relative;
@@ -2345,17 +2344,18 @@
       background: var(--primary);
       border-radius: 9999px;
       cursor: grab;
-      transition: background-color 0.2s ease, transform 0.15s ease;
+      touch-action: none;
+      will-change: left, transform;
     }
 
     .row-slider-thumb:hover {
-      transform: scaleY(1.4);
       background: var(--primary-hover);
     }
 
-    .row-slider-thumb:active {
-      cursor: grabbing;
-      transform: scaleY(1.5);
+    .row-slider-thumb:active,
+    .row-slider-thumb.dragging {
+      cursor: grabbing !important;
+      background: var(--primary-hover);
     }
 
     .art-card {
@@ -2856,7 +2856,7 @@
           <span>Notice: Media streams are provided via third-party web scrapers. This site does not host or store files on its servers.</span>
         </div>
 
-        <!-- Top Placed Interactive Filter Suite (Standard Categories) -->
+        <!-- Top Placed Interactive Filter Suite -->
         <div class="top-filter-suite" id="topFilterSuite">
           <div class="filter-row">
             <span class="filter-label"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Genres:</span>
@@ -3155,7 +3155,6 @@
           allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; screen-wake-lock *"
           loading="eager"
         ></iframe>
-        <!-- Invisible top-edge gesture surface for double-tap/click fullscreen and simulated autoplay click -->
         <div class="video-touch-overlay" id="videoTouchOverlay" title="Double-tap or double-click to toggle fullscreen"></div>
         <button class="fullscreen-overlay-btn" id="overlayFsBtn" onclick="togglePlayerFullscreen(event)" title="Toggle Fullscreen" tabindex="0">
           <i class="fa-solid fa-expand"></i>
@@ -3163,7 +3162,7 @@
       </div>
 
       <div class="player-dock">
-        <!-- Player Controls Sub Bar (Auto-Play Toggle) -->
+        <!-- Player Controls Sub Bar -->
         <div class="player-controls-sub-bar">
           <div class="autoplay-toggle-wrapper" onclick="toggleAutoPlayPreference(event)">
             <input type="checkbox" id="autoPlayToggleInput" class="toggle-switch-input" />
@@ -3376,6 +3375,39 @@
       return data;
     }
 
+    // STRICT MEDIA PURIFIER: Blocks Talk Shows, Reality TV, News, WWE/RAW, Soap Operas, Award Shows
+    const DISALLOWED_GENRE_IDS = [10763, 10764, 10767, 10766]; // News, Reality, Talk, Soap
+    const DISALLOWED_KEYWORDS = [
+      'tonight show', 'late night', 'talk show', 'wwe raw', 'wwe smackdown', 
+      'wrestlemania', 'wwe', 'aew', 'the daily show', 'jimmy kimmel', 'jimmy fallon',
+      'late show', 'good morning', 'today show', 'saturday night live', 'snl', 
+      'academy awards', 'the oscars', 'golden globes', 'grammy awards', 'emmy awards', 
+      'big brother', 'survivor', 'the bachelor', 'bachelorette', 'love island',
+      'keeping up with', 'kardashian', 'real housewives', 'american idol', 'the voice',
+      'got talent', 'wrestling', 'newsnight', '60 minutes', 'entertainment tonight',
+      'access hollywood', 'e! news', 'red carpet', 'pre-show', 'post-show', 'interviews'
+    ];
+
+    function isCleanCinemaContent(item) {
+      if (!item) return false;
+      const title = (item.title || item.name || '').toLowerCase();
+      const overview = (item.overview || '').toLowerCase();
+      const genreIds = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
+
+      // Filter by genre
+      for (const gid of genreIds) {
+        if (DISALLOWED_GENRE_IDS.includes(gid)) return false;
+      }
+
+      // Filter by blacklist phrases in title and synopsis
+      for (const badKw of DISALLOWED_KEYWORDS) {
+        if (title.includes(badKw)) return false;
+        if (overview.includes(badKw) && !item.media_type && !item.title) return false;
+      }
+
+      return true;
+    }
+
     let currentType = 'all'; 
     let currentGenre = null;
     let currentYearFilter = null;
@@ -3386,10 +3418,7 @@
     let totalPages = 1000;
     let isLoading = false;
     
-    // Global tracking to prevent duplicate elements on screen
     let globalSeenKeys = new Set();
-
-    // Multi-Select Search Categories
     let activeSearchFilters = new Set(['all']);
     let cachedRawSearchResults = [];
     
@@ -3498,15 +3527,15 @@
       ],
       tv: [
         { title: 'Viral TV Phenomena Everyone Talks About', icon: 'fa-tv', color: '#4f46e5', endpoint: `${TMDB_BASE}/trending/tv/week?api_key=${apiKey}`, type: 'tv' },
-        { title: 'Dark Secrets & Edge-of-Your-Seat Thrillers', icon: 'fa-user-secret', color: '#334155', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=9648&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'High-Fantasy Realms & Sci-Fi Epics', icon: 'fa-dungeon', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=10765&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Late-Night Sitcoms & Adult Cartoons', icon: 'fa-beer-mug-empty', color: '#f59e0b', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,35&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Top-Rated All-Time Miniseries Legends', icon: 'fa-ranking-star', color: '#10b981', endpoint: `${TMDB_BASE}/tv/top_rated?api_key=${apiKey}`, type: 'tv' }
+        { title: 'Dark Secrets & Edge-of-Your-Seat Thrillers', icon: 'fa-user-secret', color: '#334155', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&without_genres=10763,10764,10767,10766&with_genres=9648&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'High-Fantasy Realms & Sci-Fi Epics', icon: 'fa-dungeon', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&without_genres=10763,10764,10767,10766&with_genres=10765&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Late-Night Sitcoms & Adult Cartoons', icon: 'fa-beer-mug-empty', color: '#f59e0b', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&without_genres=10763,10764,10767,10766&with_genres=16,35&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Top-Rated All-Time Miniseries Legends', icon: 'fa-ranking-star', color: '#10b981', endpoint: `${TMDB_BASE}/tv/top_rated?api_key=${apiKey}&without_genres=10763,10764,10767,10766`, type: 'tv' }
       ],
       cartoon: [
-        { title: 'Saturday Morning Classics We Miss', icon: 'fa-tv', color: '#ec4899', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=en&first_air_date.lte=2015-01-01&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Cartoon Network & Nickelodeon Hits', icon: 'fa-shapes', color: '#3b82f6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Action-Packed Animated Heroes', icon: 'fa-mask', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,10759&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Saturday Morning Classics We Miss', icon: 'fa-tv', color: '#ec4899', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&without_genres=10763,10764,10767,10766&with_genres=16&with_original_language=en&first_air_date.lte=2015-01-01&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Cartoon Network & Nickelodeon Hits', icon: 'fa-shapes', color: '#3b82f6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&without_genres=10763,10764,10767,10766&with_genres=16&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Action-Packed Animated Heroes', icon: 'fa-mask', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&without_genres=10763,10764,10767,10766&with_genres=16,10759&with_original_language=en&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
         { title: 'Disney & Pixar Big Screen Treasures', icon: 'fa-wand-magic-sparkles', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&with_original_language=en&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' }
       ],
       animation: [
@@ -3515,14 +3544,13 @@
         { title: 'Futuristic Cyberpunk Animated Worlds', icon: 'fa-microchip', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16,878&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' }
       ],
       anime: [
-        { title: 'Epic Shonen Sagas & God-Level Battles', icon: 'fa-fire-flame-curved', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,10759&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Isekai Worlds & Reincarnation Quests', icon: 'fa-dungeon', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,10765&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Dark Psychological Thrillers & Mind Games', icon: 'fa-brain', color: '#3b82f6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16,9648&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Epic Shonen Sagas & God-Level Battles', icon: 'fa-fire-flame-curved', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&without_genres=10763,10764,10767,10766&with_genres=16,10759&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Isekai Worlds & Reincarnation Quests', icon: 'fa-dungeon', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&without_genres=10763,10764,10767,10766&with_genres=16,10765&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
+        { title: 'Dark Psychological Thrillers & Mind Games', icon: 'fa-brain', color: '#3b82f6', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&without_genres=10763,10764,10767,10766&with_genres=16,9648&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
         { title: 'Blockbuster Anime Movies & Legends', icon: 'fa-film', color: '#f59e0b', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=16&with_original_language=ja&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' }
       ]
     };
 
-    // DOM Elements
     const mediaGrid = document.getElementById('mediaGrid');
     const loadingSpinner = document.getElementById('loadingSpinner');
     const searchInput = document.getElementById('searchInput');
@@ -3595,7 +3623,6 @@
     const themeLabel = document.getElementById('themeLabel');
     const customColorWheel = document.getElementById('customColorWheel');
 
-    // Init App
     document.addEventListener('DOMContentLoaded', () => {
       if (autoPlayToggleInput) autoPlayToggleInput.checked = isAutoPlayEnabled;
       applyAccentColor(savedAccentColor);
@@ -3672,6 +3699,7 @@
       setupRowSliderListener('similarContainer', 'sliderSimilarThumb', 'sliderSimilar');
     }
 
+    // High-Performance Real-Time Drag with Pointer Events API (No Delay)
     function setupRowSliderListener(rowId, thumbId, trackId) {
       const row = document.getElementById(rowId);
       const thumb = document.getElementById(thumbId);
@@ -3683,6 +3711,7 @@
       let startScrollLeft = 0;
 
       const updateThumbPosition = () => {
+        if (isDragging) return;
         const maxScroll = row.scrollWidth - row.clientWidth;
         if (maxScroll <= 0) {
           thumb.style.width = '100%';
@@ -3699,19 +3728,18 @@
 
       row.addEventListener('scroll', updateThumbPosition, { passive: true });
 
-      const handleDragStart = (e) => {
+      thumb.addEventListener('pointerdown', (e) => {
         isDragging = true;
-        startX = e.clientX || (e.touches && e.touches[0].clientX);
+        startX = e.clientX;
         startScrollLeft = row.scrollLeft;
-        document.body.style.userSelect = 'none';
+        thumb.classList.add('dragging');
+        thumb.setPointerCapture(e.pointerId);
         e.preventDefault();
-        e.stopPropagation();
-      };
+      });
 
-      const handleDragMove = (e) => {
+      thumb.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
-        const currentX = e.clientX || (e.touches && e.touches[0].clientX);
-        const deltaX = currentX - startX;
+        const deltaX = e.clientX - startX;
         const trackWidth = track.clientWidth;
         const thumbWidth = thumb.clientWidth;
         const scrollableTrack = trackWidth - thumbWidth;
@@ -3719,37 +3747,38 @@
 
         if (scrollableTrack > 0 && maxScroll > 0) {
           const scrollDelta = (deltaX / scrollableTrack) * maxScroll;
-          row.scrollLeft = Math.max(0, Math.min(maxScroll, startScrollLeft + scrollDelta));
+          const targetLeft = Math.max(0, Math.min(maxScroll, startScrollLeft + scrollDelta));
+          row.scrollLeft = targetLeft;
+          
+          const pct = targetLeft / maxScroll;
+          thumb.style.left = `${pct * scrollableTrack}px`;
         }
-      };
+      });
 
-      const handleDragEnd = () => {
+      const stopDrag = (e) => {
         if (isDragging) {
           isDragging = false;
-          document.body.style.userSelect = '';
+          thumb.classList.remove('dragging');
+          try { thumb.releasePointerCapture(e.pointerId); } catch(err) {}
+          updateThumbPosition();
         }
       };
 
-      thumb.addEventListener('mousedown', handleDragStart);
-      thumb.addEventListener('touchstart', handleDragStart, { passive: false });
+      thumb.addEventListener('pointerup', stopDrag);
+      thumb.addEventListener('pointercancel', stopDrag);
 
-      window.addEventListener('mousemove', handleDragMove);
-      window.addEventListener('touchmove', handleDragMove, { passive: false });
-
-      window.addEventListener('mouseup', handleDragEnd);
-      window.addEventListener('touchend', handleDragEnd);
-
-      track.addEventListener('click', (e) => {
+      track.addEventListener('pointerdown', (e) => {
         if (e.target === thumb) return;
         const rect = track.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
         const trackWidth = rect.width;
         const pct = Math.max(0, Math.min(1, clickX / trackWidth));
         const maxScroll = row.scrollWidth - row.clientWidth;
-        row.scrollTo({ left: pct * maxScroll, behavior: 'smooth' });
+        row.scrollLeft = pct * maxScroll;
+        updateThumbPosition();
       });
 
-      setTimeout(updateThumbPosition, 50);
+      requestAnimationFrame(updateThumbPosition);
     }
 
     async function downloadImageDirectly(imageUrl, filename = 'HumbleCinema-Artwork.jpg') {
@@ -3806,6 +3835,7 @@
       globalSeenKeys.clear();
 
       let filtered = cachedRawSearchResults.filter(item => {
+        if (!isCleanCinemaContent(item)) return false;
         if (activeSearchFilters.has('all')) return true;
 
         const isPerson = item.media_type === 'person';
@@ -4134,7 +4164,7 @@
         ]);
 
         const combined = [...(resMovies.results || []), ...(resTV.results || [])]
-          .filter(i => i.backdrop_path && i.poster_path && i.overview)
+          .filter(i => i.backdrop_path && i.poster_path && i.overview && isCleanCinemaContent(i))
           .sort(() => Math.random() - 0.5);
 
         heroItems = [];
@@ -4331,7 +4361,7 @@
 
         const uniqueMap = new Map();
         rawList.forEach(item => {
-          if (item.poster_path && item.release_date && !uniqueMap.has(item.id)) {
+          if (item.poster_path && item.release_date && !uniqueMap.has(item.id) && isCleanCinemaContent(item)) {
             uniqueMap.set(item.id, item);
           }
         });
@@ -4532,7 +4562,7 @@
           cachedFetch(endpoint + (endpoint.includes('?') ? '&page=2' : '?page=2'))
         ]);
 
-        const combined = [...(page1.results || []), ...(page2.results || [])];
+        const combined = [...(page1.results || []), ...(page2.results || [])].filter(isCleanCinemaContent);
         renderItems(combined);
       } catch (e) {
         console.error(e);
@@ -4572,7 +4602,7 @@
         cachedFetch(shelf.endpoint)
           .then(data => {
             const items = (data.results || []).filter(i => {
-              if (!i.poster_path) return false;
+              if (!i.poster_path || !isCleanCinemaContent(i)) return false;
               const date = i.release_date || i.first_air_date;
               return !date || date <= todayStr;
             });
@@ -4639,6 +4669,7 @@
       }
 
       const genreQuery = currentGenre ? `&with_genres=${currentGenre}` : '';
+      const excludeBadTvGenres = `&without_genres=10763,10764,10767,10766`;
 
       if (currentType === 'latest') {
         const lte = yearQuery ? '' : `&primary_release_date.lte=${todayStr}`;
@@ -4647,7 +4678,7 @@
 
       if (currentType === 'cartoon') {
         const combinedGenres = currentGenre ? `16,${currentGenre}` : '16';
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=${combinedGenres}&with_original_language=en&sort_by=popularity.desc&page=${page}${yearQuery}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=${combinedGenres}&with_original_language=en&sort_by=popularity.desc&page=${page}${yearQuery}${excludeBadTvGenres}`;
       }
 
       if (currentType === 'animation') {
@@ -4657,7 +4688,7 @@
 
       if (currentType === 'anime') {
         const combinedGenres = currentGenre ? `16,${currentGenre}` : '16';
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=${combinedGenres}&with_original_language=ja&sort_by=popularity.desc&page=${page}${yearQuery}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=${combinedGenres}&with_original_language=ja&sort_by=popularity.desc&page=${page}${yearQuery}${excludeBadTvGenres}`;
       }
 
       if (currentType === 'movie') {
@@ -4665,7 +4696,7 @@
       }
 
       if (currentType === 'tv') {
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=popularity.desc&page=${page}${genreQuery}${yearQuery}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=popularity.desc&page=${page}${genreQuery}${yearQuery}${excludeBadTvGenres}`;
       }
 
       if (currentGenre || currentYearFilter) {
@@ -4698,7 +4729,7 @@
           const creditsData = await cachedFetch(`${TMDB_BASE}/person/${currentPersonId}/combined_credits?api_key=${apiKey}`);
           const rawItems = creditsData.cast || [];
           const sorted = rawItems
-            .filter(i => (i.poster_path || i.backdrop_path) && (i.character || i.title || i.name))
+            .filter(i => (i.poster_path || i.backdrop_path) && (i.character || i.title || i.name) && isCleanCinemaContent(i))
             .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
           
           totalPages = 1;
@@ -4708,7 +4739,7 @@
           const data = await cachedFetch(url);
 
           totalPages = data.total_pages || 1000;
-          const results = data.results || [];
+          const results = (data.results || []).filter(isCleanCinemaContent);
 
           if (currentPage === 1) {
             cachedRawSearchResults = results;
@@ -4725,7 +4756,7 @@
           totalPages = data.total_pages || 1000;
           let results = (data.results || []).filter(i => {
             if (!i.poster_path && !i.backdrop_path) return false;
-            return true;
+            return isCleanCinemaContent(i);
           });
 
           renderItems(results);
@@ -4782,6 +4813,7 @@
         }
 
         if (!item.poster_path && !item.backdrop_path) return false;
+        if (!isCleanCinemaContent(item)) return false;
         
         const type = item.media_type || (item.title ? 'movie' : 'tv');
         const uniqueKey = `${type}_${item.id}`;
@@ -4992,7 +5024,7 @@
 
       try {
         const data = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/recommendations?api_key=${apiKey}`);
-        const list = (data.results || []).slice(0, 6);
+        const list = (data.results || []).filter(isCleanCinemaContent).slice(0, 6);
 
         if (list.length === 0) {
           infoModalBody.innerHTML = '<p style="color:var(--text-muted);">No similar recommendations available.</p>';
@@ -5098,7 +5130,7 @@
         debounce = setTimeout(async () => {
           try {
             const data = await cachedFetch(`${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(val)}`);
-            let results = (data.results || []).slice(0, 10);
+            let results = (data.results || []).filter(isCleanCinemaContent).slice(0, 10);
 
             if (results.length === 0) {
               searchSuggestions.classList.remove('active');
@@ -5433,7 +5465,9 @@
         if (movieDetails.belongs_to_collection) {
           const colId = movieDetails.belongs_to_collection.id;
           const colData = await cachedFetch(`${TMDB_BASE}/collection/${colId}?api_key=${apiKey}`);
-          const parts = (colData.parts || []).sort((a, b) => (a.release_date || '').localeCompare(b.release_date || ''));
+          const parts = (colData.parts || [])
+            .filter(isCleanCinemaContent)
+            .sort((a, b) => (a.release_date || '').localeCompare(b.release_date || ''));
 
           if (parts.length > 1) {
             partsTitle.textContent = `${colData.name} (All Parts)`;
@@ -5591,14 +5625,19 @@
     async function loadActorDedicatedShelf(actor, index) {
       try {
         const creditsData = await cachedFetch(`${TMDB_BASE}/person/${actor.id}/combined_credits?api_key=${apiKey}`);
+        
+        const seenInShelf = new Set();
         const rawItems = (creditsData.cast || [])
           .filter(i => {
             if (!i.poster_path || (activeMedia && i.id === activeMedia.id)) return false;
             if (!i.title && !i.name) return false;
+            if (!isCleanCinemaContent(i)) return false;
+            if (seenInShelf.has(i.id)) return false;
+            seenInShelf.add(i.id);
             return true;
           })
           .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
-          .slice(0, 10);
+          .slice(0, 12);
 
         if (rawItems.length === 0) return;
 
@@ -5611,7 +5650,7 @@
           <div class="block-heading-wrap">
             <div class="block-heading interactive-heading" onclick="closePlayerModal(); filterByActor(${actor.id}, '${actor.name.replace(/'/g, "\\'")}');" tabindex="0" title="Click to view full filmography">
               <i class="fa-solid fa-star" style="color: var(--accent);"></i>
-              <span>Watch more movies with ${actor.name}</span>
+              <span>Watch more with ${actor.name}</span>
               <span class="view-all-hint" style="font-size:0.72rem; color:var(--primary); margin-left:6px;"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
             </div>
           </div>
@@ -5657,11 +5696,11 @@
       similarContainer.innerHTML = '';
       try {
         let data = await cachedFetch(`${TMDB_BASE}/${type}/${id}/recommendations?api_key=${apiKey}`);
-        let items = data.results || [];
+        let items = (data.results || []).filter(isCleanCinemaContent);
 
         if (items.length === 0) {
           const simData = await cachedFetch(`${TMDB_BASE}/${type}/${id}/similar?api_key=${apiKey}`);
-          items = simData.results || [];
+          items = (simData.results || []).filter(isCleanCinemaContent);
         }
 
         if (items.length === 0) {
@@ -5992,7 +6031,7 @@
     async function triggerRandomizer() {
       const randomPage = Math.floor(Math.random() * 5) + 1;
       const data = await cachedFetch(`${TMDB_BASE}/movie/top_rated?api_key=${apiKey}&page=${randomPage}`);
-      const items = (data.results || []).filter(i => i.poster_path);
+      const items = (data.results || []).filter(i => i.poster_path && isCleanCinemaContent(i));
 
       if (items.length > 0) {
         const randomItem = items[Math.floor(Math.random() * items.length)];
