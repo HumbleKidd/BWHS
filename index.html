@@ -2036,6 +2036,62 @@
       gap: 10px;
     }
 
+    .player-controls-sub-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--surface-subtle);
+      padding: 8px 12px;
+      border-radius: 10px;
+    }
+
+    .autoplay-toggle-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-switch-input {
+      display: none;
+    }
+
+    .toggle-switch-track {
+      width: 36px;
+      height: 20px;
+      background: #cbd5e1;
+      border-radius: 9999px;
+      position: relative;
+      transition: background-color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .toggle-switch-track::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #ffffff;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .toggle-switch-input:checked + .toggle-switch-track {
+      background: var(--primary);
+    }
+
+    .toggle-switch-input:checked + .toggle-switch-track::after {
+      transform: translateX(16px);
+    }
+
     .server-bar {
       display: none;
       align-items: center;
@@ -2261,7 +2317,6 @@
       scroll-behavior: smooth;
     }
 
-    /* Draggable Desktop-Only Slider Track */
     .row-slider-track {
       display: none;
       width: 100%;
@@ -3097,9 +3152,10 @@
           allowfullscreen="true" 
           webkitallowfullscreen="true" 
           mozallowfullscreen="true" 
-          allow="autoplay; fullscreen; encrypted-media; picture-in-picture; screen-wake-lock"
+          allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; screen-wake-lock *"
           loading="eager"
         ></iframe>
+        <!-- Invisible top-edge gesture surface for double-tap/click fullscreen and simulated autoplay click -->
         <div class="video-touch-overlay" id="videoTouchOverlay" title="Double-tap or double-click to toggle fullscreen"></div>
         <button class="fullscreen-overlay-btn" id="overlayFsBtn" onclick="togglePlayerFullscreen(event)" title="Toggle Fullscreen" tabindex="0">
           <i class="fa-solid fa-expand"></i>
@@ -3107,6 +3163,16 @@
       </div>
 
       <div class="player-dock">
+        <!-- Player Controls Sub Bar (Auto-Play Toggle) -->
+        <div class="player-controls-sub-bar">
+          <div class="autoplay-toggle-wrapper" onclick="toggleAutoPlayPreference(event)">
+            <input type="checkbox" id="autoPlayToggleInput" class="toggle-switch-input" />
+            <div class="toggle-switch-track"></div>
+            <span>Instant Auto-Play Stream</span>
+          </div>
+          <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Zero-Click Playback</span>
+        </div>
+
         <!-- Desktop Server Bar -->
         <div class="server-bar">
           <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
@@ -3339,6 +3405,8 @@
     let watchTimestamps = JSON.parse(localStorage.getItem('humble_timestamps')) || {};
     let mustWatchCalendar = JSON.parse(localStorage.getItem('humble_must_watch')) || [];
     
+    let isAutoPlayEnabled = localStorage.getItem('humble_autoplay') !== null ? JSON.parse(localStorage.getItem('humble_autoplay')) : true;
+
     let savedThemeMode = localStorage.getItem('humble_theme_mode') || 'night';
     let savedAccentColor = localStorage.getItem('humble_custom_accent') || '#4f46e5';
     let previewTheme = savedThemeMode;
@@ -3471,6 +3539,7 @@
     const playerFrame = document.getElementById('playerFrame');
     const videoViewport = document.getElementById('videoViewport');
     const videoTouchOverlay = document.getElementById('videoTouchOverlay');
+    const autoPlayToggleInput = document.getElementById('autoPlayToggleInput');
     const modalNavHeader = document.getElementById('modalNavHeader');
     const modalMediaTitle = document.getElementById('modalMediaTitle');
     const modalOverview = document.getElementById('modalOverview');
@@ -3528,6 +3597,7 @@
 
     // Init App
     document.addEventListener('DOMContentLoaded', () => {
+      if (autoPlayToggleInput) autoPlayToggleInput.checked = isAutoPlayEnabled;
       applyAccentColor(savedAccentColor);
       applyThemeMode(savedThemeMode);
       applyCwPanelState();
@@ -3546,6 +3616,14 @@
       setupFullscreenEvents();
       bindRowSliders();
     });
+
+    function toggleAutoPlayPreference(e) {
+      if (e) e.stopPropagation();
+      isAutoPlayEnabled = !isAutoPlayEnabled;
+      if (autoPlayToggleInput) autoPlayToggleInput.checked = isAutoPlayEnabled;
+      localStorage.setItem('humble_autoplay', JSON.stringify(isAutoPlayEnabled));
+      showToast(`Auto-Play ${isAutoPlayEnabled ? 'Enabled' : 'Disabled'}`);
+    }
 
     function previewThemeMode(mode) {
       previewTheme = mode;
@@ -3604,7 +3682,7 @@
       let startX = 0;
       let startScrollLeft = 0;
 
-      const updateThumb = () => {
+      const updateThumbPosition = () => {
         const maxScroll = row.scrollWidth - row.clientWidth;
         if (maxScroll <= 0) {
           thumb.style.width = '100%';
@@ -3612,14 +3690,16 @@
           return;
         }
         const pct = row.scrollLeft / maxScroll;
-        const thumbWidthPct = Math.max(15, (row.clientWidth / row.scrollWidth) * 100);
-        thumb.style.width = `${thumbWidthPct}%`;
-        thumb.style.left = `${pct * (100 - thumbWidthPct)}%`;
+        const trackWidth = track.clientWidth;
+        const thumbWidth = Math.max(36, (row.clientWidth / row.scrollWidth) * trackWidth);
+        thumb.style.width = `${(thumbWidth / trackWidth) * 100}%`;
+        const maxLeft = trackWidth - thumbWidth;
+        thumb.style.left = `${(pct * maxLeft)}px`;
       };
 
-      row.addEventListener('scroll', updateThumb, { passive: true });
+      row.addEventListener('scroll', updateThumbPosition, { passive: true });
 
-      const onDragStart = (e) => {
+      const handleDragStart = (e) => {
         isDragging = true;
         startX = e.clientX || (e.touches && e.touches[0].clientX);
         startScrollLeft = row.scrollLeft;
@@ -3628,7 +3708,7 @@
         e.stopPropagation();
       };
 
-      const onDragMove = (e) => {
+      const handleDragMove = (e) => {
         if (!isDragging) return;
         const currentX = e.clientX || (e.touches && e.touches[0].clientX);
         const deltaX = currentX - startX;
@@ -3637,27 +3717,27 @@
         const scrollableTrack = trackWidth - thumbWidth;
         const maxScroll = row.scrollWidth - row.clientWidth;
 
-        if (scrollableTrack > 0) {
+        if (scrollableTrack > 0 && maxScroll > 0) {
           const scrollDelta = (deltaX / scrollableTrack) * maxScroll;
-          row.scrollLeft = startScrollLeft + scrollDelta;
+          row.scrollLeft = Math.max(0, Math.min(maxScroll, startScrollLeft + scrollDelta));
         }
       };
 
-      const onDragEnd = () => {
+      const handleDragEnd = () => {
         if (isDragging) {
           isDragging = false;
           document.body.style.userSelect = '';
         }
       };
 
-      thumb.addEventListener('mousedown', onDragStart);
-      thumb.addEventListener('touchstart', onDragStart, { passive: false });
+      thumb.addEventListener('mousedown', handleDragStart);
+      thumb.addEventListener('touchstart', handleDragStart, { passive: false });
 
-      window.addEventListener('mousemove', onDragMove);
-      window.addEventListener('touchmove', onDragMove, { passive: false });
+      window.addEventListener('mousemove', handleDragMove);
+      window.addEventListener('touchmove', handleDragMove, { passive: false });
 
-      window.addEventListener('mouseup', onDragEnd);
-      window.addEventListener('touchend', onDragEnd);
+      window.addEventListener('mouseup', handleDragEnd);
+      window.addEventListener('touchend', handleDragEnd);
 
       track.addEventListener('click', (e) => {
         if (e.target === thumb) return;
@@ -3668,6 +3748,8 @@
         const maxScroll = row.scrollWidth - row.clientWidth;
         row.scrollTo({ left: pct * maxScroll, behavior: 'smooth' });
       });
+
+      setTimeout(updateThumbPosition, 50);
     }
 
     async function downloadImageDirectly(imageUrl, filename = 'HumbleCinema-Artwork.jpg') {
@@ -4385,7 +4467,7 @@
             <div class="poster-wrap">
               <img src="${avatar}" alt="${person.name}" loading="lazy" />
               <span class="badge-pill tag">Star</span>
-              <span class="badge-pill rating"><i class="fa-solid fa-fire"></i> ${Math.round(person.popularity)}</span>
+              <span class="badge-pill rating"><i class="fa-solid fa-fire"></i> ${Math.round(person.popularity || 10)}</span>
             </div>
             <div class="card-body">
               <div class="card-title">${person.name}</div>
@@ -4616,7 +4698,7 @@
           const creditsData = await cachedFetch(`${TMDB_BASE}/person/${currentPersonId}/combined_credits?api_key=${apiKey}`);
           const rawItems = creditsData.cast || [];
           const sorted = rawItems
-            .filter(i => i.poster_path || i.backdrop_path)
+            .filter(i => (i.poster_path || i.backdrop_path) && (i.character || i.title || i.name))
             .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
           
           totalPages = 1;
@@ -5290,6 +5372,34 @@
 
       modalBackdrop.classList.add('active');
       document.body.classList.add('modal-open');
+
+      if (isAutoPlayEnabled) {
+        attemptInvisibleAutoClick();
+      }
+    }
+
+    function attemptInvisibleAutoClick() {
+      setTimeout(() => {
+        const overlay = document.getElementById('videoTouchOverlay');
+        const frame = document.getElementById('playerFrame');
+        if (overlay) {
+          const rect = overlay.getBoundingClientRect();
+          const clickEvent = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+            clientX: rect.left + rect.width / 2,
+            clientY: rect.top + rect.height / 2
+          });
+          overlay.dispatchEvent(clickEvent);
+        }
+        if (frame) {
+          try {
+            frame.focus();
+            frame.contentWindow && frame.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          } catch (e) {}
+        }
+      }, 400);
     }
 
     function handleModalBackAction(e) {
@@ -5350,15 +5460,8 @@
               attachCardInteractions(card, part, 'movie');
               partsContainer.appendChild(card);
             });
-            setTimeout(() => {
-              const row = partsContainer;
-              const thumb = document.getElementById('sliderPartsThumb');
-              if (row && thumb) {
-                const maxScroll = row.scrollWidth - row.clientWidth;
-                thumb.style.width = maxScroll > 0 ? `${Math.max(15, (row.clientWidth / row.scrollWidth) * 100)}%` : '100%';
-                thumb.style.left = '0%';
-              }
-            }, 100);
+            
+            setupRowSliderListener('partsContainer', 'sliderPartsThumb', 'sliderParts');
           }
         }
       } catch (err) {
@@ -5427,15 +5530,7 @@
         artworksContainer.appendChild(card);
       });
 
-      setTimeout(() => {
-        const row = artworksContainer;
-        const thumb = document.getElementById('sliderArtworksThumb');
-        if (row && thumb) {
-          const maxScroll = row.scrollWidth - row.clientWidth;
-          thumb.style.width = maxScroll > 0 ? `${Math.max(15, (row.clientWidth / row.scrollWidth) * 100)}%` : '100%';
-          thumb.style.left = '0%';
-        }
-      }, 100);
+      setupRowSliderListener('artworksContainer', 'sliderArtworksThumb', 'sliderArtworks');
     }
 
     function openLightbox(imgUrl, fileName = 'HumbleCinema-Artwork.jpg') {
@@ -5482,15 +5577,7 @@
           castContainer.appendChild(card);
         });
 
-        setTimeout(() => {
-          const row = castContainer;
-          const thumb = document.getElementById('sliderCastThumb');
-          if (row && thumb) {
-            const maxScroll = row.scrollWidth - row.clientWidth;
-            thumb.style.width = maxScroll > 0 ? `${Math.max(15, (row.clientWidth / row.scrollWidth) * 100)}%` : '100%';
-            thumb.style.left = '0%';
-          }
-        }, 100);
+        setupRowSliderListener('castContainer', 'sliderCastThumb', 'sliderCast');
 
         const topLeadActors = cast.slice(0, 2);
         topLeadActors.forEach((actor, aIdx) => {
@@ -5505,7 +5592,11 @@
       try {
         const creditsData = await cachedFetch(`${TMDB_BASE}/person/${actor.id}/combined_credits?api_key=${apiKey}`);
         const rawItems = (creditsData.cast || [])
-          .filter(i => i.poster_path && (!activeMedia || i.id !== activeMedia.id))
+          .filter(i => {
+            if (!i.poster_path || (activeMedia && i.id === activeMedia.id)) return false;
+            if (!i.title && !i.name) return false;
+            return true;
+          })
           .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
           .slice(0, 10);
 
@@ -5557,15 +5648,6 @@
         });
 
         setupRowSliderListener(scrollId, sliderThumbId, sliderTrackId);
-        setTimeout(() => {
-          const row = rowContainer;
-          const thumb = document.getElementById(sliderThumbId);
-          if (row && thumb) {
-            const maxScroll = row.scrollWidth - row.clientWidth;
-            thumb.style.width = maxScroll > 0 ? `${Math.max(15, (row.clientWidth / row.scrollWidth) * 100)}%` : '100%';
-            thumb.style.left = '0%';
-          }
-        }, 100);
       } catch (err) {
         console.error(err);
       }
@@ -5612,15 +5694,7 @@
           similarContainer.appendChild(card);
         });
 
-        setTimeout(() => {
-          const row = similarContainer;
-          const thumb = document.getElementById('sliderSimilarThumb');
-          if (row && thumb) {
-            const maxScroll = row.scrollWidth - row.clientWidth;
-            thumb.style.width = maxScroll > 0 ? `${Math.max(15, (row.clientWidth / row.scrollWidth) * 100)}%` : '100%';
-            thumb.style.left = '0%';
-          }
-        }, 100);
+        setupRowSliderListener('similarContainer', 'sliderSimilarThumb', 'sliderSimilar');
       } catch (e) {
         console.error(e);
       }
@@ -5704,40 +5778,41 @@
       if (!activeMedia) return '';
       const id = activeMedia.id;
       const isTv = activeMedia.computedType === 'tv';
+      const autoPlayParam = isAutoPlayEnabled ? '1' : '0';
 
       switch (providerName) {
         case 'videasy':
           return isTv
-            ? `https://player.videasy.net/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=1`
-            : `https://player.videasy.net/movie/${id}?autoplay=1`;
+            ? `https://player.videasy.net/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=${autoPlayParam}`
+            : `https://player.videasy.net/movie/${id}?autoplay=${autoPlayParam}`;
 
         case 'superembed':
           return isTv
-            ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${activeSeason}&e=${activeEpisode}&autoplay=1`
-            : `https://multiembed.mov/?video_id=${id}&tmdb=1&autoplay=1`;
+            ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${activeSeason}&e=${activeEpisode}&autoplay=${autoPlayParam}`
+            : `https://multiembed.mov/?video_id=${id}&tmdb=1&autoplay=${autoPlayParam}`;
 
         case 'vidfast':
           return isTv
-            ? `https://vidfast.pro/tv/${id}/${activeSeason}/${activeEpisode}?autoPlay=true`
-            : `https://vidfast.pro/movie/${id}?autoPlay=true`;
+            ? `https://vidfast.pro/tv/${id}/${activeSeason}/${activeEpisode}?autoPlay=${isAutoPlayEnabled}`
+            : `https://vidfast.pro/movie/${id}?autoPlay=${isAutoPlayEnabled}`;
 
         case 'vidlink':
           return isTv
-            ? `https://vidlink.pro/tv/${id}/${activeSeason}/${activeEpisode}?primaryColor=4f46e5&autoplay=true`
-            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true`;
+            ? `https://vidlink.pro/tv/${id}/${activeSeason}/${activeEpisode}?primaryColor=4f46e5&autoplay=${isAutoPlayEnabled}`
+            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=${isAutoPlayEnabled}`;
 
         case 'vidapi':
           return isTv
-            ? `https://vidapi.ru/embed/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=1`
-            : `https://vidapi.ru/embed/movie/${id}?autoplay=1`;
+            ? `https://vidapi.ru/embed/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=${autoPlayParam}`
+            : `https://vidapi.ru/embed/movie/${id}?autoplay=${autoPlayParam}`;
 
         case 'vixsrc':
           return isTv 
-            ? `https://vixsrc.to/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=1`
-            : `https://vixsrc.to/movie/${id}?autoplay=1`;
+            ? `https://vixsrc.to/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=${autoPlayParam}`
+            : `https://vixsrc.to/movie/${id}?autoplay=${autoPlayParam}`;
 
         default:
-          return `https://player.videasy.net/movie/${id}?autoplay=1`;
+          return `https://player.videasy.net/movie/${id}?autoplay=${autoPlayParam}`;
       }
     }
 
@@ -5745,6 +5820,7 @@
       currentProviderIndex = PROVIDERS.indexOf(provider);
       updateServerButtons();
       executeStreamLoad();
+      if (isAutoPlayEnabled) attemptInvisibleAutoClick();
     }
 
     function updateServerButtons() {
