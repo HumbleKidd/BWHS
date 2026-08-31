@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>HumbleCinema - Premium Dynamic Stream Hub</title>
+  <title>BWHS - Binge Watch Humble Streams</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -32,7 +32,7 @@
       --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
       --radius: 16px;
       --sidebar-w: 68px;
-      --sidebar-expanded-w: 220px;
+      --sidebar-expanded-w: 240px;
       --right-panel-w: 270px;
     }
 
@@ -353,31 +353,39 @@
       white-space: nowrap;
     }
 
-    .brand-icon {
-      background: linear-gradient(135deg, var(--primary), var(--accent-pink));
-      color: #ffffff;
-      width: 36px;
-      height: 36px;
-      min-width: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.05rem;
-      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
+    .brand-logo-img {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(79, 70, 229, 0.3));
     }
 
-    .sidebar-brand span {
-      font-weight: 800;
-      font-size: 1.15rem;
-      color: var(--text-main);
-      letter-spacing: -0.5px;
+    .sidebar-brand-text {
+      display: flex;
+      flex-direction: column;
       opacity: 0;
       transition: opacity 0.2s ease;
     }
 
-    .desktop-sidebar:hover .sidebar-brand span,
-    .desktop-sidebar:focus-within .sidebar-brand span {
+    .sidebar-brand-title {
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+
+    .sidebar-brand-sub {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .desktop-sidebar:hover .sidebar-brand-text,
+    .desktop-sidebar:focus-within .sidebar-brand-text {
       opacity: 1;
     }
 
@@ -637,10 +645,10 @@
     .mobile-brand {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       cursor: pointer;
       font-weight: 800;
-      font-size: 1.05rem;
+      font-size: 1rem;
       flex-shrink: 0;
     }
 
@@ -1932,7 +1940,6 @@
       color: var(--text-main);
     }
 
-    /* FULL PAGE DEDICATED PLAYER VIEW */
     .player-page-container {
       display: none;
       width: 100%;
@@ -2708,10 +2715,15 @@
   <!-- Collapsible Left Sidebar -->
   <aside class="desktop-sidebar">
     <div class="sidebar-brand" onclick="resetToHome()" tabindex="0">
-      <div class="brand-icon">
-        <i class="fa-solid fa-clapperboard"></i>
+      <img 
+        src="https://github.com/HumbleKidd/BWHS/blob/main/Gemini_Generated_Image_kg21fkkg21fkkg21__1_-removebg-preview.png?raw=true" 
+        alt="BWHS Logo" 
+        class="brand-logo-img"
+      />
+      <div class="sidebar-brand-text">
+        <span class="sidebar-brand-title">BWHS</span>
+        <span class="sidebar-brand-sub">Binge Watch</span>
       </div>
-      <span>HumbleCinema</span>
     </div>
 
     <nav class="sidebar-menu">
@@ -2770,10 +2782,13 @@
     <header>
       <div class="header-inner">
         <div class="mobile-brand" onclick="resetToHome()">
-          <div class="brand-icon" style="width:30px; height:30px; font-size:0.85rem;">
-            <i class="fa-solid fa-clapperboard"></i>
-          </div>
-          <span>HumbleCinema</span>
+          <img 
+            src="https://github.com/HumbleKidd/BWHS/blob/main/Gemini_Generated_Image_kg21fkkg21fkkg21__1_-removebg-preview.png?raw=true" 
+            alt="BWHS Logo" 
+            class="brand-logo-img"
+            style="width: 32px; height: 32px;"
+          />
+          <span>BWHS</span>
         </div>
 
         <div class="search-box">
@@ -2898,25 +2913,25 @@
             <!-- Server Switching Helpful Notice -->
             <div class="server-helper-tip">
               <i class="fa-solid fa-circle-info"></i>
-              <span>If current player fails to load or buffers, switch to another server below.</span>
+              <span>Smooth, buffer-free playback enabled. If current player buffers or fails, switch to another server below.</span>
             </div>
 
             <!-- Desktop Server Bar -->
             <div class="server-bar">
               <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
-              <button class="srv-btn active" id="btn-videasy" onclick="manualSwitchServer('videasy')" tabindex="0">Videasy (Primary)</button>
-              <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')" tabindex="0">SuperEmbed</button>
-              <button class="srv-btn" id="btn-vidfast" onclick="manualSwitchServer('vidfast')" tabindex="0">VidFast</button>
+              <button class="srv-btn active" id="btn-vidfast" onclick="manualSwitchServer('vidfast')" tabindex="0">VidFast (Smooth)</button>
+              <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')" tabindex="0">SuperEmbed (Adaptive)</button>
+              <button class="srv-btn" id="btn-videasy" onclick="manualSwitchServer('videasy')" tabindex="0">Videasy</button>
               <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')" tabindex="0">VidLink</button>
-              <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')" tabindex="0">VidAPI</button>
               <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')" tabindex="0">VixSrc</button>
+              <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')" tabindex="0">VidAPI</button>
             </div>
 
             <!-- Mobile Server Box -->
             <div class="mobile-server-selector" onclick="openServerSheet()" tabindex="0">
               <span>
                 <i class="fa-solid fa-server" style="color:var(--primary);"></i>
-                <span id="mobServerLabel">Playing from: Videasy (Primary)</span>
+                <span id="mobServerLabel">Playing from: VidFast (Smooth)</span>
               </span>
               <i class="fa-solid fa-chevron-down chevron"></i>
             </div>
@@ -3280,23 +3295,23 @@
         <span>Select Video Server</span>
         <button class="btn-circle" onclick="closeServerSheet(null)" tabindex="0"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <button class="sheet-nav-item active" id="sheet-videasy" onclick="selectServerFromSheet('videasy')" tabindex="0">
-        <span>Videasy (Primary)</span>
+      <button class="sheet-nav-item active" id="sheet-vidfast" onclick="selectServerFromSheet('vidfast')" tabindex="0">
+        <span>VidFast (Smooth)</span>
       </button>
       <button class="sheet-nav-item" id="sheet-superembed" onclick="selectServerFromSheet('superembed')" tabindex="0">
-        <span>SuperEmbed</span>
+        <span>SuperEmbed (Adaptive)</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidfast" onclick="selectServerFromSheet('vidfast')" tabindex="0">
-        <span>VidFast</span>
+      <button class="sheet-nav-item" id="sheet-videasy" onclick="selectServerFromSheet('videasy')" tabindex="0">
+        <span>Videasy</span>
       </button>
       <button class="sheet-nav-item" id="sheet-vidlink" onclick="selectServerFromSheet('vidlink')" tabindex="0">
         <span>VidLink</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')" tabindex="0">
-        <span>VidAPI</span>
-      </button>
       <button class="sheet-nav-item" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')" tabindex="0">
         <span>VixSrc</span>
+      </button>
+      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')" tabindex="0">
+        <span>VidAPI</span>
       </button>
     </div>
   </div>
@@ -3352,14 +3367,14 @@
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['videasy', 'superembed', 'vidfast', 'vidlink', 'vidapi', 'vixsrc'];
+    const PROVIDERS = ['vidfast', 'superembed', 'videasy', 'vidlink', 'vixsrc', 'vidapi'];
     const PROVIDER_NAMES = {
-      videasy: 'Videasy (Primary)',
-      superembed: 'SuperEmbed',
-      vidfast: 'VidFast',
+      vidfast: 'VidFast (Smooth)',
+      superembed: 'SuperEmbed (Adaptive)',
+      videasy: 'Videasy',
       vidlink: 'VidLink',
-      vidapi: 'VidAPI',
-      vixsrc: 'VixSrc'
+      vixsrc: 'VixSrc',
+      vidapi: 'VidAPI'
     };
     let currentProviderIndex = 0;
 
@@ -3760,7 +3775,7 @@
       requestAnimationFrame(updateThumbPosition);
     }
 
-    async function downloadImageDirectly(imageUrl, filename = 'HumbleCinema-Artwork.jpg') {
+    async function downloadImageDirectly(imageUrl, filename = 'BWHS-Artwork.jpg') {
       showToast('Starting HD download...');
       try {
         const response = await fetch(imageUrl, { mode: 'cors' });
@@ -4113,14 +4128,14 @@
     }
 
     function openAboutDevModal() {
-      infoModalTitle.textContent = "About Dev";
+      infoModalTitle.textContent = "About Dev - BWHS";
       infoModalBody.innerHTML = `
         <div class="about-dev-box">
           <div class="about-badge"><i class="fa-solid fa-sparkles"></i> The Vibe Code Story</div>
           
           <p><strong>I am Mr. Humble from the Caribbean.</strong></p>
           
-          <p>This website was just a fun project, but I know there are at least 100 people out there who would love to have a clean, fast-loading, zero-ad streaming experience.</p>
+          <p>Welcome to <strong>BWHS - Binge Watch Humble Streams</strong>. This website was just a fun project, but I know there are at least 100 people out there who would love to have a clean, fast-loading, zero-ad streaming experience.</p>
           
           <p>A streaming site where <strong>almost every single thing is clickable</strong>.</p>
           
@@ -4136,7 +4151,7 @@
           
           <p>I love to create things. I love to be different. So I took on this project entirely solo, and I will continue to create more stuff and hopefully build something amazing, and gather a little team to make a great impact.</p>
           
-          <p>At the moment, please feel free to enjoy my streaming site. Because, <strong>it is FREE!!</strong></p>
+          <p>At the moment, please feel free to enjoy BWHS. Because, <strong>it is FREE!!</strong></p>
           
           <div class="disclaimer-sub-box">
             <strong><i class="fa-solid fa-shield-halved"></i> Disclaimer:</strong> Media streams are provided via third-party web scrapers. This site does not host or store files on its servers.
@@ -5433,7 +5448,6 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // TRANSITION TO DEDICATED PLAYER FULL PAGE
     async function openMediaPage(item, type, prefSeason = 1, prefEpisode = 1) {
       activeMedia = { ...item, computedType: type };
       activeSeason = prefSeason;
@@ -5564,7 +5578,7 @@
       list.forEach((art, idx) => {
         const thumbUrl = `${IMAGE_BASE}${art.file_path}`;
         const fullUrl = `${IMAGE_ORIGINAL}${art.file_path}`;
-        const fileName = `HumbleCinema-${activeMedia ? (activeMedia.title || activeMedia.name || 'Artwork').replace(/[^a-zA-Z0-9]/g, '_') : 'Artwork'}-${idx + 1}.jpg`;
+        const fileName = `BWHS-${activeMedia ? (activeMedia.title || activeMedia.name || 'Artwork').replace(/[^a-zA-Z0-9]/g, '_') : 'Artwork'}-${idx + 1}.jpg`;
 
         const card = document.createElement('div');
         card.className = `art-card ${isLandscape ? 'landscape' : 'portrait'}`;
@@ -5591,7 +5605,7 @@
       setupRowSliderListener('artworksContainer', 'sliderArtworksThumb', 'sliderArtworks');
     }
 
-    function openLightbox(imgUrl, fileName = 'HumbleCinema-Artwork.jpg') {
+    function openLightbox(imgUrl, fileName = 'BWHS-Artwork.jpg') {
       currentLightboxImgUrl = imgUrl;
       lightboxImg.src = imgUrl;
       lightboxDownloadBtn.onclick = () => downloadImageDirectly(currentLightboxImgUrl, fileName);
@@ -5845,38 +5859,38 @@
       const isTv = activeMedia.computedType === 'tv';
 
       switch (providerName) {
-        case 'videasy':
+        case 'vidfast':
           return isTv
-            ? `https://player.videasy.net/tv/${id}/${activeSeason}/${activeEpisode}`
-            : `https://player.videasy.net/movie/${id}`;
+            ? `https://vidfast.pro/tv/${id}/${activeSeason}/${activeEpisode}?autoPlay=true`
+            : `https://vidfast.pro/movie/${id}?autoPlay=true`;
 
         case 'superembed':
           return isTv
             ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${activeSeason}&e=${activeEpisode}`
             : `https://multiembed.mov/?video_id=${id}&tmdb=1`;
 
-        case 'vidfast':
+        case 'videasy':
           return isTv
-            ? `https://vidfast.pro/tv/${id}/${activeSeason}/${activeEpisode}`
-            : `https://vidfast.pro/movie/${id}`;
+            ? `https://player.videasy.net/tv/${id}/${activeSeason}/${activeEpisode}`
+            : `https://player.videasy.net/movie/${id}`;
 
         case 'vidlink':
           return isTv
             ? `https://vidlink.pro/tv/${id}/${activeSeason}/${activeEpisode}?primaryColor=4f46e5`
             : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5`;
 
-        case 'vidapi':
-          return isTv
-            ? `https://vidapi.ru/embed/tv/${id}/${activeSeason}/${activeEpisode}`
-            : `https://vidapi.ru/embed/movie/${id}`;
-
         case 'vixsrc':
           return isTv 
             ? `https://vixsrc.to/tv/${id}/${activeSeason}/${activeEpisode}`
             : `https://vixsrc.to/movie/${id}`;
 
+        case 'vidapi':
+          return isTv
+            ? `https://vidapi.ru/embed/tv/${id}/${activeSeason}/${activeEpisode}`
+            : `https://vidapi.ru/embed/movie/${id}`;
+
         default:
-          return `https://player.videasy.net/movie/${id}`;
+          return `https://vidfast.pro/movie/${id}`;
       }
     }
 
@@ -5975,6 +5989,10 @@
         }
 
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          if (activeEl && (activeEl.tagName === 'IFRAME' || activeEl.id === 'playerFrame' || activeEl.closest('.video-viewport'))) {
+            return;
+          }
+
           if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT')) {
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
               activeEl.blur();
@@ -5985,15 +6003,13 @@
 
           const scope = isPlayerActive ? playerPageView : document.body;
           const focusables = Array.from(scope.querySelectorAll('[tabindex="0"], button:not([disabled]), select:not([disabled]), input:not([disabled]), a[href]'))
-            .filter(el => el.offsetParent !== null && window.getComputedStyle(el).display !== 'none');
+            .filter(el => el.offsetParent !== null && window.getComputedStyle(el).display !== 'none' && !el.closest('.video-viewport'));
 
           if (focusables.length === 0) return;
 
           const currentIndex = focusables.indexOf(activeEl);
 
           if (currentIndex === -1) {
-            focusables[0].focus();
-            e.preventDefault();
             return;
           }
 
@@ -6018,19 +6034,19 @@
             let crossDist = 0;
 
             if (e.key === 'ArrowUp') {
-              inDirection = targetRect.bottom <= currentRect.top + 6;
+              inDirection = targetRect.bottom <= currentRect.top + 8;
               primaryDist = currentRect.top - targetRect.bottom;
               crossDist = Math.abs(tX - cX);
             } else if (e.key === 'ArrowDown') {
-              inDirection = targetRect.top >= currentRect.bottom - 6;
+              inDirection = targetRect.top >= currentRect.bottom - 8;
               primaryDist = targetRect.top - currentRect.bottom;
               crossDist = Math.abs(tX - cX);
             } else if (e.key === 'ArrowLeft') {
-              inDirection = targetRect.right <= currentRect.left + 6;
+              inDirection = targetRect.right <= currentRect.left + 8;
               primaryDist = currentRect.left - targetRect.right;
               crossDist = Math.abs(tY - cY);
             } else if (e.key === 'ArrowRight') {
-              inDirection = targetRect.left >= currentRect.right - 6;
+              inDirection = targetRect.left >= currentRect.right - 8;
               primaryDist = targetRect.left - currentRect.right;
               crossDist = Math.abs(tY - cY);
             }
@@ -6045,9 +6061,10 @@
           });
 
           if (bestTarget) {
+            e.preventDefault();
+            e.stopPropagation();
             bestTarget.focus();
             bestTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-            e.preventDefault();
           }
         }
       });
