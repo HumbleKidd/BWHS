@@ -699,7 +699,7 @@
       background: var(--surface);
       border-radius: 14px;
       box-shadow: var(--shadow-xl);
-      max-height: 440px;
+      max-height: 480px;
       overflow-y: auto;
       z-index: 1000;
       display: none;
@@ -758,6 +758,50 @@
       display: flex;
       gap: 6px;
       align-items: center;
+    }
+
+    .suggestion-topics-header {
+      padding: 8px 12px 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--surface-subtle);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .suggestion-topic-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px 12px 10px;
+      background: var(--surface-subtle);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topic-chip-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .topic-chip-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      transform: translateY(-1px);
     }
 
     .suggestion-more-btn {
@@ -2737,7 +2781,7 @@
           <input 
             type="text" 
             id="searchInput" 
-            placeholder="Search movies, shows, anime..." 
+            placeholder="Type any movie, actor, or concept (e.g. disaster, make money)..." 
             autocomplete="off"
             tabindex="0"
           />
@@ -3363,6 +3407,8 @@
     let currentYearFilter = null;
     let currentPersonId = null;
     let currentPersonName = '';
+    let currentKeywordId = null;
+    let currentKeywordName = '';
     let searchQuery = '';
     let currentPage = 1;
     let totalPages = 1000;
@@ -3813,6 +3859,8 @@
           currentGenre = genre.id;
           currentPersonId = null;
           currentPersonName = '';
+          currentKeywordId = null;
+          currentKeywordName = '';
           searchQuery = '';
           searchInput.value = '';
           curatedShelvesContainer.innerHTML = '';
@@ -3864,10 +3912,38 @@
       currentType = 'actor_filmography';
       currentPersonId = personId;
       currentPersonName = personName;
+      currentKeywordId = null;
+      currentKeywordName = '';
       currentGenre = null;
       currentYearFilter = null;
       searchQuery = '';
       searchInput.value = '';
+      
+      closePlayerPage();
+      heroSpotlight.style.display = 'none';
+      actorsShowcaseSection.style.display = 'none';
+      curatedShelvesContainer.innerHTML = '';
+      calendarViewContainer.style.display = 'none';
+      topFilterSuite.classList.remove('active');
+      searchFilterSuite.classList.remove('active');
+      
+      document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.m-nav-item').forEach(btn => btn.classList.remove('active'));
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      fetchCatalog(true);
+    }
+
+    function filterByKeyword(keywordId, keywordName) {
+      currentType = 'keyword_collection';
+      currentKeywordId = keywordId;
+      currentKeywordName = keywordName;
+      currentPersonId = null;
+      currentPersonName = '';
+      currentGenre = null;
+      currentYearFilter = null;
+      searchQuery = '';
+      searchInput.value = keywordName;
       
       closePlayerPage();
       heroSpotlight.style.display = 'none';
@@ -4181,6 +4257,8 @@
       currentType = type;
       currentPersonId = null;
       currentPersonName = '';
+      currentKeywordId = null;
+      currentKeywordName = '';
       currentGenre = null;
       currentYearFilter = null;
       searchQuery = '';
@@ -4454,6 +4532,8 @@
     async function openDedicatedCategory(title, endpoint, type) {
       currentPersonId = null;
       currentPersonName = '';
+      currentKeywordId = null;
+      currentKeywordName = '';
       searchQuery = '';
       searchInput.value = '';
       curatedShelvesContainer.innerHTML = '';
@@ -4569,6 +4649,10 @@
     }
 
     function buildEndpoint(page) {
+      if (currentKeywordId) {
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_keywords=${currentKeywordId}&sort_by=popularity.desc&page=${page}`;
+      }
+
       if (searchQuery) {
         return `${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(searchQuery)}&page=${page}`;
       }
@@ -4653,14 +4737,49 @@
           
           totalPages = 1;
           renderItems(sorted);
+        } else if (currentKeywordId) {
+          const [movieRes, tvRes] = await Promise.all([
+            cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_keywords=${currentKeywordId}&sort_by=popularity.desc&page=${currentPage}`),
+            cachedFetch(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_keywords=${currentKeywordId}&sort_by=popularity.desc&page=${currentPage}`)
+          ]);
+
+          const combined = [
+            ...(movieRes.results || []).map(m => ({ ...m, media_type: 'movie' })),
+            ...(tvRes.results || []).map(t => ({ ...t, media_type: 'tv' }))
+          ].filter(isCleanCinemaContent).sort((a,b) => (b.popularity || 0) - (a.popularity || 0));
+
+          totalPages = Math.max(movieRes.total_pages || 1, tvRes.total_pages || 1);
+          renderItems(combined);
+          currentPage++;
         } else if (searchQuery) {
           const url = buildEndpoint(currentPage);
           const data = await cachedFetch(url);
 
           totalPages = data.total_pages || 1000;
-          const results = (data.results || []).filter(isCleanCinemaContent);
+          let results = (data.results || []).filter(isCleanCinemaContent);
 
           if (currentPage === 1) {
+            try {
+              const kwData = await cachedFetch(`${TMDB_BASE}/search/keyword?api_key=${apiKey}&query=${encodeURIComponent(searchQuery)}`);
+              const topKws = (kwData.results || []).slice(0, 3);
+              if (topKws.length > 0) {
+                const kwIds = topKws.map(k => k.id).join('|');
+                const [extraMovies, extraTv] = await Promise.all([
+                  cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_keywords=${kwIds}&sort_by=popularity.desc&page=1`),
+                  cachedFetch(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_keywords=${kwIds}&sort_by=popularity.desc&page=1`)
+                ]);
+
+                const thematicExtra = [
+                  ...(extraMovies.results || []).map(m => ({ ...m, media_type: 'movie' })),
+                  ...(extraTv.results || []).map(t => ({ ...t, media_type: 'tv' }))
+                ];
+
+                results = [...results, ...thematicExtra];
+              }
+            } catch (err) {
+              console.log("Keyword enrichment fallback:", err);
+            }
+
             cachedRawSearchResults = results;
           } else {
             cachedRawSearchResults = [...cachedRawSearchResults, ...results];
@@ -4698,6 +4817,8 @@
 
       if (currentPersonId) {
         feedTitle.innerHTML = `<i class="fa-solid fa-user-tag" style="color: var(--primary);"></i> Filmography: "${currentPersonName}"`;
+      } else if (currentKeywordId) {
+        feedTitle.innerHTML = `<i class="fa-solid fa-tags" style="color: var(--accent);"></i> Thematic Universe: "${currentKeywordName}"`;
       } else if (searchQuery) {
         feedTitle.innerHTML = `<i class="fa-solid fa-magnifying-glass" style="color: var(--primary);"></i> Results for "${searchQuery}"`;
       } else if (currentType === 'latest') {
@@ -5014,6 +5135,8 @@
       currentType = 'all';
       currentPersonId = null;
       currentPersonName = '';
+      currentKeywordId = null;
+      currentKeywordName = '';
       currentGenre = null;
       currentYearFilter = null;
 
@@ -5047,15 +5170,44 @@
 
         debounce = setTimeout(async () => {
           try {
-            const data = await cachedFetch(`${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(val)}`);
-            let results = (data.results || []).filter(isCleanCinemaContent).slice(0, 10);
+            const [multiData, keywordData] = await Promise.all([
+              cachedFetch(`${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(val)}`),
+              cachedFetch(`${TMDB_BASE}/search/keyword?api_key=${apiKey}&query=${encodeURIComponent(val)}`)
+            ]);
 
-            if (results.length === 0) {
+            let results = (multiData.results || []).filter(isCleanCinemaContent).slice(0, 8);
+            let keywords = (keywordData.results || []).slice(0, 5);
+
+            if (results.length === 0 && keywords.length === 0) {
               searchSuggestions.classList.remove('active');
               return;
             }
 
             searchSuggestions.innerHTML = '';
+
+            if (keywords.length > 0) {
+              const kwHeader = document.createElement('div');
+              kwHeader.className = 'suggestion-topics-header';
+              kwHeader.innerHTML = `<i class="fa-solid fa-tags" style="color:var(--accent);"></i> Thematic Movie Categories`;
+              searchSuggestions.appendChild(kwHeader);
+
+              const chipsWrap = document.createElement('div');
+              chipsWrap.className = 'suggestion-topic-chips';
+              
+              keywords.forEach(kw => {
+                const btn = document.createElement('button');
+                btn.className = 'topic-chip-btn';
+                btn.setAttribute('tabindex', '0');
+                btn.innerHTML = `<i class="fa-solid fa-film"></i> ${kw.name} Films`;
+                btn.addEventListener('click', () => {
+                  searchSuggestions.classList.remove('active');
+                  filterByKeyword(kw.id, kw.name);
+                });
+                chipsWrap.appendChild(btn);
+              });
+              searchSuggestions.appendChild(chipsWrap);
+            }
+
             results.forEach(item => {
               const isPerson = item.media_type === 'person';
               const title = item.title || item.name || 'Untitled';
@@ -5095,7 +5247,7 @@
             const moreBtn = document.createElement('button');
             moreBtn.className = 'suggestion-more-btn';
             moreBtn.setAttribute('tabindex', '0');
-            moreBtn.innerHTML = `<span>View All Results for "${val}"</span> <i class="fa-solid fa-arrow-right"></i>`;
+            moreBtn.innerHTML = `<span>Explore All Films & Lists for "${val}"</span> <i class="fa-solid fa-arrow-right"></i>`;
             moreBtn.addEventListener('click', () => {
               executeSearchAction(val);
             });
