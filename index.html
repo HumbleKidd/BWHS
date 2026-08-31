@@ -121,10 +121,6 @@
       padding-bottom: 90px;
     }
 
-    body.modal-open {
-      overflow: hidden;
-    }
-
     @media (min-width: 900px) {
       body {
         padding-bottom: 0;
@@ -1858,65 +1854,33 @@
       color: var(--text-main);
     }
 
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.92);
-      backdrop-filter: blur(8px);
-      z-index: 100;
+    /* FULL PAGE DEDICATED PLAYER VIEW */
+    .player-page-container {
       display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-    }
-
-    @media (min-width: 768px) {
-      .modal-backdrop {
-        padding: 16px;
-      }
-    }
-
-    .modal-backdrop.active {
-      display: flex;
-    }
-
-    .modal-window {
-      background: var(--surface);
       width: 100%;
-      height: 100%;
-      max-width: 1040px;
-      max-height: 100vh;
-      border-radius: 0;
-      overflow-y: auto;
-      display: flex;
+      background: var(--surface);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 30px;
       flex-direction: column;
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: smooth;
     }
 
-    @media (min-width: 768px) {
-      .modal-window {
-        height: auto;
-        max-height: 92vh;
-        border-radius: 20px;
-      }
+    .player-page-container.active {
+      display: flex;
     }
 
-    .modal-nav {
-      padding: 12px 16px;
+    .player-page-nav {
+      padding: 14px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: sticky;
-      top: 0;
       background: var(--surface);
-      z-index: 20;
-      cursor: pointer;
-      user-select: none;
+      border-bottom: 1px solid var(--border);
     }
 
-    .modal-heading {
-      font-size: 1rem;
+    .player-page-heading {
+      font-size: 1.15rem;
       font-weight: 800;
       color: var(--text-main);
       display: -webkit-box;
@@ -1928,15 +1892,9 @@
       gap: 8px;
     }
 
-    .modal-actions-top {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
     .btn-circle {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: var(--surface-subtle);
       border: none;
@@ -2012,8 +1970,8 @@
       backdrop-filter: blur(8px);
       color: #ffffff;
       border: none;
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -2029,10 +1987,10 @@
     }
 
     .player-dock {
-      padding: 12px 16px;
+      padding: 14px 18px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .player-controls-sub-bar {
@@ -2041,8 +1999,8 @@
       justify-content: space-between;
       gap: 10px;
       background: var(--surface-subtle);
-      padding: 8px 12px;
-      border-radius: 10px;
+      padding: 8px 14px;
+      border-radius: 12px;
     }
 
     .autoplay-toggle-wrapper {
@@ -2094,7 +2052,7 @@
     .server-bar {
       display: none;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       overflow-x: auto;
       padding-bottom: 4px;
     }
@@ -2106,18 +2064,18 @@
     }
 
     .server-tag {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 800;
       color: var(--text-muted);
       flex-shrink: 0;
     }
 
     .srv-btn {
-      padding: 6px 12px;
-      border-radius: 8px;
+      padding: 7px 14px;
+      border-radius: 10px;
       border: none;
       background: var(--surface-subtle);
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       font-weight: 700;
       color: var(--text-main);
       cursor: pointer;
@@ -2141,10 +2099,10 @@
       justify-content: space-between;
       background: var(--surface-subtle);
       border: none;
-      padding: 8px 12px;
-      border-radius: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
     }
 
@@ -2158,10 +2116,10 @@
       display: none;
       background: var(--surface-subtle);
       border: none;
-      padding: 12px;
+      padding: 14px;
       border-radius: 14px;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .tv-suite-top {
@@ -2172,10 +2130,10 @@
     }
 
     .tv-suite-top select {
-      padding: 6px 10px;
+      padding: 8px 12px;
       border-radius: 8px;
       border: none;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
       background: var(--surface);
       color: var(--text-main);
@@ -2187,7 +2145,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 180px;
+      max-height: 240px;
       overflow-y: auto;
     }
 
@@ -2196,7 +2154,7 @@
       align-items: center;
       gap: 10px;
       background: var(--surface);
-      padding: 8px 12px;
+      padding: 9px 14px;
       border-radius: 10px;
       cursor: pointer;
       box-shadow: var(--shadow-sm);
@@ -2231,7 +2189,7 @@
     }
 
     .ep-name-text {
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
@@ -2240,15 +2198,15 @@
     }
 
     .details-section {
-      padding: 0 16px 24px;
+      padding: 0 18px 24px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 20px;
     }
 
     .overview-text {
-      font-size: 0.85rem;
-      line-height: 1.5;
+      font-size: 0.9rem;
+      line-height: 1.6;
       color: var(--text-main);
     }
 
@@ -2256,12 +2214,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       position: relative;
     }
 
     .block-heading {
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       font-weight: 800;
       text-transform: uppercase;
       color: var(--text-muted);
@@ -2310,7 +2268,7 @@
 
     .artworks-row, .cast-row, .similar-row, .parts-row, .actor-shelf-row {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       overflow-x: auto;
       padding-bottom: 4px;
       scroll-behavior: smooth;
@@ -2361,7 +2319,7 @@
     .art-card {
       position: relative;
       flex-shrink: 0;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       background: var(--surface-subtle);
       border: none;
@@ -2373,8 +2331,8 @@
       transform: translateY(-2px) scale(1.03);
     }
 
-    .art-card.landscape { width: 170px; aspect-ratio: 16 / 9; }
-    .art-card.portrait { width: 95px; aspect-ratio: 2 / 3; }
+    .art-card.landscape { width: 190px; aspect-ratio: 16 / 9; }
+    .art-card.portrait { width: 110px; aspect-ratio: 2 / 3; }
 
     .art-card img {
       width: 100%;
@@ -2388,13 +2346,13 @@
       right: 6px;
       background: rgba(0, 0, 0, 0.85);
       color: #ffffff;
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       backdrop-filter: blur(4px);
       transition: transform 0.2s ease, background 0.2s ease;
     }
@@ -2408,7 +2366,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 64px;
+      width: 70px;
       flex-shrink: 0;
       cursor: pointer;
       text-align: center;
@@ -2420,8 +2378,8 @@
     }
 
     .cast-avatar {
-      width: 50px;
-      height: 50px;
+      width: 55px;
+      height: 55px;
       border-radius: 50%;
       object-fit: cover;
       background: #000;
@@ -2430,7 +2388,7 @@
     }
 
     .cast-name {
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       font-weight: 700;
       color: var(--text-main);
       line-height: 1.2;
@@ -2856,112 +2814,267 @@
           <span>Notice: Media streams are provided via third-party web scrapers. This site does not host or store files on its servers.</span>
         </div>
 
-        <!-- Top Placed Interactive Filter Suite -->
-        <div class="top-filter-suite" id="topFilterSuite">
-          <div class="filter-row">
-            <span class="filter-label"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Genres:</span>
-            <div class="filter-row" id="genresContainer"></div>
-          </div>
-
-          <div class="filter-row">
-            <span class="filter-label"><i class="fa-solid fa-calendar" style="color:var(--accent);"></i> Year:</span>
-            <select class="mobile-year-select" id="mobileYearSelect" onchange="handleMobileYearChange(this.value)"></select>
-            <div class="desktop-year-chips" id="yearsContainer"></div>
-          </div>
-        </div>
-
-        <!-- Dynamic Multi-Select Search Filter Suite -->
-        <div class="search-filter-suite" id="searchFilterSuite">
-          <div class="search-filter-header">
-            <span><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> Filter Search Results</span>
-            <span style="font-size:0.7rem; color:var(--text-muted);">Multi-select enabled</span>
-          </div>
-          <div class="search-filter-chips">
-            <button class="filter-chip active" id="sf-all" onclick="toggleSearchFilter('all')" tabindex="0">
-              <i class="fa-solid fa-globe"></i> All Results
-            </button>
-            <button class="filter-chip" id="sf-person" onclick="toggleSearchFilter('person')" tabindex="0">
-              <i class="fa-solid fa-user-astronaut"></i> People / Cast
-            </button>
-            <button class="filter-chip" id="sf-movie" onclick="toggleSearchFilter('movie')" tabindex="0">
-              <i class="fa-solid fa-film"></i> Movies
-            </button>
-            <button class="filter-chip" id="sf-tv" onclick="toggleSearchFilter('tv')" tabindex="0">
-              <i class="fa-solid fa-tv"></i> TV Shows
-            </button>
-            <button class="filter-chip" id="sf-cartoon" onclick="toggleSearchFilter('cartoon')" tabindex="0">
-              <i class="fa-solid fa-shapes"></i> Cartoons
-            </button>
-            <button class="filter-chip" id="sf-animation" onclick="toggleSearchFilter('animation')" tabindex="0">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Animation
-            </button>
-          </div>
-        </div>
-
-        <!-- 6-Second Dynamic Live Hero Carousel -->
-        <section class="hero-spotlight" id="heroSpotlight">
-          <img src="" id="heroBgImg" class="hero-bg" alt="Hero Featured Backdrop" />
-          <div class="hero-overlay"></div>
-          <div class="hero-indicators" id="heroIndicators"></div>
-          <div class="hero-content">
-            <div class="hero-mini-poster" id="heroMiniPosterWrap">
-              <img src="" id="heroMiniPoster" alt="Poster Thumbnail" />
+        <!-- FULL PAGE DEDICATED PLAYER VIEW -->
+        <section class="player-page-container" id="playerPageView">
+          <div class="player-page-nav">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button class="btn-circle" id="playerBackPageBtn" onclick="closePlayerPage()" title="Back to Catalog" tabindex="0">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <h2 class="player-page-heading" id="playerPageTitle">Loading Player...</h2>
             </div>
-            <div class="hero-text-block">
-              <span class="hero-tag pulse-badge" id="heroTag">Featured Spotlight</span>
-              <h1 class="hero-title" id="heroTitle">Loading Feature...</h1>
-              <div class="hero-meta">
-                <span class="rating-badge"><i class="fa-solid fa-star"></i> <span id="heroRating">--</span></span>
-                <span id="heroYear">----</span>
-                <span id="heroTypeTag">Movie</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn-circle" id="playerFullscreenBtn" onclick="togglePlayerFullscreen(event)" title="Toggle Fullscreen" tabindex="0">
+                <i class="fa-solid fa-expand" id="pageFsIcon"></i>
+              </button>
+              <button class="btn-circle fav" id="playerFavBtn" onclick="toggleFavoriteFromPlayer(event)" tabindex="0">
+                <i class="fa-solid fa-heart"></i>
+              </button>
+              <button class="btn-circle" onclick="closePlayerPage()" title="Close View" tabindex="0">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="video-viewport" id="videoViewport">
+            <iframe 
+              id="playerFrame" 
+              src="" 
+              allowfullscreen="true" 
+              webkitallowfullscreen="true" 
+              mozallowfullscreen="true" 
+              allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; screen-wake-lock *"
+              loading="eager"
+            ></iframe>
+            <div class="video-touch-overlay" id="videoTouchOverlay" title="Double-tap or double-click to toggle fullscreen"></div>
+            <button class="fullscreen-overlay-btn" id="overlayFsBtn" onclick="togglePlayerFullscreen(event)" title="Toggle Fullscreen" tabindex="0">
+              <i class="fa-solid fa-expand"></i>
+            </button>
+          </div>
+
+          <div class="player-dock">
+            <!-- Player Controls Sub Bar -->
+            <div class="player-controls-sub-bar">
+              <div class="autoplay-toggle-wrapper" onclick="toggleAutoPlayPreference(event)">
+                <input type="checkbox" id="autoPlayToggleInput" class="toggle-switch-input" />
+                <div class="toggle-switch-track"></div>
+                <span>Instant Auto-Play Stream</span>
               </div>
-              <p class="hero-overview" id="heroOverview">Loading synopsis details...</p>
-              <div class="hero-actions">
-                <button class="btn-hero-play" id="heroWatchBtn" tabindex="0">
-                  <i class="fa-solid fa-play"></i> Watch Now
-                </button>
-                <button class="btn-hero-info" id="heroInfoBtn" tabindex="0">
-                  <i class="fa-solid fa-circle-info"></i> More Details
-                </button>
+              <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Zero-Click Playback</span>
+            </div>
+
+            <!-- Desktop Server Bar -->
+            <div class="server-bar">
+              <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
+              <button class="srv-btn active" id="btn-videasy" onclick="manualSwitchServer('videasy')" tabindex="0">Videasy (Primary)</button>
+              <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')" tabindex="0">SuperEmbed</button>
+              <button class="srv-btn" id="btn-vidfast" onclick="manualSwitchServer('vidfast')" tabindex="0">VidFast</button>
+              <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')" tabindex="0">VidLink</button>
+              <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')" tabindex="0">VidAPI</button>
+              <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')" tabindex="0">VixSrc</button>
+            </div>
+
+            <!-- Mobile Server Box -->
+            <div class="mobile-server-selector" onclick="openServerSheet()" tabindex="0">
+              <span>
+                <i class="fa-solid fa-server" style="color:var(--primary);"></i>
+                <span id="mobServerLabel">Playing from: Videasy (Primary)</span>
+              </span>
+              <i class="fa-solid fa-chevron-down chevron"></i>
+            </div>
+
+            <!-- Named Episodes Suite -->
+            <div class="tv-control-suite" id="tvControlSuite">
+              <div class="tv-suite-top">
+                <label style="font-size: 0.8rem; font-weight: 700;">Season Selection:</label>
+                <select id="seasonDropdown" onchange="handleSeasonChange()" tabindex="0"></select>
+              </div>
+              <div class="episodes-grid" id="episodesGrid"></div>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <p class="overview-text" id="playerOverview">Loading synopsis...</p>
+
+            <div id="partsSection" style="display: none;">
+              <div class="block-heading-wrap">
+                <div class="block-heading">
+                  <i class="fa-solid fa-layer-group" style="color: var(--primary);"></i>
+                  <span id="partsTitle">Franchise Parts & Sequels</span>
+                </div>
+              </div>
+              <div class="row-scroll-container">
+                <div class="parts-row" id="partsContainer"></div>
+                <div class="row-slider-track" id="sliderParts">
+                  <div class="row-slider-thumb" id="sliderPartsThumb"></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="block-heading-wrap">
+                <div class="block-heading">
+                  <i class="fa-solid fa-palette"></i>
+                  <span>Official Artworks & Wallpapers</span>
+                </div>
+                <div class="art-toggle-group">
+                  <button class="art-toggle-btn active" id="artLandscapeBtn" onclick="toggleArtworkView('backdrops')" tabindex="0">Landscapes</button>
+                  <button class="art-toggle-btn" id="artPortraitBtn" onclick="toggleArtworkView('posters')" tabindex="0">Portraits</button>
+                </div>
+              </div>
+              <div class="row-scroll-container">
+                <div class="artworks-row" id="artworksContainer"></div>
+                <div class="row-slider-track" id="sliderArtworks">
+                  <div class="row-slider-thumb" id="sliderArtworksThumb"></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="block-heading-wrap">
+                <div class="block-heading">
+                  <i class="fa-solid fa-users"></i>
+                  <span>Who's in this film</span>
+                </div>
+              </div>
+              <div class="row-scroll-container">
+                <div class="cast-row" id="castContainer"></div>
+                <div class="row-slider-track" id="sliderCast">
+                  <div class="row-slider-thumb" id="sliderCastThumb"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Actor-Specific Movie Shelves Container (2+ Cast, 9+ Movies Each) -->
+            <div id="actorsMovieShelvesContainer" style="display:flex; flex-direction:column; gap:18px;"></div>
+
+            <div>
+              <div class="block-heading-wrap">
+                <div class="block-heading interactive-heading" onclick="expandSimilarUnlimited()" tabindex="0" title="Click to view all recommendations">
+                  <i class="fa-solid fa-film"></i>
+                  <span id="similarTitleHeader">You should also watch...</span>
+                  <span class="view-all-hint" style="font-size:0.72rem; color:var(--primary); margin-left:6px;"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+                </div>
+              </div>
+              <div class="row-scroll-container">
+                <div class="similar-row" id="similarContainer"></div>
+                <div class="row-slider-track" id="sliderSimilar">
+                  <div class="row-slider-thumb" id="sliderSimilarThumb"></div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Top Actors Showcase -->
-        <div class="actors-section" id="actorsShowcaseSection">
-          <div class="shelf-header">
-            <h3 class="shelf-title" onclick="selectType('actors_page')" tabindex="0">
-              <i class="fa-solid fa-star" style="color: var(--accent);"></i>
-              <span>Top Actors & Actresses</span>
-              <span class="view-all-hint" tabindex="0">Explore All Stars <i class="fa-solid fa-arrow-right"></i></span>
-            </h3>
-          </div>
-          <div class="actors-scroll" id="actorsScrollContainer"></div>
-        </div>
-
-        <div class="shelves-container" id="curatedShelvesContainer"></div>
-
-        <!-- Movie Release Calendar Section -->
-        <div id="calendarViewContainer" style="display: none;">
-          <div class="cal-filter-bar">
-            <div class="cal-tabs">
-              <button class="cal-tab-btn active" id="calTabAll" onclick="filterCalendar('all')" tabindex="0">All 2026 - 2027 Debuts</button>
-              <button class="cal-tab-btn" id="calTabReminders" onclick="filterCalendar('must_watch')" tabindex="0"><i class="fa-solid fa-bell"></i> Must Watch (<span id="mustWatchCount">0</span>)</button>
+        <!-- CATALOG BROWSER VIEW WRAPPER -->
+        <div id="catalogBrowserView">
+          <!-- Top Placed Interactive Filter Suite -->
+          <div class="top-filter-suite" id="topFilterSuite">
+            <div class="filter-row">
+              <span class="filter-label"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Genres:</span>
+              <div class="filter-row" id="genresContainer"></div>
             </div>
-            <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">Complete 2026 to Full 2027 Schedule</span>
+
+            <div class="filter-row">
+              <span class="filter-label"><i class="fa-solid fa-calendar" style="color:var(--accent);"></i> Year:</span>
+              <select class="mobile-year-select" id="mobileYearSelect" onchange="handleMobileYearChange(this.value)"></select>
+              <div class="desktop-year-chips" id="yearsContainer"></div>
+            </div>
           </div>
-          <div class="calendar-grid" id="calendarGrid"></div>
-        </div>
 
-        <h2 class="section-title" id="feedTitle">
-          <i class="fa-solid fa-compass" style="color: var(--primary);"></i> Discover Catalog
-        </h2>
+          <!-- Dynamic Multi-Select Search Filter Suite -->
+          <div class="search-filter-suite" id="searchFilterSuite">
+            <div class="search-filter-header">
+              <span><i class="fa-solid fa-sliders" style="color:var(--primary);"></i> Filter Search Results</span>
+              <span style="font-size:0.7rem; color:var(--text-muted);">Multi-select enabled</span>
+            </div>
+            <div class="search-filter-chips">
+              <button class="filter-chip active" id="sf-all" onclick="toggleSearchFilter('all')" tabindex="0">
+                <i class="fa-solid fa-globe"></i> All Results
+              </button>
+              <button class="filter-chip" id="sf-person" onclick="toggleSearchFilter('person')" tabindex="0">
+                <i class="fa-solid fa-user-astronaut"></i> People / Cast
+              </button>
+              <button class="filter-chip" id="sf-movie" onclick="toggleSearchFilter('movie')" tabindex="0">
+                <i class="fa-solid fa-film"></i> Movies
+              </button>
+              <button class="filter-chip" id="sf-tv" onclick="toggleSearchFilter('tv')" tabindex="0">
+                <i class="fa-solid fa-tv"></i> TV Shows
+              </button>
+              <button class="filter-chip" id="sf-cartoon" onclick="toggleSearchFilter('cartoon')" tabindex="0">
+                <i class="fa-solid fa-shapes"></i> Cartoons
+              </button>
+              <button class="filter-chip" id="sf-animation" onclick="toggleSearchFilter('animation')" tabindex="0">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Animation
+              </button>
+            </div>
+          </div>
 
-        <div class="media-grid" id="mediaGrid"></div>
-        
-        <div class="loading-spinner" id="loadingSpinner">
-          <i class="fa-solid fa-circle-notch fa-spin"></i>
+          <!-- 6-Second Dynamic Live Hero Carousel -->
+          <section class="hero-spotlight" id="heroSpotlight">
+            <img src="" id="heroBgImg" class="hero-bg" alt="Hero Featured Backdrop" />
+            <div class="hero-overlay"></div>
+            <div class="hero-indicators" id="heroIndicators"></div>
+            <div class="hero-content">
+              <div class="hero-mini-poster" id="heroMiniPosterWrap">
+                <img src="" id="heroMiniPoster" alt="Poster Thumbnail" />
+              </div>
+              <div class="hero-text-block">
+                <span class="hero-tag pulse-badge" id="heroTag">Featured Spotlight</span>
+                <h1 class="hero-title" id="heroTitle">Loading Feature...</h1>
+                <div class="hero-meta">
+                  <span class="rating-badge"><i class="fa-solid fa-star"></i> <span id="heroRating">--</span></span>
+                  <span id="heroYear">----</span>
+                  <span id="heroTypeTag">Movie</span>
+                </div>
+                <p class="hero-overview" id="heroOverview">Loading synopsis details...</p>
+                <div class="hero-actions">
+                  <button class="btn-hero-play" id="heroWatchBtn" tabindex="0">
+                    <i class="fa-solid fa-play"></i> Watch Now
+                  </button>
+                  <button class="btn-hero-info" id="heroInfoBtn" tabindex="0">
+                    <i class="fa-solid fa-circle-info"></i> More Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Top Actors Showcase -->
+          <div class="actors-section" id="actorsShowcaseSection">
+            <div class="shelf-header">
+              <h3 class="shelf-title" onclick="selectType('actors_page')" tabindex="0">
+                <i class="fa-solid fa-star" style="color: var(--accent);"></i>
+                <span>Top Actors & Actresses</span>
+                <span class="view-all-hint" tabindex="0">Explore All Stars <i class="fa-solid fa-arrow-right"></i></span>
+              </h3>
+            </div>
+            <div class="actors-scroll" id="actorsScrollContainer"></div>
+          </div>
+
+          <div class="shelves-container" id="curatedShelvesContainer"></div>
+
+          <!-- Movie Release Calendar Section -->
+          <div id="calendarViewContainer" style="display: none;">
+            <div class="cal-filter-bar">
+              <div class="cal-tabs">
+                <button class="cal-tab-btn active" id="calTabAll" onclick="filterCalendar('all')" tabindex="0">All 2026 - 2027 Debuts</button>
+                <button class="cal-tab-btn" id="calTabReminders" onclick="filterCalendar('must_watch')" tabindex="0"><i class="fa-solid fa-bell"></i> Must Watch (<span id="mustWatchCount">0</span>)</button>
+              </div>
+              <span style="font-size:0.78rem; color:var(--text-muted); font-weight:700;">Complete 2026 to Full 2027 Schedule</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+
+          <h2 class="section-title" id="feedTitle">
+            <i class="fa-solid fa-compass" style="color: var(--primary);"></i> Discover Catalog
+          </h2>
+
+          <div class="media-grid" id="mediaGrid"></div>
+          
+          <div class="loading-spinner" id="loadingSpinner">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+          </div>
         </div>
       </main>
 
@@ -3122,160 +3235,6 @@
     <i class="fa-solid fa-arrow-up"></i>
   </button>
 
-  <!-- Main Player Modal -->
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal-window" id="modalWindow">
-      <div class="modal-nav" id="modalNavHeader" title="Double click or tap here to toggle fullscreen">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <button class="btn-circle" id="modalBackNavBtn" onclick="handleModalBackAction(event)" style="display:none;" tabindex="0">
-            <i class="fa-solid fa-arrow-left"></i>
-          </button>
-          <span class="modal-heading" id="modalMediaTitle">Loading...</span>
-        </div>
-        <div class="modal-actions-top">
-          <button class="btn-circle" id="modalFullscreenBtn" onclick="togglePlayerFullscreen(event)" title="Toggle Fullscreen (F)" tabindex="0">
-            <i class="fa-solid fa-expand" id="modalFsIcon"></i>
-          </button>
-          <button class="btn-circle fav" id="modalFavBtn" onclick="toggleFavoriteFromModal(event)" tabindex="0">
-            <i class="fa-solid fa-heart"></i>
-          </button>
-          <button class="btn-circle" id="modalCloseBtn" onclick="closePlayerModal(event)" tabindex="0">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="video-viewport" id="videoViewport">
-        <iframe 
-          id="playerFrame" 
-          src="" 
-          allowfullscreen="true" 
-          webkitallowfullscreen="true" 
-          mozallowfullscreen="true" 
-          allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; screen-wake-lock *"
-          loading="eager"
-        ></iframe>
-        <div class="video-touch-overlay" id="videoTouchOverlay" title="Double-tap or double-click to toggle fullscreen"></div>
-        <button class="fullscreen-overlay-btn" id="overlayFsBtn" onclick="togglePlayerFullscreen(event)" title="Toggle Fullscreen" tabindex="0">
-          <i class="fa-solid fa-expand"></i>
-        </button>
-      </div>
-
-      <div class="player-dock">
-        <!-- Player Controls Sub Bar -->
-        <div class="player-controls-sub-bar">
-          <div class="autoplay-toggle-wrapper" onclick="toggleAutoPlayPreference(event)">
-            <input type="checkbox" id="autoPlayToggleInput" class="toggle-switch-input" />
-            <div class="toggle-switch-track"></div>
-            <span>Instant Auto-Play Stream</span>
-          </div>
-          <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Zero-Click Playback</span>
-        </div>
-
-        <!-- Desktop Server Bar -->
-        <div class="server-bar">
-          <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
-          <button class="srv-btn active" id="btn-videasy" onclick="manualSwitchServer('videasy')" tabindex="0">Videasy (Primary)</button>
-          <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')" tabindex="0">SuperEmbed</button>
-          <button class="srv-btn" id="btn-vidfast" onclick="manualSwitchServer('vidfast')" tabindex="0">VidFast</button>
-          <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')" tabindex="0">VidLink</button>
-          <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')" tabindex="0">VidAPI</button>
-          <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')" tabindex="0">VixSrc</button>
-        </div>
-
-        <!-- Mobile Server Box -->
-        <div class="mobile-server-selector" onclick="openServerSheet()" tabindex="0">
-          <span>
-            <i class="fa-solid fa-server" style="color:var(--primary);"></i>
-            <span id="mobServerLabel">Playing from: Videasy (Primary)</span>
-          </span>
-          <i class="fa-solid fa-chevron-down chevron"></i>
-        </div>
-
-        <!-- Named Episodes Suite -->
-        <div class="tv-control-suite" id="tvControlSuite">
-          <div class="tv-suite-top">
-            <label style="font-size: 0.8rem; font-weight: 700;">Season Selection:</label>
-            <select id="seasonDropdown" onchange="handleSeasonChange()" tabindex="0"></select>
-          </div>
-          <div class="episodes-grid" id="episodesGrid"></div>
-        </div>
-      </div>
-
-      <div class="details-section">
-        <p class="overview-text" id="modalOverview">Loading synopsis...</p>
-
-        <div id="partsSection" style="display: none;">
-          <div class="block-heading-wrap">
-            <div class="block-heading">
-              <i class="fa-solid fa-layer-group" style="color: var(--primary);"></i>
-              <span id="partsTitle">Franchise Parts & Sequels</span>
-            </div>
-          </div>
-          <div class="row-scroll-container">
-            <div class="parts-row" id="partsContainer"></div>
-            <div class="row-slider-track" id="sliderParts">
-              <div class="row-slider-thumb" id="sliderPartsThumb"></div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div class="block-heading-wrap">
-            <div class="block-heading">
-              <i class="fa-solid fa-palette"></i>
-              <span>Official Artworks & Wallpapers</span>
-            </div>
-            <div class="art-toggle-group">
-              <button class="art-toggle-btn active" id="artLandscapeBtn" onclick="toggleArtworkView('backdrops')" tabindex="0">Landscapes</button>
-              <button class="art-toggle-btn" id="artPortraitBtn" onclick="toggleArtworkView('posters')" tabindex="0">Portraits</button>
-            </div>
-          </div>
-          <div class="row-scroll-container">
-            <div class="artworks-row" id="artworksContainer"></div>
-            <div class="row-slider-track" id="sliderArtworks">
-              <div class="row-slider-thumb" id="sliderArtworksThumb"></div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div class="block-heading-wrap">
-            <div class="block-heading">
-              <i class="fa-solid fa-users"></i>
-              <span>Who's in this film</span>
-            </div>
-          </div>
-          <div class="row-scroll-container">
-            <div class="cast-row" id="castContainer"></div>
-            <div class="row-slider-track" id="sliderCast">
-              <div class="row-slider-thumb" id="sliderCastThumb"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dynamic Actor-Specific Movie Shelves Container -->
-        <div id="actorsMovieShelvesContainer" style="display:flex; flex-direction:column; gap:18px;"></div>
-
-        <div>
-          <div class="block-heading-wrap">
-            <div class="block-heading interactive-heading" onclick="expandSimilarUnlimited()" tabindex="0" title="Click to view all recommendations">
-              <i class="fa-solid fa-film"></i>
-              <span id="similarTitleHeader">You should also watch...</span>
-              <span class="view-all-hint" style="font-size:0.72rem; color:var(--primary); margin-left:6px;"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
-            </div>
-          </div>
-          <div class="row-scroll-container">
-            <div class="similar-row" id="similarContainer"></div>
-            <div class="row-slider-track" id="sliderSimilar">
-              <div class="row-slider-thumb" id="sliderSimilarThumb"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Mobile Server Bottom Sheet -->
   <div class="more-sheet-backdrop" id="serverSheetBackdrop" onclick="closeServerSheet(event)">
     <div class="more-sheet">
@@ -3375,8 +3334,7 @@
       return data;
     }
 
-    // STRICT MEDIA PURIFIER: Blocks Talk Shows, Reality TV, News, WWE/RAW, Soap Operas, Award Shows
-    const DISALLOWED_GENRE_IDS = [10763, 10764, 10767, 10766]; // News, Reality, Talk, Soap
+    const DISALLOWED_GENRE_IDS = [10763, 10764, 10767, 10766];
     const DISALLOWED_KEYWORDS = [
       'tonight show', 'late night', 'talk show', 'wwe raw', 'wwe smackdown', 
       'wrestlemania', 'wwe', 'aew', 'the daily show', 'jimmy kimmel', 'jimmy fallon',
@@ -3394,12 +3352,10 @@
       const overview = (item.overview || '').toLowerCase();
       const genreIds = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
 
-      // Filter by genre
       for (const gid of genreIds) {
         if (DISALLOWED_GENRE_IDS.includes(gid)) return false;
       }
 
-      // Filter by blacklist phrases in title and synopsis
       for (const badKw of DISALLOWED_KEYWORDS) {
         if (title.includes(badKw)) return false;
         if (overview.includes(badKw) && !item.media_type && !item.title) return false;
@@ -3425,8 +3381,6 @@
     let heroItems = [];
     let currentHeroIndex = 0;
     let heroCarouselInterval = null;
-    
-    let modalHistoryStack = [];
 
     let favoritesList = JSON.parse(localStorage.getItem('humble_favorites')) || [];
     let watchHistory = JSON.parse(localStorage.getItem('humble_history')) || [];
@@ -3562,17 +3516,15 @@
     const yearsContainer = document.getElementById('yearsContainer');
     const mobileYearSelect = document.getElementById('mobileYearSelect');
     const curatedShelvesContainer = document.getElementById('curatedShelvesContainer');
-    const modalBackdrop = document.getElementById('modalBackdrop');
-    const modalWindow = document.getElementById('modalWindow');
+    const catalogBrowserView = document.getElementById('catalogBrowserView');
+    const playerPageView = document.getElementById('playerPageView');
+    const playerPageTitle = document.getElementById('playerPageTitle');
+    const playerOverview = document.getElementById('playerOverview');
+    const playerFavBtn = document.getElementById('playerFavBtn');
     const playerFrame = document.getElementById('playerFrame');
     const videoViewport = document.getElementById('videoViewport');
     const videoTouchOverlay = document.getElementById('videoTouchOverlay');
     const autoPlayToggleInput = document.getElementById('autoPlayToggleInput');
-    const modalNavHeader = document.getElementById('modalNavHeader');
-    const modalMediaTitle = document.getElementById('modalMediaTitle');
-    const modalOverview = document.getElementById('modalOverview');
-    const modalFavBtn = document.getElementById('modalFavBtn');
-    const modalBackNavBtn = document.getElementById('modalBackNavBtn');
     const castContainer = document.getElementById('castContainer');
     const artworksContainer = document.getElementById('artworksContainer');
     const similarContainer = document.getElementById('similarContainer');
@@ -3699,7 +3651,6 @@
       setupRowSliderListener('similarContainer', 'sliderSimilarThumb', 'sliderSimilar');
     }
 
-    // High-Performance Real-Time Drag with Pointer Events API (No Delay)
     function setupRowSliderListener(rowId, thumbId, trackId) {
       const row = document.getElementById(rowId);
       const thumb = document.getElementById(thumbId);
@@ -3883,6 +3834,7 @@
           searchQuery = '';
           searchInput.value = '';
           curatedShelvesContainer.innerHTML = '';
+          closePlayerPage();
           fetchCatalog(true);
         });
         genresContainer.appendChild(chip);
@@ -3904,6 +3856,7 @@
           currentYearFilter = yr.id;
           if (mobileYearSelect) mobileYearSelect.value = yr.id || '';
           curatedShelvesContainer.innerHTML = '';
+          closePlayerPage();
           fetchCatalog(true);
         });
         yearsContainer.appendChild(chip);
@@ -3921,6 +3874,7 @@
         c.classList.toggle('active', (val === '' && c.textContent === 'All Years') || (val && c.textContent === val));
       });
       curatedShelvesContainer.innerHTML = '';
+      closePlayerPage();
       fetchCatalog(true);
     }
 
@@ -3933,6 +3887,7 @@
       searchQuery = '';
       searchInput.value = '';
       
+      closePlayerPage();
       heroSpotlight.style.display = 'none';
       actorsShowcaseSection.style.display = 'none';
       curatedShelvesContainer.innerHTML = '';
@@ -3965,16 +3920,6 @@
     }
 
     function setupFullscreenEvents() {
-      window.addEventListener('keydown', (e) => {
-        if (e.target && e.target.tagName === 'INPUT') return;
-        if (e.key === 'f' || e.key === 'F') {
-          if (modalBackdrop.classList.contains('active')) {
-            e.preventDefault();
-            togglePlayerFullscreen();
-          }
-        }
-      });
-
       let lastTap = 0;
       function handleDoubleTap(e) {
         const now = Date.now();
@@ -3984,17 +3929,6 @@
         }
         lastTap = now;
       }
-
-      modalNavHeader.addEventListener('touchend', (e) => {
-        if (e.target.closest('button')) return;
-        handleDoubleTap(e);
-      });
-
-      modalNavHeader.addEventListener('dblclick', (e) => {
-        if (e.target.closest('button')) return;
-        e.preventDefault();
-        togglePlayerFullscreen();
-      });
 
       if (videoTouchOverlay) {
         videoTouchOverlay.addEventListener('touchend', handleDoubleTap);
@@ -4015,7 +3949,6 @@
 
     function togglePlayerFullscreen(e) {
       if (e) e.stopPropagation();
-      if (!modalBackdrop.classList.contains('active')) return;
       const elem = videoViewport;
 
       if (!isFullscreenActive()) {
@@ -4033,7 +3966,7 @@
 
     function updateFullscreenUiState() {
       const fs = isFullscreenActive();
-      const icon = document.getElementById('modalFsIcon');
+      const icon = document.getElementById('pageFsIcon');
       if (icon) {
         icon.className = fs ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
       }
@@ -4214,7 +4147,7 @@
         d.classList.toggle('active', i === index);
       });
 
-      heroWatchBtn.onclick = () => openMediaModal(item, isMovie ? 'movie' : 'tv');
+      heroWatchBtn.onclick = () => openMediaPage(item, isMovie ? 'movie' : 'tv');
       heroInfoBtn.onclick = () => showFunFacts(item);
     }
 
@@ -4273,6 +4206,7 @@
       searchSuggestions.classList.remove('active');
       searchFilterSuite.classList.remove('active');
 
+      closePlayerPage();
       buildGenreChips();
       buildYearChips();
 
@@ -4541,6 +4475,7 @@
       searchQuery = '';
       searchInput.value = '';
       curatedShelvesContainer.innerHTML = '';
+      closePlayerPage();
       heroSpotlight.style.display = 'none';
       actorsShowcaseSection.style.display = 'none';
       calendarViewContainer.style.display = 'none';
@@ -4904,7 +4839,7 @@
     function attachCardInteractions(element, item, type) {
       element.addEventListener('click', (e) => {
         if (!e.target.closest('.fav-heart-btn')) {
-          openMediaModal(item, type);
+          openMediaPage(item, type);
         }
       });
 
@@ -4936,7 +4871,7 @@
       if (!contextItem) return;
 
       if (action === 'play') {
-        openMediaModal(contextItem, contextItem.computedType);
+        openMediaPage(contextItem, contextItem.computedType);
       } else if (action === 'fav') {
         toggleFavoriteCard(null, contextItem.id);
       } else if (action === 'nextplay') {
@@ -5052,7 +4987,7 @@
           `;
           card.addEventListener('click', () => {
             closeInfoModal(null);
-            openMediaModal(sim, type);
+            openMediaPage(sim, type);
           });
           grid.appendChild(card);
         });
@@ -5070,21 +5005,17 @@
       if (!activeMedia) return;
       const targetMedia = { ...activeMedia };
       const endpoint = `${TMDB_BASE}/${targetMedia.computedType}/${targetMedia.id}/recommendations?api_key=${apiKey}`;
-      closePlayerModal();
+      closePlayerPage();
       openDedicatedCategory(`Related Universe: "${targetMedia.title || targetMedia.name}"`, endpoint, targetMedia.computedType);
     }
 
     function openInfoModal() {
       infoModalBackdrop.classList.add('active');
-      document.body.classList.add('modal-open');
     }
 
     function closeInfoModal(e) {
       if (!e || e.target === infoModalBackdrop || e.target.closest('.btn-circle')) {
         infoModalBackdrop.classList.remove('active');
-        if (!modalBackdrop.classList.contains('active')) {
-          document.body.classList.remove('modal-open');
-        }
       }
     }
 
@@ -5093,6 +5024,7 @@
       searchQuery = queryText.trim();
       if (!searchQuery) return;
 
+      closePlayerPage();
       currentType = 'all';
       currentPersonId = null;
       currentPersonName = '';
@@ -5167,7 +5099,7 @@
                 if (isPerson) {
                   filterByActor(item.id, item.name);
                 } else {
-                  openMediaModal(item, item.media_type || (item.title ? 'movie' : 'tv'));
+                  openMediaPage(item, item.media_type || (item.title ? 'movie' : 'tv'));
                 }
               });
 
@@ -5219,18 +5151,18 @@
       if (currentType === 'favorites') renderFavorites();
     }
 
-    function toggleFavoriteFromModal(e) {
+    function toggleFavoriteFromPlayer(e) {
       if (e) e.stopPropagation();
       if (!activeMedia) return;
       const id = activeMedia.id;
       const existingIdx = favoritesList.findIndex(f => f.id === id);
       if (existingIdx > -1) {
         favoritesList.splice(existingIdx, 1);
-        modalFavBtn.classList.remove('active');
+        playerFavBtn.classList.remove('active');
         showToast('Removed from Saved Favorites');
       } else {
         favoritesList.unshift(activeMedia);
-        modalFavBtn.classList.add('active');
+        playerFavBtn.classList.add('active');
         showToast('Added to Saved Favorites');
       }
       localStorage.setItem('humble_favorites', JSON.stringify(favoritesList));
@@ -5304,7 +5236,7 @@
             <span class="panel-item-time"><i class="fa-solid fa-clock"></i> ${savedTime}</span>
           </div>
         `;
-        card.onclick = () => openMediaModal(item, item.media_type, item.season || 1, item.episode || 1);
+        card.onclick = () => openMediaPage(item, item.media_type, item.season || 1, item.episode || 1);
         desktopCwList.appendChild(card);
       });
 
@@ -5325,7 +5257,7 @@
         `;
         mobCard.onclick = () => {
           closeMoreSheet(null);
-          openMediaModal(item, item.media_type, item.season || 1, item.episode || 1);
+          openMediaPage(item, item.media_type, item.season || 1, item.episode || 1);
         };
         mobileCwContainer.appendChild(mobCard);
       });
@@ -5342,6 +5274,7 @@
 
     function setupInfiniteScroll() {
       window.addEventListener('scroll', () => {
+        if (playerPageView.classList.contains('active')) return;
         if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600) {
           fetchCatalog(false);
         }
@@ -5362,30 +5295,23 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    async function openMediaModal(item, type, prefSeason = 1, prefEpisode = 1, fromBack = false) {
-      if (activeMedia && !fromBack && activeMedia.id !== item.id) {
-        modalHistoryStack.push({
-          media: { ...activeMedia },
-          season: activeSeason,
-          episode: activeEpisode
-        });
-      }
-
+    // TRANSITION TO DEDICATED PLAYER FULL PAGE
+    async function openMediaPage(item, type, prefSeason = 1, prefEpisode = 1) {
       activeMedia = { ...item, computedType: type };
       activeSeason = prefSeason;
       activeEpisode = prefEpisode;
       currentProviderIndex = 0;
 
-      modalWindow.scrollTop = 0;
-
       const mediaTitle = item.title || item.name || 'Media Player';
-      modalMediaTitle.textContent = mediaTitle;
-      modalOverview.textContent = item.overview || 'No synopsis available for this title.';
-
-      modalBackNavBtn.style.display = modalHistoryStack.length > 0 ? 'flex' : 'none';
+      playerPageTitle.textContent = mediaTitle;
+      playerOverview.textContent = item.overview || 'No synopsis available for this title.';
 
       const isFav = favoritesList.some(f => f.id === item.id);
-      modalFavBtn.classList.toggle('active', isFav);
+      playerFavBtn.classList.toggle('active', isFav);
+
+      catalogBrowserView.style.display = 'none';
+      playerPageView.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       loadCastData(item.id, type);
       loadMediaArtworks(item.id, type);
@@ -5402,12 +5328,20 @@
       loadActiveStream();
       addToHistory(item, activeSeason, activeEpisode);
 
-      modalBackdrop.classList.add('active');
-      document.body.classList.add('modal-open');
-
       if (isAutoPlayEnabled) {
         attemptInvisibleAutoClick();
       }
+    }
+
+    function closePlayerPage() {
+      if (isFullscreenActive()) {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+      playerPageView.classList.remove('active');
+      catalogBrowserView.style.display = 'block';
+      activeMedia = null;
+      playerFrame.src = '';
     }
 
     function attemptInvisibleAutoClick() {
@@ -5432,26 +5366,6 @@
           } catch (e) {}
         }
       }, 400);
-    }
-
-    function handleModalBackAction(e) {
-      if (e) e.stopPropagation();
-      if (modalHistoryStack.length === 0) return;
-      const prev = modalHistoryStack.pop();
-      openMediaModal(prev.media, prev.media.computedType, prev.season, prev.episode, true);
-    }
-
-    function closePlayerModal(e) {
-      if (e) e.stopPropagation();
-      if (isFullscreenActive()) {
-        if (document.exitFullscreen) document.exitFullscreen();
-        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      }
-      modalBackdrop.classList.remove('active');
-      document.body.classList.remove('modal-open');
-      modalHistoryStack = [];
-      activeMedia = null;
-      playerFrame.src = '';
     }
 
     async function loadFranchiseParts(id, type) {
@@ -5587,7 +5501,7 @@
 
       try {
         const data = await cachedFetch(`${TMDB_BASE}/${type}/${id}/credits?api_key=${apiKey}`);
-        const cast = (data.cast || []).slice(0, 14);
+        const cast = (data.cast || []).slice(0, 16);
 
         cast.forEach(person => {
           const avatar = person.profile_path 
@@ -5604,7 +5518,6 @@
 
           card.addEventListener('click', (e) => {
             e.stopPropagation();
-            closePlayerModal();
             filterByActor(person.id, person.name);
           });
 
@@ -5613,8 +5526,9 @@
 
         setupRowSliderListener('castContainer', 'sliderCastThumb', 'sliderCast');
 
-        const topLeadActors = cast.slice(0, 2);
-        topLeadActors.forEach((actor, aIdx) => {
+        // Automatically build dedicated shelves for at least two lead cast members
+        const qualifyingActors = cast.filter(p => p.id && p.name).slice(0, 3);
+        qualifyingActors.forEach((actor, aIdx) => {
           loadActorDedicatedShelf(actor, aIdx);
         });
       } catch (e) {
@@ -5637,9 +5551,9 @@
             return true;
           })
           .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
-          .slice(0, 12);
+          .slice(0, 15); // Guarantees 9+ films
 
-        if (rawItems.length === 0) return;
+        if (rawItems.length < 2) return;
 
         const shelfDiv = document.createElement('div');
         const scrollId = `actorShelfScroll_${actor.id}_${index}`;
@@ -5648,10 +5562,10 @@
 
         shelfDiv.innerHTML = `
           <div class="block-heading-wrap">
-            <div class="block-heading interactive-heading" onclick="closePlayerModal(); filterByActor(${actor.id}, '${actor.name.replace(/'/g, "\\'")}');" tabindex="0" title="Click to view full filmography">
+            <div class="block-heading interactive-heading" onclick="filterByActor(${actor.id}, '${actor.name.replace(/'/g, "\\'")}');" tabindex="0" title="Click to view full filmography">
               <i class="fa-solid fa-star" style="color: var(--accent);"></i>
-              <span>Watch more with ${actor.name}</span>
-              <span class="view-all-hint" style="font-size:0.72rem; color:var(--primary); margin-left:6px;"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+              <span>Watch more with ${actor.name} (${rawItems.length} Titles)</span>
+              <span class="view-all-hint" style="font-size:0.75rem; color:var(--primary); margin-left:8px; display:inline-flex; align-items:center; gap:4px;">View All Filmography <i class="fa-solid fa-arrow-right"></i></span>
             </div>
           </div>
           <div class="row-scroll-container">
@@ -5679,7 +5593,10 @@
               <img src="${poster}" alt="${title}" loading="lazy" />
             </div>
             <div class="shelf-card-title">${title}</div>
-            <div class="shelf-sub"><span>${year}</span></div>
+            <div class="shelf-sub">
+              <span>${year}</span>
+              <span class="rating-star"><i class="fa-solid fa-star"></i> ${item.vote_average ? item.vote_average.toFixed(1) : 'NR'}</span>
+            </div>
           `;
 
           attachCardInteractions(card, item, itemType);
@@ -5912,12 +5829,19 @@
       }
     }
 
+    // SPATIAL NAVIGATION: PREVENT CARET BROWSING & CROSS-TAB ACCIDENTAL KEY SHORTCUTS
     function setupSpatialDPad() {
       window.addEventListener('keydown', (e) => {
-        const isModalOpen = modalBackdrop.classList.contains('active');
+        // Block browser Caret Browsing toggle (F7)
+        if (e.key === 'F7') {
+          e.preventDefault();
+          return;
+        }
+
+        const isPlayerActive = playerPageView.classList.contains('active');
         const activeEl = document.activeElement;
 
-        if (e.key === 'Escape' || (e.key === 'Backspace' && activeEl && activeEl.tagName !== 'INPUT')) {
+        if (e.key === 'Escape') {
           if (lightboxBackdrop.classList.contains('active')) {
             closeLightbox(null);
             e.preventDefault();
@@ -5938,19 +5862,15 @@
             e.preventDefault();
             return;
           }
-          if (isModalOpen) {
-            if (modalHistoryStack.length > 0) {
-              handleModalBackAction();
-            } else {
-              closePlayerModal();
-            }
+          if (isPlayerActive) {
+            closePlayerPage();
             e.preventDefault();
             return;
           }
         }
 
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-          if (activeEl && activeEl.tagName === 'INPUT') {
+          if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT')) {
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
               activeEl.blur();
             } else {
@@ -5958,7 +5878,7 @@
             }
           }
 
-          const scope = isModalOpen ? modalWindow : document.body;
+          const scope = isPlayerActive ? playerPageView : document.body;
           const focusables = Array.from(scope.querySelectorAll('[tabindex="0"], button:not([disabled]), select:not([disabled]), input:not([disabled]), a[href]'))
             .filter(el => el.offsetParent !== null && window.getComputedStyle(el).display !== 'none');
 
@@ -6035,13 +5955,9 @@
 
       if (items.length > 0) {
         const randomItem = items[Math.floor(Math.random() * items.length)];
-        openMediaModal(randomItem, 'movie');
+        openMediaPage(randomItem, 'movie');
       }
     }
-
-    modalBackdrop.addEventListener('click', (e) => {
-      if (e.target === modalBackdrop) closePlayerModal();
-    });
   </script>
 </body>
 </html>
