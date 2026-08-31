@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>HumbleCinema - Premium Stream Hub</title>
+  <title>HumbleCinema - Premium Dynamic Stream Hub</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -47,13 +47,13 @@
     }
 
     body.theme-night {
-      --bg: #000000;
-      --surface: #09090b;
-      --surface-subtle: #141417;
+      --bg: #09090b;
+      --surface: #121216;
+      --surface-subtle: #1c1c24;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --border: transparent;
-      --primary-light: #161622;
+      --primary-light: #1e1e2d;
     }
 
     body.theme-lavender {
@@ -119,6 +119,7 @@
       display: flex;
       flex-direction: column;
       padding-bottom: 90px;
+      overflow-x: hidden;
     }
 
     @media (min-width: 900px) {
@@ -136,14 +137,46 @@
       z-index: 30;
     }
 
-    @keyframes rgbGlow {
-      0% { box-shadow: 0 0 14px rgba(79, 70, 229, 0.4); }
-      50% { box-shadow: 0 0 16px rgba(236, 72, 153, 0.4); }
-      100% { box-shadow: 0 0 14px rgba(6, 182, 212, 0.4); }
+    @keyframes radiantAura {
+      0% {
+        box-shadow: 0 0 12px rgba(79, 70, 229, 0.45), 0 0 24px rgba(236, 72, 153, 0.3);
+        border-color: rgba(236, 72, 153, 0.7);
+      }
+      33% {
+        box-shadow: 0 0 16px rgba(245, 158, 11, 0.5), 0 0 28px rgba(239, 68, 68, 0.35);
+        border-color: rgba(245, 158, 11, 0.8);
+      }
+      66% {
+        box-shadow: 0 0 16px rgba(6, 182, 212, 0.5), 0 0 28px rgba(79, 70, 229, 0.35);
+        border-color: rgba(6, 182, 212, 0.8);
+      }
+      100% {
+        box-shadow: 0 0 12px rgba(79, 70, 229, 0.45), 0 0 24px rgba(236, 72, 153, 0.3);
+        border-color: rgba(236, 72, 153, 0.7);
+      }
     }
 
-    .rgb-glow {
-      animation: rgbGlow 4s infinite alternate ease-in-out;
+    .radiant-hot-glow {
+      animation: radiantAura 4.5s infinite ease-in-out;
+      border: 1.5px solid transparent !important;
+      position: relative;
+    }
+
+    .radiant-hot-glow::after {
+      content: 'HOT';
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: linear-gradient(135deg, #ef4444, #f59e0b);
+      color: #ffffff;
+      font-size: 0.58rem;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+      z-index: 6;
+      pointer-events: none;
     }
 
     @keyframes badgePulse {
@@ -306,7 +339,7 @@
       .desktop-sidebar:hover,
       .desktop-sidebar:focus-within {
         width: var(--sidebar-expanded-w);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
       }
     }
 
@@ -577,7 +610,7 @@
       box-shadow: var(--shadow-sm);
     }
 
-    body.theme-night header { background: rgba(9, 9, 11, 0.95); }
+    body.theme-night header { background: rgba(18, 18, 22, 0.95); }
     body.theme-sunset header { background: rgba(34, 29, 77, 0.95); }
     body.theme-lavender header { background: rgba(243, 240, 255, 0.95); }
     body.theme-mint header { background: rgba(236, 253, 245, 0.95); }
@@ -954,6 +987,7 @@
       display: flex;
       align-items: flex-end;
       box-shadow: var(--shadow-md);
+      transform: translateZ(0);
     }
 
     @media (min-width: 768px) {
@@ -1658,7 +1692,7 @@
       border: none;
     }
 
-    body.theme-night .mobile-nav { background: rgba(9, 9, 11, 0.88); }
+    body.theme-night .mobile-nav { background: rgba(18, 18, 22, 0.88); }
     body.theme-sunset .mobile-nav { background: rgba(34, 29, 77, 0.88); }
     body.theme-lavender .mobile-nav { background: rgba(243, 240, 255, 0.88); }
     body.theme-mint .mobile-nav { background: rgba(236, 253, 245, 0.88); }
@@ -1864,6 +1898,7 @@
       box-shadow: var(--shadow-md);
       margin-bottom: 30px;
       flex-direction: column;
+      transform: translateZ(0);
     }
 
     .player-page-container.active {
@@ -1923,6 +1958,7 @@
       background: #000000;
       flex-shrink: 0;
       overflow: hidden;
+      transform: translateZ(0);
     }
 
     .video-viewport:-webkit-full-screen,
@@ -1993,60 +2029,22 @@
       gap: 12px;
     }
 
-    .player-controls-sub-bar {
+    .server-helper-tip {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      background: var(--surface-subtle);
-      padding: 8px 14px;
-      border-radius: 12px;
-    }
-
-    .autoplay-toggle-wrapper {
-      display: inline-flex;
-      align-items: center;
       gap: 8px;
-      font-size: 0.78rem;
+      background: var(--surface-subtle);
+      border-left: 3px solid var(--accent);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.76rem;
       font-weight: 700;
       color: var(--text-main);
-      cursor: pointer;
-      user-select: none;
     }
 
-    .toggle-switch-input {
-      display: none;
-    }
-
-    .toggle-switch-track {
-      width: 36px;
-      height: 20px;
-      background: #cbd5e1;
-      border-radius: 9999px;
-      position: relative;
-      transition: background-color 0.2s ease;
-      cursor: pointer;
-    }
-
-    .toggle-switch-track::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 16px;
-      height: 16px;
-      background: #ffffff;
-      border-radius: 50%;
-      transition: transform 0.2s ease;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-
-    .toggle-switch-input:checked + .toggle-switch-track {
-      background: var(--primary);
-    }
-
-    .toggle-switch-input:checked + .toggle-switch-track::after {
-      transform: translateX(16px);
+    .server-helper-tip i {
+      color: var(--accent);
+      font-size: 0.85rem;
     }
 
     .server-bar {
@@ -2853,14 +2851,10 @@
           </div>
 
           <div class="player-dock">
-            <!-- Player Controls Sub Bar -->
-            <div class="player-controls-sub-bar">
-              <div class="autoplay-toggle-wrapper" onclick="toggleAutoPlayPreference(event)">
-                <input type="checkbox" id="autoPlayToggleInput" class="toggle-switch-input" />
-                <div class="toggle-switch-track"></div>
-                <span>Instant Auto-Play Stream</span>
-              </div>
-              <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">Zero-Click Playback</span>
+            <!-- Server Switching Helpful Notice -->
+            <div class="server-helper-tip">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>If current player fails to load or buffers, switch to another server below.</span>
             </div>
 
             <!-- Desktop Server Bar -->
@@ -2945,7 +2939,7 @@
               </div>
             </div>
 
-            <!-- Dynamic Actor-Specific Movie Shelves Container (2+ Cast, 9+ Movies Each) -->
+            <!-- Dynamic Actor-Specific Movie Shelves Container -->
             <div id="actorsMovieShelvesContainer" style="display:flex; flex-direction:column; gap:18px;"></div>
 
             <div>
@@ -3387,10 +3381,8 @@
     let nextPlayList = JSON.parse(localStorage.getItem('humble_nextplay')) || [];
     let watchTimestamps = JSON.parse(localStorage.getItem('humble_timestamps')) || {};
     let mustWatchCalendar = JSON.parse(localStorage.getItem('humble_must_watch')) || [];
-    
-    let isAutoPlayEnabled = localStorage.getItem('humble_autoplay') !== null ? JSON.parse(localStorage.getItem('humble_autoplay')) : true;
 
-    let savedThemeMode = localStorage.getItem('humble_theme_mode') || 'night';
+    let savedThemeMode = localStorage.getItem('humble_theme_mode') || 'day';
     let savedAccentColor = localStorage.getItem('humble_custom_accent') || '#4f46e5';
     let previewTheme = savedThemeMode;
     let previewAccent = savedAccentColor;
@@ -3524,7 +3516,6 @@
     const playerFrame = document.getElementById('playerFrame');
     const videoViewport = document.getElementById('videoViewport');
     const videoTouchOverlay = document.getElementById('videoTouchOverlay');
-    const autoPlayToggleInput = document.getElementById('autoPlayToggleInput');
     const castContainer = document.getElementById('castContainer');
     const artworksContainer = document.getElementById('artworksContainer');
     const similarContainer = document.getElementById('similarContainer');
@@ -3576,7 +3567,6 @@
     const customColorWheel = document.getElementById('customColorWheel');
 
     document.addEventListener('DOMContentLoaded', () => {
-      if (autoPlayToggleInput) autoPlayToggleInput.checked = isAutoPlayEnabled;
       applyAccentColor(savedAccentColor);
       applyThemeMode(savedThemeMode);
       applyCwPanelState();
@@ -3595,14 +3585,6 @@
       setupFullscreenEvents();
       bindRowSliders();
     });
-
-    function toggleAutoPlayPreference(e) {
-      if (e) e.stopPropagation();
-      isAutoPlayEnabled = !isAutoPlayEnabled;
-      if (autoPlayToggleInput) autoPlayToggleInput.checked = isAutoPlayEnabled;
-      localStorage.setItem('humble_autoplay', JSON.stringify(isAutoPlayEnabled));
-      showToast(`Auto-Play ${isAutoPlayEnabled ? 'Enabled' : 'Disabled'}`);
-    }
 
     function previewThemeMode(mode) {
       previewTheme = mode;
@@ -3627,16 +3609,16 @@
 
     function resetThemeSettings(e) {
       if (e) e.stopPropagation();
-      savedThemeMode = 'night';
+      savedThemeMode = 'day';
       savedAccentColor = '#4f46e5';
-      previewTheme = 'night';
+      previewTheme = 'day';
       previewAccent = '#4f46e5';
-      localStorage.setItem('humble_theme_mode', 'night');
+      localStorage.setItem('humble_theme_mode', 'day');
       localStorage.setItem('humble_custom_accent', '#4f46e5');
-      applyThemeMode('night');
+      applyThemeMode('day');
       applyAccentColor('#4f46e5');
       if (customColorWheel) customColorWheel.value = '#4f46e5';
-      showToast('Theme reset to default (Dark & Indigo)');
+      showToast('Theme reset to default (Vibrant Day & Indigo)');
     }
 
     function applyAccentColor(hex) {
@@ -4060,25 +4042,25 @@
         <div class="about-dev-box">
           <div class="about-badge"><i class="fa-solid fa-sparkles"></i> The Vibe Code Story</div>
           
-          <p><strong>I am Mr. Humble from the Caribbean.</strong> 🌴✨</p>
+          <p><strong>I am Mr. Humble from the Caribbean.</strong></p>
           
           <p>This website was just a fun project, but I know there are at least 100 people out there who would love to have a clean, fast-loading, zero-ad streaming experience.</p>
           
-          <p>A streaming site where <strong>almost every single thing is clickable</strong>. ⚡🎬</p>
+          <p>A streaming site where <strong>almost every single thing is clickable</strong>.</p>
           
           <p>Currently, it is still an experimental but fun-to-use website.</p>
           
-          <p>If you asked, or guessed it: <strong>YES! It was vibe coded.</strong> 🚀💻</p>
+          <p>If you asked, or guessed it: <strong>YES! It was vibe coded.</strong></p>
           
           <p>You may imagine it to be a simple thing to do, but you are absolutely wrong.</p>
           
           <p>Vibe coding also needs a lot of time and patience to learn prompts, and put things into perspective.</p>
           
-          <p>Codes may break, but how you handle those errors tells a lot about how passionate you are about whatever it is you are building. ❤️🛠️</p>
+          <p>Codes may break, but how you handle those errors tells a lot about how passionate you are about whatever it is you are building.</p>
           
           <p>I love to create things. I love to be different. So I took on this project entirely solo, and I will continue to create more stuff and hopefully build something amazing, and gather a little team to make a great impact.</p>
           
-          <p>At the moment, please feel free to enjoy my streaming site. Because, <strong>it is FREE!!</strong> 🎉🍿</p>
+          <p>At the moment, please feel free to enjoy my streaming site. Because, <strong>it is FREE!!</strong></p>
           
           <div class="disclaimer-sub-box">
             <strong><i class="fa-solid fa-shield-halved"></i> Disclaimer:</strong> Media streams are provided via third-party web scrapers. This site does not host or store files on its servers.
@@ -4547,6 +4529,8 @@
             scrollContainer.innerHTML = '';
 
             let renderedCount = 0;
+            const hotPickIndex = Math.floor(Math.random() * Math.min(items.length, 6));
+
             items.forEach((item, cardIdx) => {
               const itemType = shelf.type === 'all' ? (item.media_type || 'movie') : shelf.type;
               const uniqueKey = `${itemType}_${item.id}`;
@@ -4560,13 +4544,13 @@
               const date = item.release_date || item.first_air_date || '';
               const year = date ? date.split('-')[0] : '';
               const rating = item.vote_average ? item.vote_average.toFixed(1) : 'NR';
-              const isTopFeatured = index === 0 && cardIdx < 3;
+              const isHotGlow = cardIdx === hotPickIndex || (index === 0 && cardIdx === 0);
 
               const card = document.createElement('div');
-              card.className = 'shelf-card';
+              card.className = `shelf-card ${isHotGlow ? 'radiant-hot-glow' : ''}`;
               card.setAttribute('tabindex', '0');
               card.innerHTML = `
-                <div class="shelf-poster ${isTopFeatured ? 'rgb-glow' : ''}">
+                <div class="shelf-poster">
                   <img src="${poster}" alt="${title}" loading="lazy" />
                 </div>
                 <div class="shelf-card-title">${title}</div>
@@ -4757,6 +4741,8 @@
         return true;
       });
 
+      const randomGlowIdx = Math.floor(Math.random() * Math.min(valid.length, 8));
+
       valid.forEach((item, idx) => {
         const isPerson = item.media_type === 'person';
 
@@ -4808,13 +4794,13 @@
           ? `${IMAGE_BASE}${item.poster_path}` 
           : 'https://via.placeholder.com/300x450?text=No+Poster';
         const isFav = favoritesList.some(f => f.id === item.id);
-        const isTop = idx === 0 && currentPage === 2;
+        const isRandomHot = idx === randomGlowIdx || (idx === 0 && currentPage === 2);
 
         const card = document.createElement('div');
-        card.className = 'media-card';
+        card.className = `media-card ${isRandomHot ? 'radiant-hot-glow' : ''}`;
         card.setAttribute('tabindex', '0');
         card.innerHTML = `
-          <div class="poster-wrap ${isTop ? 'rgb-glow' : ''}">
+          <div class="poster-wrap">
             <img src="${poster}" alt="${title}" loading="lazy" />
             <span class="badge-pill tag">${type === 'movie' ? 'Movie' : 'TV'}</span>
             <span class="badge-pill rating"><i class="fa-solid fa-star"></i> ${rating}</span>
@@ -5327,10 +5313,6 @@
 
       loadActiveStream();
       addToHistory(item, activeSeason, activeEpisode);
-
-      if (isAutoPlayEnabled) {
-        attemptInvisibleAutoClick();
-      }
     }
 
     function closePlayerPage() {
@@ -5342,30 +5324,6 @@
       catalogBrowserView.style.display = 'block';
       activeMedia = null;
       playerFrame.src = '';
-    }
-
-    function attemptInvisibleAutoClick() {
-      setTimeout(() => {
-        const overlay = document.getElementById('videoTouchOverlay');
-        const frame = document.getElementById('playerFrame');
-        if (overlay) {
-          const rect = overlay.getBoundingClientRect();
-          const clickEvent = new MouseEvent('click', {
-            view: window,
-            bubbles: true,
-            cancelable: true,
-            clientX: rect.left + rect.width / 2,
-            clientY: rect.top + rect.height / 2
-          });
-          overlay.dispatchEvent(clickEvent);
-        }
-        if (frame) {
-          try {
-            frame.focus();
-            frame.contentWindow && frame.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-          } catch (e) {}
-        }
-      }, 400);
     }
 
     async function loadFranchiseParts(id, type) {
@@ -5526,7 +5484,6 @@
 
         setupRowSliderListener('castContainer', 'sliderCastThumb', 'sliderCast');
 
-        // Automatically build dedicated shelves for at least two lead cast members
         const qualifyingActors = cast.filter(p => p.id && p.name).slice(0, 3);
         qualifyingActors.forEach((actor, aIdx) => {
           loadActorDedicatedShelf(actor, aIdx);
@@ -5551,7 +5508,7 @@
             return true;
           })
           .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
-          .slice(0, 15); // Guarantees 9+ films
+          .slice(0, 15);
 
         if (rawItems.length < 2) return;
 
@@ -5734,41 +5691,40 @@
       if (!activeMedia) return '';
       const id = activeMedia.id;
       const isTv = activeMedia.computedType === 'tv';
-      const autoPlayParam = isAutoPlayEnabled ? '1' : '0';
 
       switch (providerName) {
         case 'videasy':
           return isTv
-            ? `https://player.videasy.net/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=${autoPlayParam}`
-            : `https://player.videasy.net/movie/${id}?autoplay=${autoPlayParam}`;
+            ? `https://player.videasy.net/tv/${id}/${activeSeason}/${activeEpisode}`
+            : `https://player.videasy.net/movie/${id}`;
 
         case 'superembed':
           return isTv
-            ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${activeSeason}&e=${activeEpisode}&autoplay=${autoPlayParam}`
-            : `https://multiembed.mov/?video_id=${id}&tmdb=1&autoplay=${autoPlayParam}`;
+            ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${activeSeason}&e=${activeEpisode}`
+            : `https://multiembed.mov/?video_id=${id}&tmdb=1`;
 
         case 'vidfast':
           return isTv
-            ? `https://vidfast.pro/tv/${id}/${activeSeason}/${activeEpisode}?autoPlay=${isAutoPlayEnabled}`
-            : `https://vidfast.pro/movie/${id}?autoPlay=${isAutoPlayEnabled}`;
+            ? `https://vidfast.pro/tv/${id}/${activeSeason}/${activeEpisode}`
+            : `https://vidfast.pro/movie/${id}`;
 
         case 'vidlink':
           return isTv
-            ? `https://vidlink.pro/tv/${id}/${activeSeason}/${activeEpisode}?primaryColor=4f46e5&autoplay=${isAutoPlayEnabled}`
-            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=${isAutoPlayEnabled}`;
+            ? `https://vidlink.pro/tv/${id}/${activeSeason}/${activeEpisode}?primaryColor=4f46e5`
+            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5`;
 
         case 'vidapi':
           return isTv
-            ? `https://vidapi.ru/embed/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=${autoPlayParam}`
-            : `https://vidapi.ru/embed/movie/${id}?autoplay=${autoPlayParam}`;
+            ? `https://vidapi.ru/embed/tv/${id}/${activeSeason}/${activeEpisode}`
+            : `https://vidapi.ru/embed/movie/${id}`;
 
         case 'vixsrc':
           return isTv 
-            ? `https://vixsrc.to/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=${autoPlayParam}`
-            : `https://vixsrc.to/movie/${id}?autoplay=${autoPlayParam}`;
+            ? `https://vixsrc.to/tv/${id}/${activeSeason}/${activeEpisode}`
+            : `https://vixsrc.to/movie/${id}`;
 
         default:
-          return `https://player.videasy.net/movie/${id}?autoplay=${autoPlayParam}`;
+          return `https://player.videasy.net/movie/${id}`;
       }
     }
 
@@ -5776,7 +5732,6 @@
       currentProviderIndex = PROVIDERS.indexOf(provider);
       updateServerButtons();
       executeStreamLoad();
-      if (isAutoPlayEnabled) attemptInvisibleAutoClick();
     }
 
     function updateServerButtons() {
@@ -5829,10 +5784,8 @@
       }
     }
 
-    // SPATIAL NAVIGATION: PREVENT CARET BROWSING & CROSS-TAB ACCIDENTAL KEY SHORTCUTS
     function setupSpatialDPad() {
       window.addEventListener('keydown', (e) => {
-        // Block browser Caret Browsing toggle (F7)
         if (e.key === 'F7') {
           e.preventDefault();
           return;
