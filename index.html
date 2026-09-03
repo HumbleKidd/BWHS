@@ -117,7 +117,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Keep generic elements clean without scrollbars */
     body, nav, aside, .filter-row, .shelf-scroll, .actors-scroll, .artworks-row, .parts-row, .actor-shelf-row, .single-line-cast-bar {
       scrollbar-width: none;
       -ms-overflow-style: none;
@@ -615,6 +614,7 @@
       z-index: 50;
       box-shadow: var(--shadow-sm);
       transform: translate3d(0, 0, 0);
+      transition: filter 0.3s ease, opacity 0.3s ease;
     }
 
     .header-inner {
@@ -719,7 +719,6 @@
       font-size: 0.85rem;
     }
 
-    /* Custom Vertical Scrollbar & Affordance for Search Suggestions */
     .search-suggestions {
       position: absolute;
       top: calc(100% + 8px);
@@ -759,7 +758,6 @@
       display: flex;
     }
 
-    /* Mobile bottom overflow hint indicator */
     @media (max-width: 768px) {
       .search-suggestions {
         mask-image: linear-gradient(to bottom, black calc(100% - 24px), rgba(0, 0, 0, 0.2) 100%);
@@ -1652,6 +1650,7 @@
       cursor: pointer;
     }
 
+    /* Player Container & Smooth Transition States */
     .player-page-container {
       display: none;
       width: 100%;
@@ -1660,9 +1659,9 @@
       box-shadow: var(--shadow-md);
       margin-bottom: 30px;
       flex-direction: column;
-      transform: translate3d(0, 0, 0);
       position: relative;
       background-color: var(--surface);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .player-page-container.active {
@@ -1710,7 +1709,7 @@
       color: var(--text-main);
       cursor: pointer;
       font-size: 0.95rem;
-      transition: transform 0.15s ease, background-color 0.15s ease;
+      transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
     }
 
     .btn-circle:hover {
@@ -1724,15 +1723,23 @@
       background: rgba(239, 68, 68, 0.15);
     }
 
+    .btn-circle.theater-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    }
+
     .player-split-layout {
       display: flex;
       flex-direction: column;
       width: 100%;
+      align-items: stretch;
     }
 
     @media (min-width: 1080px) {
       .player-split-layout {
         flex-direction: row;
+        align-items: stretch;
       }
     }
 
@@ -1743,6 +1750,7 @@
       min-width: 0;
     }
 
+    /* Desktop Suggestions list flows to the bottom evenly with left content */
     .player-also-watch-sidebar {
       width: 100%;
       background: var(--surface-subtle);
@@ -1755,12 +1763,12 @@
 
     @media (min-width: 1080px) {
       .player-also-watch-sidebar {
-        width: 340px;
-        min-width: 340px;
+        width: 360px;
+        min-width: 360px;
         border-top: none;
         border-left: 1px solid var(--border);
-        max-height: 1200px;
-        overflow-y: auto;
+        height: auto;
+        overflow-y: visible;
       }
     }
 
@@ -1776,11 +1784,13 @@
       cursor: pointer;
     }
 
-    /* Small, neat 3 movies per row mobile layout */
+    /* Strict 3-columns mobile grid for Suggestions */
     .sidebar-rec-list {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
+      width: 100%;
+      overflow: visible;
     }
 
     @media (min-width: 1080px) {
@@ -1798,11 +1808,13 @@
       gap: 4px;
       background: var(--surface);
       border-radius: 10px;
-      padding: 5px;
+      padding: 6px;
       cursor: pointer;
       box-shadow: var(--shadow-sm);
-      transition: transform 0.15s ease, background-color 0.15s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
       contain: content;
+      width: 100%;
+      min-width: 0;
     }
 
     @media (min-width: 1080px) {
@@ -1825,6 +1837,7 @@
       object-fit: cover;
       flex-shrink: 0;
       background: #000;
+      display: block;
     }
 
     @media (min-width: 1080px) {
@@ -1839,6 +1852,8 @@
       justify-content: center;
       overflow: hidden;
       flex: 1;
+      width: 100%;
+      min-width: 0;
     }
 
     .sidebar-rec-title {
@@ -1849,6 +1864,8 @@
       overflow: hidden;
       text-overflow: ellipsis;
       line-height: 1.2;
+      width: 100%;
+      display: block;
     }
 
     @media (min-width: 1080px) {
@@ -1865,6 +1882,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: block;
     }
 
     .btn-load-more-rec {
@@ -1877,7 +1895,7 @@
       font-size: 0.76rem;
       font-weight: 800;
       cursor: pointer;
-      transition: background-color 0.15s ease;
+      transition: background-color 0.15s ease, color 0.15s ease;
       text-align: center;
       width: 100%;
       margin-top: 6px;
@@ -1965,6 +1983,7 @@
       flex-shrink: 0;
       overflow: hidden;
       transform: translate3d(0, 0, 0);
+      transition: all 0.35s ease;
     }
 
     .video-viewport iframe {
@@ -2420,6 +2439,7 @@
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
       border: none;
       transform: translate3d(0, 0, 0);
+      transition: filter 0.3s ease, opacity 0.3s ease;
     }
 
     @media (min-width: 900px) {
@@ -2666,6 +2686,37 @@
       align-items: center;
       justify-content: center;
     }
+
+    /* Modern Theater Mode Styles */
+    body.theater-mode-active header,
+    body.theater-mode-active .desktop-sidebar,
+    body.theater-mode-active .mobile-nav,
+    body.theater-mode-active .desktop-right-panel,
+    body.theater-mode-active .details-section,
+    body.theater-mode-active .player-dock,
+    body.theater-mode-active .player-also-watch-sidebar,
+    body.theater-mode-active .player-bottom-disclaimer {
+      filter: blur(14px) brightness(0.4);
+      opacity: 0.25;
+      pointer-events: none;
+      transition: all 0.4s ease;
+    }
+
+    body.theater-mode-active {
+      background: #000000 !important;
+    }
+
+    body.theater-mode-active .player-page-container {
+      background: #000000;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+      border-radius: 0;
+    }
+
+    body.theater-mode-active .video-viewport {
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95);
+      transform: scale(1.01);
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
@@ -2832,6 +2883,9 @@
                 <h2 class="player-page-heading" id="playerPageTitle">Loading Player...</h2>
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
+                <button class="btn-circle theater-btn" id="btnTheaterMode" onclick="toggleTheaterMode()" title="Toggle Theater Cinema Mode">
+                  <i class="fa-solid fa-clapperboard"></i>
+                </button>
                 <button class="btn-circle fav" id="playerFavBtn" onclick="toggleFavoriteFromPlayer(event)">
                   <i class="fa-solid fa-heart"></i>
                 </button>
@@ -2950,16 +3004,22 @@
               </div>
 
               <!-- Right Column: Extended "Also Watch" & Commentary Sidebar -->
-              <aside class="player-also-watch-sidebar">
-                <div class="sidebar-also-heading" onclick="expandSimilarUnlimited()" title="Click to view all related titles">
+              <aside class="player-also-watch-sidebar" id="playerAlsoWatchSidebar">
+                <div class="sidebar-also-heading">
                   <span><i class="fa-solid fa-film" style="color:var(--accent);"></i> Also Watch</span>
-                  <span style="font-size:0.7rem; color:var(--primary); cursor:pointer;">View All <i class="fa-solid fa-arrow-right"></i></span>
+                  <span id="similarResultsCount" style="font-size:0.7rem; color:var(--primary); font-weight:700;">Related Picks</span>
                 </div>
+                
+                <!-- Neat 3-Col Mobile / Vertical Desktop Suggestions Grid -->
                 <div class="sidebar-rec-list" id="sidebarRecList">
                   <div style="text-align:center; padding:20px; color:var(--text-muted); grid-column:1/-1;">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> Loading titles...
                   </div>
                 </div>
+
+                <button class="btn-load-more-rec" id="btnLoadMoreRelated" onclick="loadMoreRelatedTitles()" style="display: none;">
+                  <i class="fa-solid fa-angles-down"></i> Load More Related Titles
+                </button>
 
                 <!-- Desktop Worldwide Commentary & Reviews Section -->
                 <div class="desktop-commentary-section" id="desktopCommentarySection">
@@ -2973,6 +3033,12 @@
                   </button>
                 </div>
               </aside>
+            </div>
+
+            <!-- Persistent Third-party Scraper Disclaimer on Every Playing Screen -->
+            <div class="disclaimer-banner player-bottom-disclaimer" style="margin: 20px 18px 18px; border-radius: 12px;">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Notice: Media streams are provided via third-party web scrapers. This site does not host or store files on its servers.</span>
             </div>
           </div>
         </section>
@@ -3385,6 +3451,10 @@
     let cachedReviewsList = [];
     let reviewsRenderCount = 0;
 
+    let similarCurrentPage = 1;
+    let similarSeenSet = new Set();
+    let isTheaterMode = false;
+
     const todayStr = '2026-08-31';
 
     const GENRES = [
@@ -3457,6 +3527,8 @@
     const singleLineCastBar = document.getElementById('singleLineCastBar');
     const artworksContainer = document.getElementById('artworksContainer');
     const sidebarRecList = document.getElementById('sidebarRecList');
+    const btnLoadMoreRelated = document.getElementById('btnLoadMoreRelated');
+    const similarResultsCount = document.getElementById('similarResultsCount');
     const commentsListContainer = document.getElementById('commentsListContainer');
     const btnLoadMoreComments = document.getElementById('btnLoadMoreComments');
     const actorsMovieShelvesContainer = document.getElementById('actorsMovieShelvesContainer');
@@ -3502,6 +3574,7 @@
     const themePopupMenu = document.getElementById('themePopupMenu');
     const themeIcon = document.getElementById('themeIcon');
     const themeLabel = document.getElementById('themeLabel');
+    const btnTheaterMode = document.getElementById('btnTheaterMode');
 
     let auraReminderTimer = null;
 
@@ -3546,12 +3619,35 @@
     }
 
     function handlePlayerBackNavigation() {
+      if (isTheaterMode) {
+        toggleTheaterMode();
+      }
       if (window.history.length > 1) {
         window.history.back();
       } else {
         closePlayerPage(true);
       }
     }
+
+    function toggleTheaterMode() {
+      isTheaterMode = !isTheaterMode;
+      document.body.classList.toggle('theater-mode-active', isTheaterMode);
+      if (btnTheaterMode) {
+        btnTheaterMode.classList.toggle('active', isTheaterMode);
+      }
+      if (isTheaterMode) {
+        showToast('Theater Cinema Mode On');
+        videoViewport.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        showToast('Theater Cinema Mode Off');
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isTheaterMode) {
+        toggleTheaterMode();
+      }
+    });
 
     function previewThemeMode(mode) {
       applyThemeMode(mode);
@@ -4759,14 +4855,6 @@
       }
     }
 
-    function expandSimilarUnlimited() {
-      if (!activeMedia) return;
-      const targetMedia = { ...activeMedia };
-      const endpoint = `${TMDB_BASE}/${targetMedia.computedType}/${targetMedia.id}/recommendations?api_key=${apiKey}`;
-      closePlayerPage();
-      openDedicatedCategory(`Related Universe: "${targetMedia.title || targetMedia.name}"`, endpoint, targetMedia.computedType);
-    }
-
     function openInfoModal() {
       infoModalBackdrop.classList.add('active');
     }
@@ -5065,6 +5153,8 @@
       activeSeason = prefSeason;
       activeEpisode = prefEpisode;
       currentProviderIndex = 0;
+      similarCurrentPage = 1;
+      similarSeenSet.clear();
 
       if (desktopRightPanel) {
         desktopRightPanel.classList.add('player-hidden');
@@ -5104,6 +5194,9 @@
     }
 
     function closePlayerPage(pushHistory = true) {
+      if (isTheaterMode) {
+        toggleTheaterMode();
+      }
       playerPageView.classList.remove('active');
       catalogBrowserView.style.display = 'block';
       activeMedia = null;
@@ -5417,6 +5510,9 @@
 
     async function loadSidebarAlsoWatch(id, type) {
       sidebarRecList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--text-muted); grid-column:1/-1;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading titles...</div>';
+      btnLoadMoreRelated.style.display = 'none';
+      similarSeenSet.clear();
+      similarCurrentPage = 1;
 
       try {
         let [p1, p2, p3] = await Promise.all([
@@ -5433,46 +5529,75 @@
           return;
         }
 
-        const seenRec = new Set();
-        let rendered = 0;
-
-        items.forEach(rec => {
-          if (!rec.poster_path || seenRec.has(rec.id) || rendered >= 48) return;
-          seenRec.add(rec.id);
-          rendered++;
-
-          const poster = `${IMAGE_BASE}${rec.poster_path}`;
-          const title = rec.title || rec.name;
-          const date = rec.release_date || rec.first_air_date || '';
-          const year = date ? date.split('-')[0] : '';
-          const rating = rec.vote_average ? rec.vote_average.toFixed(1) : 'NR';
-
-          const card = document.createElement('div');
-          card.className = 'sidebar-rec-card';
-          card.innerHTML = `
-            <img src="${poster}" class="sidebar-rec-thumb" alt="${title}" loading="lazy" />
-            <div class="sidebar-rec-info">
-              <span class="sidebar-rec-title">${title}</span>
-              <span class="sidebar-rec-sub"><i class="fa-solid fa-star" style="color:#fbbf24;"></i> ${rating} • ${year}</span>
-            </div>
-          `;
-
-          card.addEventListener('click', () => {
-            openMediaPage(rec, rec.media_type || type);
-          });
-
-          sidebarRecList.appendChild(card);
-        });
-
-        if (items.length > 48) {
-          const loadMoreBtn = document.createElement('button');
-          loadMoreBtn.className = 'btn-load-more-rec';
-          loadMoreBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Load More Titles';
-          loadMoreBtn.onclick = () => expandSimilarUnlimited();
-          sidebarRecList.appendChild(loadMoreBtn);
-        }
+        renderSimilarCardsBatch(items);
+        btnLoadMoreRelated.style.display = 'block';
       } catch (err) {
         sidebarRecList.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted); grid-column:1/-1;">Failed to load recommendations.</span>';
+      }
+    }
+
+    function renderSimilarCardsBatch(items) {
+      const fragment = document.createDocumentFragment();
+
+      items.forEach(rec => {
+        if (!rec.poster_path || similarSeenSet.has(rec.id) || (activeMedia && rec.id === activeMedia.id)) return;
+        similarSeenSet.add(rec.id);
+
+        const poster = `${IMAGE_BASE}${rec.poster_path}`;
+        const title = rec.title || rec.name || 'Untitled';
+        const date = rec.release_date || rec.first_air_date || '';
+        const year = date ? date.split('-')[0] : '';
+        const rating = rec.vote_average ? rec.vote_average.toFixed(1) : 'NR';
+
+        const card = document.createElement('div');
+        card.className = 'sidebar-rec-card';
+        card.innerHTML = `
+          <img src="${poster}" class="sidebar-rec-thumb" alt="${title}" loading="lazy" />
+          <div class="sidebar-rec-info">
+            <span class="sidebar-rec-title">${title}</span>
+            <span class="sidebar-rec-sub"><i class="fa-solid fa-star" style="color:#fbbf24;"></i> ${rating} • ${year}</span>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          openMediaPage(rec, rec.media_type || (rec.title ? 'movie' : 'tv'));
+        });
+
+        fragment.appendChild(card);
+      });
+
+      sidebarRecList.appendChild(fragment);
+      if (similarResultsCount) {
+        similarResultsCount.textContent = `${similarSeenSet.size} Titles`;
+      }
+    }
+
+    async function loadMoreRelatedTitles() {
+      if (!activeMedia) return;
+      btnLoadMoreRelated.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Finding more related films...';
+      similarCurrentPage++;
+
+      const type = activeMedia.computedType || 'movie';
+      const id = activeMedia.id;
+
+      try {
+        const [pRec, pSim] = await Promise.all([
+          cachedFetch(`${TMDB_BASE}/${type}/${id}/recommendations?api_key=${apiKey}&page=${similarCurrentPage}`),
+          cachedFetch(`${TMDB_BASE}/${type}/${id}/similar?api_key=${apiKey}&page=${similarCurrentPage}`)
+        ]);
+
+        let items = [...(pRec.results || []), ...(pSim.results || [])].filter(isCleanCinemaContent);
+
+        if (items.length === 0 && activeMedia.genre_ids && activeMedia.genre_ids.length > 0) {
+          const genreId = activeMedia.genre_ids[0];
+          const genreData = await cachedFetch(`${TMDB_BASE}/discover/${type}?api_key=${apiKey}&with_genres=${genreId}&sort_by=popularity.desc&page=${similarCurrentPage}`);
+          items = (genreData.results || []).filter(isCleanCinemaContent);
+        }
+
+        renderSimilarCardsBatch(items);
+        btnLoadMoreRelated.innerHTML = '<i class="fa-solid fa-angles-down"></i> Load More Related Titles';
+      } catch (err) {
+        btnLoadMoreRelated.style.display = 'none';
       }
     }
 
