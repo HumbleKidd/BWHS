@@ -115,11 +115,19 @@
       padding: 0;
       font-family: 'Plus Jakarta Sans', sans-serif;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Keep generic elements clean without scrollbars */
+    body, nav, aside, .filter-row, .shelf-scroll, .actors-scroll, .artworks-row, .parts-row, .actor-shelf-row, .single-line-cast-bar {
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
 
-    *::-webkit-scrollbar {
+    body::-webkit-scrollbar, nav::-webkit-scrollbar, aside::-webkit-scrollbar, 
+    .filter-row::-webkit-scrollbar, .shelf-scroll::-webkit-scrollbar, 
+    .actors-scroll::-webkit-scrollbar, .artworks-row::-webkit-scrollbar, 
+    .parts-row::-webkit-scrollbar, .actor-shelf-row::-webkit-scrollbar, 
+    .single-line-cast-bar::-webkit-scrollbar {
       display: none !important;
       width: 0 !important;
       height: 0 !important;
@@ -244,7 +252,6 @@
       box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
     }
 
-    /* Upgraded Modern Year Dropdown for Mobile */
     .mobile-year-dropdown-wrap {
       position: relative;
       display: inline-flex;
@@ -712,6 +719,7 @@
       font-size: 0.85rem;
     }
 
+    /* Custom Vertical Scrollbar & Affordance for Search Suggestions */
     .search-suggestions {
       position: absolute;
       top: calc(100% + 8px);
@@ -720,24 +728,53 @@
       background: var(--surface);
       border-radius: 14px;
       box-shadow: var(--shadow-xl);
-      max-height: 420px;
+      max-height: 400px;
       overflow-y: auto;
       z-index: 1000;
       display: none;
       flex-direction: column;
+      border: 1px solid var(--border);
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) transparent;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .search-suggestions::-webkit-scrollbar {
+      display: block !important;
+      width: 5px !important;
+    }
+
+    .search-suggestions::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 9999px;
+      margin: 6px 0;
+    }
+
+    .search-suggestions::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, var(--primary), var(--accent-pink));
+      border-radius: 9999px;
     }
 
     .search-suggestions.active {
       display: flex;
     }
 
+    /* Mobile bottom overflow hint indicator */
+    @media (max-width: 768px) {
+      .search-suggestions {
+        mask-image: linear-gradient(to bottom, black calc(100% - 24px), rgba(0, 0, 0, 0.2) 100%);
+        -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 24px), rgba(0, 0, 0, 0.2) 100%);
+      }
+    }
+
     .suggestion-item {
-      padding: 8px 12px;
+      padding: 9px 12px;
       display: flex;
       align-items: center;
       gap: 10px;
       cursor: pointer;
       border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
 
     .suggestion-item:last-of-type {
@@ -1615,7 +1652,6 @@
       cursor: pointer;
     }
 
-    /* Player Page Container adheres naturally to theme backgrounds */
     .player-page-container {
       display: none;
       width: 100%;
@@ -1740,7 +1776,7 @@
       cursor: pointer;
     }
 
-    /* Fixed mobile suggested layout: tight 3 movies per row grid */
+    /* Small, neat 3 movies per row mobile layout */
     .sidebar-rec-list {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -3847,7 +3883,7 @@
     }
 
     function setupGlobalClicks() {
-      document.addEventListener('click', (e) => {
+      document.addEventListener('pointerdown', (e) => {
         if (!e.target.closest('.search-box')) {
           searchSuggestions.classList.remove('active');
         }
@@ -4493,9 +4529,14 @@
           totalPages = data.total_pages || 1;
           if (page >= totalPages) hasMorePages = false;
           let results = (data.results || []).filter(isCleanCinemaContent);
-          cachedRawSearchResults = results;
 
-          filterAndRenderSearchResults();
+          if (reset) {
+            cachedRawSearchResults = results;
+            filterAndRenderSearchResults();
+          } else {
+            cachedRawSearchResults = [...cachedRawSearchResults, ...results];
+            renderItems(results);
+          }
         } else {
           const url = buildEndpoint(page);
           const data = await cachedFetch(url);
@@ -4742,7 +4783,7 @@
       if (!searchQuery) return;
 
       closePlayerPage();
-      currentType = 'all';
+      currentType = 'search';
       currentPersonId = null;
       currentPersonName = '';
       currentKeywordId = null;
@@ -4781,7 +4822,7 @@
         debounce = setTimeout(async () => {
           try {
             const multiData = await cachedFetch(`${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(val)}`);
-            let results = (multiData.results || []).filter(isCleanCinemaContent).slice(0, 6);
+            let results = (multiData.results || []).filter(isCleanCinemaContent).slice(0, 10);
 
             if (results.length === 0) {
               searchSuggestions.classList.remove('active');
@@ -4812,7 +4853,8 @@
                 </div>
               `;
 
-              div.addEventListener('click', () => {
+              div.addEventListener('click', (ev) => {
+                ev.stopPropagation();
                 searchSuggestions.classList.remove('active');
                 searchInput.value = title;
                 if (isPerson) {
