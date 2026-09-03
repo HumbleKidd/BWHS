@@ -47,6 +47,12 @@
       --sidebar-w: 68px;
       --sidebar-expanded-w: 240px;
       --right-panel-w: 280px;
+
+      --scroll-track: rgba(79, 70, 229, 0.06);
+      --scroll-thumb-grad: linear-gradient(180deg, var(--primary), var(--accent-pink));
+      --scroll-thumb-hover: linear-gradient(180deg, var(--accent-pink), var(--accent));
+      --scroll-thumb-h-grad: linear-gradient(90deg, var(--primary), var(--accent-pink));
+      --scroll-thumb-h-hover: linear-gradient(90deg, var(--accent-pink), var(--accent));
     }
 
     body.theme-sunset {
@@ -57,6 +63,7 @@
       --text-muted: #cbd5e1;
       --border: transparent;
       --primary-light: #312a6e;
+      --scroll-track: rgba(236, 72, 153, 0.12);
     }
 
     body.theme-night {
@@ -67,6 +74,7 @@
       --text-muted: #94a3b8;
       --border: transparent;
       --primary-light: #1e1e2d;
+      --scroll-track: rgba(255, 255, 255, 0.06);
     }
 
     body.theme-lavender {
@@ -77,6 +85,7 @@
       --text-muted: #7c3aed;
       --border: #e9e4ff;
       --primary-light: #ede9fe;
+      --scroll-track: rgba(139, 92, 246, 0.12);
     }
 
     body.theme-mint {
@@ -87,6 +96,7 @@
       --text-muted: #059669;
       --border: #d1fae5;
       --primary-light: #e6fffa;
+      --scroll-track: rgba(16, 185, 129, 0.12);
     }
 
     body.theme-emerald {
@@ -97,6 +107,7 @@
       --text-muted: #6ee7b7;
       --border: transparent;
       --primary-light: #134e3a;
+      --scroll-track: rgba(110, 231, 183, 0.12);
     }
 
     body.theme-royal {
@@ -107,6 +118,7 @@
       --text-muted: #93c5fd;
       --border: transparent;
       --primary-light: #1e3a8a;
+      --scroll-track: rgba(59, 130, 246, 0.12);
     }
 
     * {
@@ -117,12 +129,45 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body, nav, aside, .filter-row, .shelf-scroll, .actors-scroll, .artworks-row, .parts-row, .actor-shelf-row, .single-line-cast-bar {
+    /* Universal Stylish Page Vertical Scrollbar on Right */
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) var(--scroll-track);
+    }
+
+    html::-webkit-scrollbar {
+      width: 9px;
+      height: 9px;
+      display: block !important;
+    }
+
+    html::-webkit-scrollbar-track {
+      background: var(--scroll-track);
+      border-radius: 9999px;
+      margin: 4px;
+    }
+
+    html::-webkit-scrollbar-thumb {
+      background: var(--scroll-thumb-grad);
+      border-radius: 9999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      box-shadow: 0 0 10px rgba(79, 70, 229, 0.45);
+    }
+
+    html::-webkit-scrollbar-thumb:hover {
+      background: var(--scroll-thumb-hover);
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    /* Hidden Internal Native Scrollbars for clean touch gestures */
+    nav, aside, .filter-row, .shelf-scroll, .actors-scroll, .artworks-row, .parts-row, .actor-shelf-row, .single-line-cast-bar {
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
 
-    body::-webkit-scrollbar, nav::-webkit-scrollbar, aside::-webkit-scrollbar, 
+    nav::-webkit-scrollbar, aside::-webkit-scrollbar, 
     .filter-row::-webkit-scrollbar, .shelf-scroll::-webkit-scrollbar, 
     .actors-scroll::-webkit-scrollbar, .artworks-row::-webkit-scrollbar, 
     .parts-row::-webkit-scrollbar, .actor-shelf-row::-webkit-scrollbar, 
@@ -132,37 +177,58 @@
       height: 0 !important;
     }
 
+    /* High-Touch Custom Gradient Vertical Scrollbars for Modals & Interactive Panels */
+    .info-modal-content,
+    .more-sheet,
+    .episodes-grid,
+    .desktop-right-panel,
+    .search-suggestions,
+    .sidebar-menu {
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) var(--scroll-track);
+    }
+
+    .info-modal-content::-webkit-scrollbar,
     .more-sheet::-webkit-scrollbar,
-    .mobile-cw-scroll::-webkit-scrollbar {
-      height: 4px;
-      width: 4px;
+    .episodes-grid::-webkit-scrollbar,
+    .desktop-right-panel::-webkit-scrollbar,
+    .search-suggestions::-webkit-scrollbar,
+    .sidebar-menu::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
       display: block !important;
     }
 
+    .info-modal-content::-webkit-scrollbar-track,
     .more-sheet::-webkit-scrollbar-track,
-    .mobile-cw-scroll::-webkit-scrollbar-track {
-      background: rgba(79, 70, 229, 0.05);
+    .episodes-grid::-webkit-scrollbar-track,
+    .desktop-right-panel::-webkit-scrollbar-track,
+    .search-suggestions::-webkit-scrollbar-track,
+    .sidebar-menu::-webkit-scrollbar-track {
+      background: var(--scroll-track);
       border-radius: 9999px;
-      margin: 4px 14px;
+      margin: 6px 2px;
     }
 
+    .info-modal-content::-webkit-scrollbar-thumb,
     .more-sheet::-webkit-scrollbar-thumb,
-    .mobile-cw-scroll::-webkit-scrollbar-thumb {
-      background: linear-gradient(90deg, var(--primary), var(--accent-pink));
+    .episodes-grid::-webkit-scrollbar-thumb,
+    .desktop-right-panel::-webkit-scrollbar-thumb,
+    .search-suggestions::-webkit-scrollbar-thumb,
+    .sidebar-menu::-webkit-scrollbar-thumb {
+      background: var(--scroll-thumb-grad);
       border-radius: 9999px;
-      box-shadow: 0 1px 4px rgba(79, 70, 229, 0.35);
-      transition: background 0.2s ease;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
+    .info-modal-content::-webkit-scrollbar-thumb:hover,
     .more-sheet::-webkit-scrollbar-thumb:hover,
-    .mobile-cw-scroll::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(90deg, var(--primary-hover), var(--accent));
-    }
-
-    .more-sheet,
-    .mobile-cw-scroll {
-      scrollbar-width: thin;
-      scrollbar-color: var(--primary) rgba(0, 0, 0, 0.03);
+    .episodes-grid::-webkit-scrollbar-thumb:hover,
+    .desktop-right-panel::-webkit-scrollbar-thumb:hover,
+    .search-suggestions::-webkit-scrollbar-thumb:hover,
+    .sidebar-menu::-webkit-scrollbar-thumb:hover {
+      background: var(--scroll-thumb-hover);
     }
 
     body {
@@ -779,25 +845,7 @@
       display: none;
       flex-direction: column;
       border: 1px solid var(--border);
-      scrollbar-width: thin;
-      scrollbar-color: var(--primary) transparent;
       -webkit-overflow-scrolling: touch;
-    }
-
-    .search-suggestions::-webkit-scrollbar {
-      display: block !important;
-      width: 5px !important;
-    }
-
-    .search-suggestions::-webkit-scrollbar-track {
-      background: transparent;
-      border-radius: 9999px;
-      margin: 6px 0;
-    }
-
-    .search-suggestions::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, var(--primary), var(--accent-pink));
-      border-radius: 9999px;
     }
 
     .search-suggestions.active {
@@ -2120,18 +2168,28 @@
       font-size: 0.85rem;
     }
 
-    .server-bar {
+    /* Stylized Server Bar Container with Auto-Adjusting Slider */
+    .server-bar-wrap {
       display: none;
-      align-items: center;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
     }
 
     @media (min-width: 768px) {
-      .server-bar {
+      .server-bar-wrap {
         display: flex;
       }
+    }
+
+    .server-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 6px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
     }
 
     .server-tag {
@@ -2164,6 +2222,7 @@
     .srv-btn.active {
       background: var(--primary);
       color: #ffffff;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
     }
 
     .mobile-server-selector {
@@ -2221,6 +2280,7 @@
       gap: 6px;
       max-height: 240px;
       overflow-y: auto;
+      padding-right: 4px;
     }
 
     .ep-named-card {
@@ -2399,15 +2459,17 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    /* Standardized High-Grade Horizontal Slider Track with Indicator Button */
     .row-slider-track {
       width: 100%;
-      height: 7px;
-      background: var(--surface-subtle);
+      height: 8px;
+      background: var(--scroll-track);
       border-radius: 9999px;
       position: relative;
       cursor: pointer;
       user-select: none;
       touch-action: none;
+      margin-top: 2px;
     }
 
     .row-slider-thumb {
@@ -2416,22 +2478,36 @@
       left: 0;
       height: 100%;
       width: 25%;
-      min-width: 36px;
-      background: var(--primary);
+      min-width: 44px;
+      background: var(--scroll-thumb-h-grad);
       border-radius: 9999px;
       cursor: grab;
       touch-action: none;
       will-change: left, transform;
+      box-shadow: 0 1px 4px rgba(79, 70, 229, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+    }
+
+    .row-slider-thumb::after {
+      content: '';
+      width: 14px;
+      height: 3px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.25);
     }
 
     .row-slider-thumb:hover {
-      background: var(--primary-hover);
+      background: var(--scroll-thumb-h-hover);
     }
 
     .row-slider-thumb:active,
     .row-slider-thumb.dragging {
       cursor: grabbing !important;
-      background: var(--primary-hover);
+      background: var(--scroll-thumb-h-hover);
     }
 
     .art-card {
@@ -2654,6 +2730,7 @@
       box-shadow: var(--shadow-xl);
       max-height: 85vh;
       overflow-y: auto;
+      padding-right: 18px;
     }
 
     .info-modal-header {
@@ -3097,15 +3174,20 @@
                     <span>Buffer-free playback enabled. If current server fails, switch servers below.</span>
                   </div>
 
-                  <!-- Desktop Server Bar -->
-                  <div class="server-bar">
-                    <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
-                    <button class="srv-btn active" id="btn-vidfast" onclick="manualSwitchServer('vidfast')">VidFast (Smooth)</button>
-                    <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')">SuperEmbed (Adaptive)</button>
-                    <button class="srv-btn" id="btn-videasy" onclick="manualSwitchServer('videasy')">Videasy</button>
-                    <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')">VidLink</button>
-                    <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
-                    <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
+                  <!-- Desktop Server Bar with Stylized Interactive Slider -->
+                  <div class="server-bar-wrap">
+                    <div class="server-bar" id="serverBar">
+                      <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
+                      <button class="srv-btn active" id="btn-vidfast" onclick="manualSwitchServer('vidfast')">VidFast (Smooth)</button>
+                      <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')">SuperEmbed (Adaptive)</button>
+                      <button class="srv-btn" id="btn-videasy" onclick="manualSwitchServer('videasy')">Videasy</button>
+                      <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')">VidLink</button>
+                      <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
+                      <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
+                    </div>
+                    <div class="row-slider-track" id="sliderServerTrack">
+                      <div class="row-slider-thumb" id="sliderServerThumb"></div>
+                    </div>
                   </div>
 
                   <!-- Mobile Server Box -->
@@ -3189,7 +3271,6 @@
                   <span id="similarResultsCount" style="font-size:0.7rem; color:var(--primary); font-weight:700;">Related Picks</span>
                 </div>
                 
-                <!-- 3-Col Portrait on Mobile / Clean Landscape Cards on Big Screens -->
                 <div class="sidebar-rec-list" id="sidebarRecList">
                   <div style="text-align:center; padding:20px; color:var(--text-muted); grid-column:1/-1;">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> Loading titles...
@@ -3511,7 +3592,7 @@
     </div>
   </div>
 
-  <!-- Quick Info Modal -->
+  <!-- Quick Info & About Modal -->
   <div class="info-modal-backdrop" id="infoModalBackdrop" onclick="closeInfoModal(event)">
     <div class="info-modal-content">
       <div class="info-modal-header">
@@ -3783,6 +3864,7 @@
     const btnTheaterMode = document.getElementById('btnTheaterMode');
     const theaterPillText = document.getElementById('theaterPillText');
     const theaterBackdropAura = document.getElementById('theaterBackdropAura');
+    const serverBar = document.getElementById('serverBar');
 
     let auraReminderTimer = null;
 
@@ -3804,6 +3886,10 @@
       bindRowSliders();
       setupBrowserHistoryState();
       startRandomHistoryReminderAura();
+
+      window.addEventListener('resize', () => {
+        updateAllSliders();
+      });
     });
 
     function setupBrowserHistoryState() {
@@ -3878,6 +3964,14 @@
       setupRowSliderListener('artworksContainer', 'sliderArtworksThumb', 'sliderArtworks');
       setupRowSliderListener('genresContainer', 'sliderGenresThumb', 'sliderGenresTrack');
       setupRowSliderListener('yearsContainer', 'sliderYearsThumb', 'sliderYearsTrack');
+      setupRowSliderListener('serverBar', 'sliderServerThumb', 'sliderServerTrack');
+    }
+
+    function updateAllSliders() {
+      ['sliderTopActors', 'sliderParts', 'sliderArtworks', 'sliderGenresTrack', 'sliderYearsTrack', 'sliderServerTrack'].forEach(id => {
+        const track = document.getElementById(id);
+        if (track && track._updateThumb) track._updateThumb();
+      });
     }
 
     function setupRowSliderListener(rowId, thumbId, trackId) {
@@ -3893,19 +3987,20 @@
       const updateThumbPosition = () => {
         if (isDragging) return;
         const maxScroll = row.scrollWidth - row.clientWidth;
-        if (maxScroll <= 0) {
+        if (maxScroll <= 4) {
           track.style.display = 'none';
           return;
         }
         track.style.display = 'block';
-        const pct = row.scrollLeft / maxScroll;
+        const pct = Math.max(0, Math.min(1, row.scrollLeft / maxScroll));
         const trackWidth = track.clientWidth;
-        const thumbWidth = Math.max(36, (row.clientWidth / row.scrollWidth) * trackWidth);
+        const thumbWidth = Math.max(44, (row.clientWidth / row.scrollWidth) * trackWidth);
         thumb.style.width = `${(thumbWidth / trackWidth) * 100}%`;
         const maxLeft = trackWidth - thumbWidth;
         thumb.style.left = `${pct * maxLeft}px`;
       };
 
+      track._updateThumb = updateThumbPosition;
       row.addEventListener('scroll', updateThumbPosition, { passive: true });
 
       thumb.addEventListener('pointerdown', (e) => {
@@ -5463,6 +5558,10 @@
 
       loadActiveStream();
       addToHistory(item, activeSeason, activeEpisode);
+
+      requestAnimationFrame(() => {
+        setupRowSliderListener('serverBar', 'sliderServerThumb', 'sliderServerTrack');
+      });
     }
 
     function closePlayerPage(pushHistory = true) {
