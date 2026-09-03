@@ -154,7 +154,7 @@
     .top-filter-suite {
       display: none;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 18px;
       width: 100%;
     }
@@ -197,6 +197,21 @@
       align-items: center;
     }
 
+    .filter-group-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .filter-scroll-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
     .filter-row {
       display: flex;
       gap: 8px;
@@ -204,6 +219,7 @@
       padding-bottom: 4px;
       align-items: center;
       width: 100%;
+      scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -284,17 +300,15 @@
       font-size: 0.7rem;
     }
 
-    .desktop-year-chips {
+    .desktop-year-scroll-wrapper {
       display: none;
-      gap: 8px;
-      align-items: center;
     }
 
     @media (min-width: 900px) {
       .mobile-year-dropdown-wrap {
         display: none;
       }
-      .desktop-year-chips {
+      .desktop-year-scroll-wrapper {
         display: flex;
       }
     }
@@ -1649,7 +1663,6 @@
       cursor: pointer;
     }
 
-    /* Player Container */
     .player-page-container {
       display: none;
       width: 100%;
@@ -1696,7 +1709,6 @@
       gap: 8px;
     }
 
-    /* Centered Theater Mode Switch Pill */
     .player-nav-center {
       display: flex;
       align-items: center;
@@ -1814,11 +1826,11 @@
       cursor: pointer;
     }
 
-    /* Mobile: 2 Films Per Row with Portrait Post-Art / Desktop: Horizontal row card */
+    /* Suggestions Grid: 3 per row Portrait on Mobile, Landscape Cards on Desktop */
     .sidebar-rec-list {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
       width: 100%;
       overflow: visible;
     }
@@ -1827,7 +1839,7 @@
       .sidebar-rec-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
       }
     }
 
@@ -1842,16 +1854,8 @@
       box-shadow: var(--shadow-sm);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       width: 100%;
+      min-width: 0;
       border: 1px solid var(--border);
-    }
-
-    @media (min-width: 1080px) {
-      .sidebar-rec-card {
-        flex-direction: row;
-        padding: 6px;
-        align-items: center;
-        gap: 10px;
-      }
     }
 
     .sidebar-rec-card:hover {
@@ -1869,9 +1873,7 @@
 
     @media (min-width: 1080px) {
       .sidebar-rec-thumb-wrap {
-        width: 60px;
-        min-width: 60px;
-        border-radius: 8px;
+        aspect-ratio: 16 / 9;
       }
     }
 
@@ -1888,45 +1890,63 @@
     }
 
     .sidebar-rec-info {
-      padding: 8px 10px;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
       background: var(--surface);
       overflow: hidden;
       flex: 1;
+      width: 100%;
+      min-width: 0;
     }
 
     @media (min-width: 1080px) {
       .sidebar-rec-info {
-        padding: 4px 6px;
+        padding: 8px 12px;
+        gap: 4px;
       }
     }
 
     .sidebar-rec-title {
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       font-weight: 800;
       color: var(--text-main);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       line-height: 1.25;
+      display: block;
+      width: 100%;
+    }
+
+    @media (min-width: 1080px) {
+      .sidebar-rec-title {
+        font-size: 0.84rem;
+      }
     }
 
     .sidebar-rec-meta {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 700;
       color: var(--text-muted);
+      width: 100%;
+    }
+
+    @media (min-width: 1080px) {
+      .sidebar-rec-meta {
+        font-size: 0.72rem;
+      }
     }
 
     .sidebar-rec-rating {
       color: #fbbf24;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
 
     .btn-load-more-rec {
@@ -2019,7 +2039,6 @@
       overflow: hidden;
     }
 
-    /* Video Viewport */
     .video-viewport {
       position: relative;
       width: 100%;
@@ -2484,6 +2503,7 @@
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
       border: none;
       transform: translate3d(0, 0, 0);
+      transition: filter 0.3s ease, opacity 0.3s ease;
     }
 
     @media (min-width: 900px) {
@@ -2731,7 +2751,7 @@
       justify-content: center;
     }
 
-    /* True Cinema Theater Mode (Screen Centers Only Video, Hides Everything Around) */
+    /* True Cinema Theater Mode */
     .theater-backdrop-aura {
       position: fixed;
       inset: 0;
@@ -3027,7 +3047,6 @@
               <!-- Left / Main Column: Video Player & Details -->
               <div class="player-main-col">
                 <div class="video-viewport" id="videoViewport">
-                  <!-- Embed iframe (Sandbox removed to allow clean native streams) -->
                   <iframe 
                     id="playerFrame" 
                     src="" 
@@ -3138,7 +3157,7 @@
                   <span id="similarResultsCount" style="font-size:0.7rem; color:var(--primary); font-weight:700;">Related Picks</span>
                 </div>
                 
-                <!-- 2-Col Mobile Portrait Cards & Clean Desktop Rows -->
+                <!-- Suggestions Grid: 3-Col Portrait on Mobile, 16:9 Landscape on Big Screen -->
                 <div class="sidebar-rec-list" id="sidebarRecList">
                   <div style="text-align:center; padding:20px; color:var(--text-muted); grid-column:1/-1;">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> Loading titles...
@@ -3173,14 +3192,19 @@
 
         <!-- CATALOG BROWSER VIEW WRAPPER -->
         <div id="catalogBrowserView">
-          <!-- Top Placed Interactive Filter Suite -->
+          <!-- Top Placed Interactive Filter Suite with Sliders -->
           <div class="top-filter-suite" id="topFilterSuite">
-            <div class="filter-row">
+            <div class="filter-group-wrap">
               <span class="filter-label"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Genres:</span>
-              <div class="filter-row" id="genresContainer"></div>
+              <div class="filter-scroll-wrapper">
+                <div class="filter-row" id="genresContainer"></div>
+                <div class="row-slider-track" id="sliderGenresTrack">
+                  <div class="row-slider-thumb" id="sliderGenresThumb"></div>
+                </div>
+              </div>
             </div>
 
-            <div class="filter-row">
+            <div class="filter-group-wrap">
               <span class="filter-label"><i class="fa-solid fa-calendar" style="color:var(--accent);"></i> Year:</span>
               
               <!-- Clean Custom Mobile Select Dropdown -->
@@ -3189,8 +3213,13 @@
                 <i class="fa-solid fa-chevron-down"></i>
               </div>
 
-              <!-- Desktop Chips Only -->
-              <div class="desktop-year-chips" id="yearsContainer"></div>
+              <!-- Desktop Horizontal Scroll with Slider -->
+              <div class="filter-scroll-wrapper desktop-year-scroll-wrapper">
+                <div class="filter-row" id="yearsContainer"></div>
+                <div class="row-slider-track" id="sliderYearsTrack">
+                  <div class="row-slider-thumb" id="sliderYearsThumb"></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -3776,7 +3805,6 @@
       }
     }
 
-    /* Cinema Theater Mode: Isolates only the video screen centered */
     function toggleTheaterMode() {
       isTheaterMode = !isTheaterMode;
       document.body.classList.toggle('theater-mode-active', isTheaterMode);
@@ -3816,6 +3844,8 @@
       setupRowSliderListener('actorsScrollContainer', 'sliderTopActorsThumb', 'sliderTopActors');
       setupRowSliderListener('partsContainer', 'sliderPartsThumb', 'sliderParts');
       setupRowSliderListener('artworksContainer', 'sliderArtworksThumb', 'sliderArtworks');
+      setupRowSliderListener('genresContainer', 'sliderGenresThumb', 'sliderGenresTrack');
+      setupRowSliderListener('yearsContainer', 'sliderYearsThumb', 'sliderYearsTrack');
     }
 
     function setupRowSliderListener(rowId, thumbId, trackId) {
@@ -3832,10 +3862,10 @@
         if (isDragging) return;
         const maxScroll = row.scrollWidth - row.clientWidth;
         if (maxScroll <= 0) {
-          thumb.style.width = '100%';
-          thumb.style.left = '0%';
+          track.style.display = 'none';
           return;
         }
+        track.style.display = 'block';
         const pct = row.scrollLeft / maxScroll;
         const trackWidth = track.clientWidth;
         const thumbWidth = Math.max(36, (row.clientWidth / row.scrollWidth) * trackWidth);
@@ -4044,6 +4074,9 @@
         });
         genresContainer.appendChild(chip);
       });
+      requestAnimationFrame(() => {
+        setupRowSliderListener('genresContainer', 'sliderGenresThumb', 'sliderGenresTrack');
+      });
     }
 
     function buildYearChips() {
@@ -4069,6 +4102,9 @@
         opt.value = yr.id || '';
         opt.textContent = yr.name;
         mobileYearSelect.appendChild(opt);
+      });
+      requestAnimationFrame(() => {
+        setupRowSliderListener('yearsContainer', 'sliderYearsThumb', 'sliderYearsTrack');
       });
     }
 
@@ -5007,6 +5043,14 @@
       }
     }
 
+    function expandSimilarUnlimited() {
+      if (!activeMedia) return;
+      const targetMedia = { ...activeMedia };
+      const endpoint = `${TMDB_BASE}/${targetMedia.computedType}/${targetMedia.id}/recommendations?api_key=${apiKey}`;
+      closePlayerPage();
+      openDedicatedCategory(`Related Universe: "${targetMedia.title || targetMedia.name}"`, endpoint, targetMedia.computedType);
+    }
+
     function openInfoModal() {
       infoModalBackdrop.classList.add('active');
     }
@@ -5319,7 +5363,6 @@
       const isFav = favoritesList.some(f => f.id === item.id);
       playerFavBtn.classList.toggle('active', isFav);
 
-      /* Dynamic glowing aura background in theater mode */
       const auraImgUrl = item.backdrop_path ? `${IMAGE_ORIGINAL}${item.backdrop_path}` : (item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '');
       if (auraImgUrl) {
         theaterBackdropAura.style.backgroundImage = `url(${auraImgUrl})`;
@@ -5696,16 +5739,20 @@
       }
     }
 
-    /* Suggestions Grid: Clean Portrait Cover-art with Visible Titles */
+    /* Suggestions Grid: 3 per row on Mobile with Portrait, 16:9 Landscape on Desktop */
     function renderSimilarCardsBatch(items) {
       const fragment = document.createDocumentFragment();
 
       items.forEach(rec => {
-        const thumbPath = rec.poster_path || rec.backdrop_path;
-        if (!thumbPath || similarSeenSet.has(rec.id) || (activeMedia && rec.id === activeMedia.id)) return;
+        const posterPath = rec.poster_path || rec.backdrop_path;
+        const backdropPath = rec.backdrop_path || rec.poster_path;
+        if ((!posterPath && !backdropPath) || similarSeenSet.has(rec.id) || (activeMedia && rec.id === activeMedia.id)) return;
         similarSeenSet.add(rec.id);
 
-        const thumbUrl = `${IMAGE_BASE}${thumbPath}`;
+        const isDesktop = window.innerWidth >= 1080;
+        const chosenPath = isDesktop ? backdropPath : posterPath;
+        const thumbUrl = `${IMAGE_BASE}${chosenPath}`;
+        
         const title = rec.title || rec.name || 'Untitled';
         const date = rec.release_date || rec.first_air_date || '';
         const year = date ? date.split('-')[0] : 'Feature';
@@ -5715,7 +5762,10 @@
         card.className = 'sidebar-rec-card';
         card.innerHTML = `
           <div class="sidebar-rec-thumb-wrap">
-            <img src="${thumbUrl}" class="sidebar-rec-thumb" alt="${title}" loading="lazy" />
+            <picture>
+              <source media="(min-width: 1080px)" srcset="${IMAGE_BASE}${backdropPath}">
+              <img src="${IMAGE_BASE}${posterPath}" class="sidebar-rec-thumb" alt="${title}" loading="lazy" />
+            </picture>
           </div>
           <div class="sidebar-rec-info">
             <span class="sidebar-rec-title">${title}</span>
