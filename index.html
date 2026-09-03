@@ -132,7 +132,6 @@
       height: 0 !important;
     }
 
-    /* Redesigned Premium Mobile Sliders */
     .more-sheet::-webkit-scrollbar,
     .mobile-cw-scroll::-webkit-scrollbar {
       height: 4px;
@@ -3820,7 +3819,7 @@
             selectType(e.state.type, false);
           }
         } else if (e.state.view === 'player' && e.state.item) {
-          openMediaPage(e.state.item, e.state.mediaType || 'movie', e.state.season || 1, e.state.episode || 1, false);
+          openMediaPage(e.state.item, e.state.mediaType || (e.state.item.title ? 'movie' : 'tv'), e.state.season || 1, e.state.episode || 1, false);
         } else if (e.state.view === 'full_cast' && activeMedia) {
           openFullCastDirectory(false);
         }
@@ -4251,7 +4250,7 @@
     function openAboutDevModal() {
       infoModalTitle.textContent = "About";
       infoModalBody.innerHTML = `
-        <div style="display:flex; flex-direction:column; align-items:center; gap:20px; text-align:center;">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:18px; text-align:center;">
           <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
             <div style="width: 88px; height: 88px; border-radius: 22px; background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(236, 72, 153, 0.15)); display: flex; align-items: center; justify-content: center; padding: 10px; box-shadow: var(--shadow-md);">
               <img 
@@ -4260,32 +4259,35 @@
                 style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(79, 70, 229, 0.3));"
               />
             </div>
-            <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.3px;">BWHS</div>
-            <div style="font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.6px;">Binge Watch Humble Streams</div>
+            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.3px;">BWHS</div>
+            <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px;">Binge Watch Humble Streams</div>
+            <div style="display:inline-flex; align-items:center; gap:6px; background:var(--surface-subtle); padding:4px 12px; border-radius:9999px; font-size:0.72rem; font-weight:800; color:var(--accent); margin-top:2px;">
+              <i class="fa-solid fa-code"></i> Built by Mr. Humble
+            </div>
           </div>
 
           <div style="display:flex; flex-direction:column; gap:14px; text-align:left; font-size:0.88rem; line-height:1.6; color:var(--text-main); width:100%;">
             <div style="background: var(--surface-subtle); padding: 14px 16px; border-radius: 14px; border-left: 3px solid var(--primary);">
-              <p style="margin: 0; font-weight: 600;">Welcome to your new favorite streaming destination. Third-party providers power the video streams, but the entire interface was built from the ground up for one mission: <strong style="color:var(--primary);">pure cinematic, hyper-fluid entertainment.</strong></p>
+              <p style="margin: 0; font-weight: 600;">Hey there! Welcome to my streaming site. While the video playbacks are sourced from third-party players, the entire frontend and user interface was engineered by me for true cinematic flow and high-energy excitement.</p>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 8px; margin: 4px 0;">
+            <div style="display: flex; flex-direction: column; gap: 9px; margin: 4px 0;">
               <div style="display: flex; align-items: flex-start; gap: 10px;">
                 <i class="fa-solid fa-bolt" style="color: var(--accent); margin-top: 4px; font-size: 0.85rem;"></i>
-                <span><strong style="color: var(--text-main);">Built to Break Boredom:</strong> An addictive, lightning-fast platform where one episode turns into an all-night marathon.</span>
+                <span><strong style="color: var(--text-main);">Breaking Boredom:</strong> Built specifically as an ultimate cure for dull moments. The more you watch, the more you want to keep watching.</span>
               </div>
               <div style="display: flex; align-items: flex-start; gap: 10px;">
                 <i class="fa-solid fa-hand-pointer" style="color: var(--accent-pink); margin-top: 4px; font-size: 0.85rem;"></i>
-                <span><strong style="color: var(--text-main);">Hyper-Interactive:</strong> Almost every actor, franchise, wallpaper, and tag is clickable. You will never run out of rabbit holes.</span>
+                <span><strong style="color: var(--text-main);">Fully Interactive Universe:</strong> Almost every single thing is clickable—jump between actors, related franchises, and high-res wallpapers seamlessly.</span>
               </div>
               <div style="display: flex; align-items: flex-start; gap: 10px;">
                 <i class="fa-solid fa-compass" style="color: var(--accent-cyan); margin-top: 4px; font-size: 0.85rem;"></i>
-                <span><strong style="color: var(--text-main);">More On The Way:</strong> Smart recommendations, community suggestions, and custom feature drops are coming soon.</span>
+                <span><strong style="color: var(--text-main);">More Drops Coming:</strong> Community suggestions and feature requests are on the roadmap. For now, watch all you can!</span>
               </div>
             </div>
 
             <div style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(236, 72, 153, 0.08)); padding: 12px 14px; border-radius: 12px; text-align: center;">
-              <span style="font-weight: 800; font-size: 0.92rem; color: var(--primary);">Dive in, binge without limits, and enjoy the show!</span>
+              <span style="font-weight: 800; font-size: 0.92rem; color: var(--primary);">Dive in, binge all you want, and enjoy every second. Thank you!</span>
             </div>
           </div>
         </div>
@@ -5441,7 +5443,7 @@
       playerPageView.classList.add('active');
 
       if (pushHistory) {
-        window.history.pushState({ view: 'player', item, mediaType: type, season: activeSeason, episode: activeEpisode }, '');
+        window.history.pushState({ view: 'player', item: activeMedia, mediaType: type, season: activeSeason, episode: activeEpisode }, '');
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
