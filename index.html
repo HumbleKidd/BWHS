@@ -132,32 +132,38 @@
       height: 0 !important;
     }
 
-    /* Custom Mobile Sliders */
+    /* Redesigned Premium Mobile Sliders */
     .more-sheet::-webkit-scrollbar,
     .mobile-cw-scroll::-webkit-scrollbar {
-      height: 5px;
-      width: 5px;
+      height: 4px;
+      width: 4px;
       display: block !important;
     }
 
     .more-sheet::-webkit-scrollbar-track,
     .mobile-cw-scroll::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.04);
+      background: rgba(79, 70, 229, 0.05);
       border-radius: 9999px;
-      margin: 4px 10px;
+      margin: 4px 14px;
     }
 
     .more-sheet::-webkit-scrollbar-thumb,
     .mobile-cw-scroll::-webkit-scrollbar-thumb {
-      background: linear-gradient(135deg, var(--primary), var(--accent-pink));
+      background: linear-gradient(90deg, var(--primary), var(--accent-pink));
       border-radius: 9999px;
-      box-shadow: 0 1px 3px rgba(79, 70, 229, 0.35);
+      box-shadow: 0 1px 4px rgba(79, 70, 229, 0.35);
+      transition: background 0.2s ease;
+    }
+
+    .more-sheet::-webkit-scrollbar-thumb:hover,
+    .mobile-cw-scroll::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(90deg, var(--primary-hover), var(--accent));
     }
 
     .more-sheet,
     .mobile-cw-scroll {
       scrollbar-width: thin;
-      scrollbar-color: var(--primary) rgba(0, 0, 0, 0.05);
+      scrollbar-color: var(--primary) rgba(0, 0, 0, 0.03);
     }
 
     body {
@@ -1855,7 +1861,6 @@
       cursor: pointer;
     }
 
-    /* Mobile: 3 per row Portrait / Desktop: 16:9 Landscape with details underneath */
     .sidebar-rec-list {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -4246,19 +4251,42 @@
     function openAboutDevModal() {
       infoModalTitle.textContent = "About";
       infoModalBody.innerHTML = `
-        <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:16px;">
-          <img 
-            src="https://github.com/HumbleKidd/BWHS/blob/main/Gemini_Generated_Image_kg21fkkg21fkkg21__1_-removebg-preview.png?raw=true" 
-            alt="BWHS Logo" 
-            style="width: 76px; height: 76px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(79, 70, 229, 0.4));"
-          />
-          <div style="display:flex; flex-direction:column; gap:12px; font-size:0.9rem; line-height:1.65; color:var(--text-main); text-align:left;">
-            <p>Hey there, welcome to my streaming site. While the video playbacks are from third-party sources, the enter front end and ui is designed for full cinematic and dynamic entertainment.</p>
-            <p>Building this amazing streaming platform is a way of completely breaking the boredom. The more you watch, the more you want to keep watching.</p>
-            <p>Almost every single thing is clickable so it's literally impossible to get bored.</p>
-            <p>Dive in and enjoy! Thank you so much.</p>
-            <p>Soon, I will have suggestions and feature requests. For now, watch all you can.</p>
-            <p style="font-weight: 800; color: var(--primary);">Enjoy!</p>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:20px; text-align:center;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div style="width: 88px; height: 88px; border-radius: 22px; background: linear-gradient(135deg, rgba(79, 70, 229, 0.12), rgba(236, 72, 153, 0.15)); display: flex; align-items: center; justify-content: center; padding: 10px; box-shadow: var(--shadow-md);">
+              <img 
+                src="https://github.com/HumbleKidd/BWHS/blob/main/Gemini_Generated_Image_kg21fkkg21fkkg21__1_-removebg-preview.png?raw=true" 
+                alt="BWHS Logo" 
+                style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(79, 70, 229, 0.3));"
+              />
+            </div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.3px;">BWHS</div>
+            <div style="font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.6px;">Binge Watch Humble Streams</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:14px; text-align:left; font-size:0.88rem; line-height:1.6; color:var(--text-main); width:100%;">
+            <div style="background: var(--surface-subtle); padding: 14px 16px; border-radius: 14px; border-left: 3px solid var(--primary);">
+              <p style="margin: 0; font-weight: 600;">Welcome to your new favorite streaming destination. Third-party providers power the video streams, but the entire interface was built from the ground up for one mission: <strong style="color:var(--primary);">pure cinematic, hyper-fluid entertainment.</strong></p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; margin: 4px 0;">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <i class="fa-solid fa-bolt" style="color: var(--accent); margin-top: 4px; font-size: 0.85rem;"></i>
+                <span><strong style="color: var(--text-main);">Built to Break Boredom:</strong> An addictive, lightning-fast platform where one episode turns into an all-night marathon.</span>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <i class="fa-solid fa-hand-pointer" style="color: var(--accent-pink); margin-top: 4px; font-size: 0.85rem;"></i>
+                <span><strong style="color: var(--text-main);">Hyper-Interactive:</strong> Almost every actor, franchise, wallpaper, and tag is clickable. You will never run out of rabbit holes.</span>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <i class="fa-solid fa-compass" style="color: var(--accent-cyan); margin-top: 4px; font-size: 0.85rem;"></i>
+                <span><strong style="color: var(--text-main);">More On The Way:</strong> Smart recommendations, community suggestions, and custom feature drops are coming soon.</span>
+              </div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(236, 72, 153, 0.08)); padding: 12px 14px; border-radius: 12px; text-align: center;">
+              <span style="font-weight: 800; font-size: 0.92rem; color: var(--primary);">Dive in, binge without limits, and enjoy the show!</span>
+            </div>
           </div>
         </div>
       `;
