@@ -132,6 +132,34 @@
       height: 0 !important;
     }
 
+    /* Custom Mobile Sliders */
+    .more-sheet::-webkit-scrollbar,
+    .mobile-cw-scroll::-webkit-scrollbar {
+      height: 5px;
+      width: 5px;
+      display: block !important;
+    }
+
+    .more-sheet::-webkit-scrollbar-track,
+    .mobile-cw-scroll::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 9999px;
+      margin: 4px 10px;
+    }
+
+    .more-sheet::-webkit-scrollbar-thumb,
+    .mobile-cw-scroll::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--primary), var(--accent-pink));
+      border-radius: 9999px;
+      box-shadow: 0 1px 3px rgba(79, 70, 229, 0.35);
+    }
+
+    .more-sheet,
+    .mobile-cw-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) rgba(0, 0, 0, 0.05);
+    }
+
     body {
       background-color: var(--bg);
       color: var(--text-main);
@@ -1663,6 +1691,7 @@
       cursor: pointer;
     }
 
+    /* Player Container */
     .player-page-container {
       display: none;
       width: 100%;
@@ -1826,7 +1855,7 @@
       cursor: pointer;
     }
 
-    /* Suggestions Grid: 3 per row Portrait on Mobile, Landscape Cards on Desktop */
+    /* Mobile: 3 per row Portrait / Desktop: 16:9 Landscape with details underneath */
     .sidebar-rec-list {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2503,7 +2532,6 @@
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
       border: none;
       transform: translate3d(0, 0, 0);
-      transition: filter 0.3s ease, opacity 0.3s ease;
     }
 
     @media (min-width: 900px) {
@@ -2615,8 +2643,8 @@
 
     .info-modal-content {
       background: var(--surface);
-      border-radius: 18px;
-      padding: 20px;
+      border-radius: 20px;
+      padding: 24px;
       width: 100%;
       max-width: 540px;
       box-shadow: var(--shadow-xl);
@@ -2925,8 +2953,8 @@
         <span>Saved Favorites</span>
       </button>
       <button class="sidebar-btn" id="sideAboutDev" onclick="openAboutDevModal()">
-        <i class="fa-solid fa-code" style="color: #06b6d4;"></i>
-        <span>About Dev</span>
+        <i class="fa-solid fa-circle-info" style="color: #06b6d4;"></i>
+        <span>About</span>
       </button>
     </nav>
   </aside>
@@ -3157,7 +3185,7 @@
                   <span id="similarResultsCount" style="font-size:0.7rem; color:var(--primary); font-weight:700;">Related Picks</span>
                 </div>
                 
-                <!-- Suggestions Grid: 3-Col Portrait on Mobile, 16:9 Landscape on Big Screen -->
+                <!-- 3-Col Portrait on Mobile / Clean Landscape Cards on Big Screens -->
                 <div class="sidebar-rec-list" id="sidebarRecList">
                   <div style="text-align:center; padding:20px; color:var(--text-muted); grid-column:1/-1;">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> Loading titles...
@@ -3192,7 +3220,7 @@
 
         <!-- CATALOG BROWSER VIEW WRAPPER -->
         <div id="catalogBrowserView">
-          <!-- Top Placed Interactive Filter Suite with Sliders -->
+          <!-- Top Placed Interactive Filter Suite with Horizontal Sliders -->
           <div class="top-filter-suite" id="topFilterSuite">
             <div class="filter-group-wrap">
               <span class="filter-label"><i class="fa-solid fa-layer-group" style="color:var(--primary);"></i> Genres:</span>
@@ -3369,7 +3397,7 @@
     </button>
   </nav>
 
-  <!-- Mobile More Sheet -->
+  <!-- Mobile More Sheet with Redesigned Sliders -->
   <div class="more-sheet-backdrop" id="moreSheetBackdrop" onclick="closeMoreSheet(event)">
     <div class="more-sheet">
       <div class="more-sheet-header">
@@ -3400,7 +3428,7 @@
           <span><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent);"></i> Continue Watching</span>
           <button onclick="clearHistory(event)" style="background:none; border:none; color:var(--text-muted); font-size:0.7rem; font-weight:700; cursor:pointer;">Clear</button>
         </div>
-        <div class="mobile-cw-scroll" id="mobileCwContainer" style="display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch;"></div>
+        <div class="mobile-cw-scroll" id="mobileCwContainer" style="display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px;"></div>
       </div>
 
       <button class="sheet-nav-item" onclick="selectType('upcoming'); closeMoreSheet(null);">
@@ -3432,8 +3460,8 @@
         <span>Animation</span>
       </button>
       <button class="sheet-nav-item" onclick="openAboutDevModal(); closeMoreSheet(null);">
-        <i class="fa-solid fa-code" style="color:#06b6d4;"></i>
-        <span>About Dev (Vibe Story)</span>
+        <i class="fa-solid fa-circle-info" style="color:#06b6d4;"></i>
+        <span>About</span>
       </button>
       <button class="sheet-nav-item" onclick="triggerRandomizer(); closeMoreSheet(null);">
         <i class="fa-solid fa-shuffle" style="color:#f59e0b;"></i>
@@ -4216,11 +4244,22 @@
     }
 
     function openAboutDevModal() {
-      infoModalTitle.textContent = "About Dev - BWHS";
+      infoModalTitle.textContent = "About";
       infoModalBody.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:12px; font-size:0.88rem; line-height:1.55;">
-          <p><strong>I am Mr. Humble from the Caribbean.</strong></p>
-          <p>Welcome to <strong>BWHS - Binge Watch Humble Streams</strong>. Fast, zero-lag, instant start streaming built for effortless browsing.</p>
+        <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:16px;">
+          <img 
+            src="https://github.com/HumbleKidd/BWHS/blob/main/Gemini_Generated_Image_kg21fkkg21fkkg21__1_-removebg-preview.png?raw=true" 
+            alt="BWHS Logo" 
+            style="width: 76px; height: 76px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(79, 70, 229, 0.4));"
+          />
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:0.9rem; line-height:1.65; color:var(--text-main); text-align:left;">
+            <p>Hey there, welcome to my streaming site. While the video playbacks are from third-party sources, the enter front end and ui is designed for full cinematic and dynamic entertainment.</p>
+            <p>Building this amazing streaming platform is a way of completely breaking the boredom. The more you watch, the more you want to keep watching.</p>
+            <p>Almost every single thing is clickable so it's literally impossible to get bored.</p>
+            <p>Dive in and enjoy! Thank you so much.</p>
+            <p>Soon, I will have suggestions and feature requests. For now, watch all you can.</p>
+            <p style="font-weight: 800; color: var(--primary);">Enjoy!</p>
+          </div>
         </div>
       `;
       openInfoModal();
@@ -5739,7 +5778,6 @@
       }
     }
 
-    /* Suggestions Grid: 3 per row on Mobile with Portrait, 16:9 Landscape on Desktop */
     function renderSimilarCardsBatch(items) {
       const fragment = document.createDocumentFragment();
 
@@ -5749,10 +5787,6 @@
         if ((!posterPath && !backdropPath) || similarSeenSet.has(rec.id) || (activeMedia && rec.id === activeMedia.id)) return;
         similarSeenSet.add(rec.id);
 
-        const isDesktop = window.innerWidth >= 1080;
-        const chosenPath = isDesktop ? backdropPath : posterPath;
-        const thumbUrl = `${IMAGE_BASE}${chosenPath}`;
-        
         const title = rec.title || rec.name || 'Untitled';
         const date = rec.release_date || rec.first_air_date || '';
         const year = date ? date.split('-')[0] : 'Feature';
