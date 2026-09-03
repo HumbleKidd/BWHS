@@ -614,7 +614,6 @@
       z-index: 50;
       box-shadow: var(--shadow-sm);
       transform: translate3d(0, 0, 0);
-      transition: filter 0.3s ease, opacity 0.3s ease;
     }
 
     .header-inner {
@@ -1650,7 +1649,7 @@
       cursor: pointer;
     }
 
-    /* Player Container & Smooth Transition States */
+    /* Player Container */
     .player-page-container {
       display: none;
       width: 100%;
@@ -1661,7 +1660,6 @@
       flex-direction: column;
       position: relative;
       background-color: var(--surface);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .player-page-container.active {
@@ -1676,16 +1674,17 @@
     }
 
     .player-page-nav {
-      padding: 14px 18px;
+      padding: 12px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
+      gap: 12px;
     }
 
     .player-page-heading {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 800;
       color: var(--text-main);
       display: -webkit-box;
@@ -1695,6 +1694,44 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    /* Centered Theater Mode Switch Pill */
+    .player-nav-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+
+    .btn-theater-pill {
+      background: var(--surface-subtle);
+      border: 1.5px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .btn-theater-pill:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+      transform: scale(1.03);
+    }
+
+    .btn-theater-pill.active {
+      background: linear-gradient(135deg, var(--accent), #d97706);
+      color: #ffffff !important;
+      border-color: transparent;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
     }
 
     .btn-circle {
@@ -1723,12 +1760,6 @@
       background: rgba(239, 68, 68, 0.15);
     }
 
-    .btn-circle.theater-btn.active {
-      background: var(--accent);
-      color: #ffffff;
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
-    }
-
     .player-split-layout {
       display: flex;
       flex-direction: column;
@@ -1750,7 +1781,6 @@
       min-width: 0;
     }
 
-    /* Desktop Suggestions list flows to the bottom evenly with left content */
     .player-also-watch-sidebar {
       width: 100%;
       background: var(--surface-subtle);
@@ -1763,8 +1793,8 @@
 
     @media (min-width: 1080px) {
       .player-also-watch-sidebar {
-        width: 360px;
-        min-width: 360px;
+        width: 380px;
+        min-width: 380px;
         border-top: none;
         border-left: 1px solid var(--border);
         height: auto;
@@ -1784,11 +1814,11 @@
       cursor: pointer;
     }
 
-    /* Strict 3-columns mobile grid for Suggestions */
+    /* Mobile: 2 Films Per Row with Portrait Post-Art / Desktop: Horizontal row card */
     .sidebar-rec-list {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
       width: 100%;
       overflow: visible;
     }
@@ -1805,84 +1835,98 @@
       position: relative;
       display: flex;
       flex-direction: column;
-      gap: 4px;
       background: var(--surface);
-      border-radius: 10px;
-      padding: 6px;
+      border-radius: 12px;
+      overflow: hidden;
       cursor: pointer;
       box-shadow: var(--shadow-sm);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      contain: content;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
       width: 100%;
-      min-width: 0;
+      border: 1px solid var(--border);
     }
 
     @media (min-width: 1080px) {
       .sidebar-rec-card {
         flex-direction: row;
+        padding: 6px;
+        align-items: center;
         gap: 10px;
-        padding: 8px;
       }
     }
 
     .sidebar-rec-card:hover {
-      transform: translateY(-2px);
+      transform: translateY(-3px);
       box-shadow: var(--shadow-md);
+    }
+
+    .sidebar-rec-thumb-wrap {
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      background: #000000;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (min-width: 1080px) {
+      .sidebar-rec-thumb-wrap {
+        width: 60px;
+        min-width: 60px;
+        border-radius: 8px;
+      }
     }
 
     .sidebar-rec-thumb {
       width: 100%;
-      aspect-ratio: 2 / 3;
-      border-radius: 6px;
+      height: 100%;
       object-fit: cover;
-      flex-shrink: 0;
-      background: #000;
       display: block;
+      transition: transform 0.3s ease;
     }
 
-    @media (min-width: 1080px) {
-      .sidebar-rec-thumb {
-        width: 50px;
-      }
+    .sidebar-rec-card:hover .sidebar-rec-thumb {
+      transform: scale(1.04);
     }
 
     .sidebar-rec-info {
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      gap: 4px;
+      background: var(--surface);
       overflow: hidden;
       flex: 1;
-      width: 100%;
-      min-width: 0;
+    }
+
+    @media (min-width: 1080px) {
+      .sidebar-rec-info {
+        padding: 4px 6px;
+      }
     }
 
     .sidebar-rec-title {
-      font-size: 0.68rem;
-      font-weight: 700;
+      font-size: 0.8rem;
+      font-weight: 800;
       color: var(--text-main);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      line-height: 1.2;
-      width: 100%;
-      display: block;
+      line-height: 1.25;
     }
 
-    @media (min-width: 1080px) {
-      .sidebar-rec-title {
-        font-size: 0.78rem;
-      }
-    }
-
-    .sidebar-rec-sub {
-      font-size: 0.62rem;
-      color: var(--primary);
+    .sidebar-rec-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.7rem;
       font-weight: 700;
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block;
+      color: var(--text-muted);
+    }
+
+    .sidebar-rec-rating {
+      color: #fbbf24;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .btn-load-more-rec {
@@ -1975,6 +2019,7 @@
       overflow: hidden;
     }
 
+    /* Video Viewport */
     .video-viewport {
       position: relative;
       width: 100%;
@@ -1983,7 +2028,7 @@
       flex-shrink: 0;
       overflow: hidden;
       transform: translate3d(0, 0, 0);
-      transition: all 0.35s ease;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .video-viewport iframe {
@@ -2439,7 +2484,6 @@
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
       border: none;
       transform: translate3d(0, 0, 0);
-      transition: filter 0.3s ease, opacity 0.3s ease;
     }
 
     @media (min-width: 900px) {
@@ -2687,7 +2731,47 @@
       justify-content: center;
     }
 
-    /* Modern Theater Mode Styles */
+    /* True Cinema Theater Mode (Screen Centers Only Video, Hides Everything Around) */
+    .theater-backdrop-aura {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center center;
+      filter: blur(60px) brightness(0.2);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 990;
+      transition: opacity 0.4s ease;
+    }
+
+    .btn-exit-theater-floating {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 18px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      z-index: 1005;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+    }
+
+    body.theater-mode-active .theater-backdrop-aura {
+      opacity: 1;
+    }
+
+    body.theater-mode-active .btn-exit-theater-floating {
+      display: inline-flex;
+    }
+
     body.theater-mode-active header,
     body.theater-mode-active .desktop-sidebar,
     body.theater-mode-active .mobile-nav,
@@ -2695,31 +2779,69 @@
     body.theater-mode-active .details-section,
     body.theater-mode-active .player-dock,
     body.theater-mode-active .player-also-watch-sidebar,
-    body.theater-mode-active .player-bottom-disclaimer {
-      filter: blur(14px) brightness(0.4);
-      opacity: 0.25;
-      pointer-events: none;
-      transition: all 0.4s ease;
+    body.theater-mode-active .player-page-nav,
+    body.theater-mode-active .player-bottom-disclaimer,
+    body.theater-mode-active .disclaimer-banner {
+      display: none !important;
     }
 
     body.theater-mode-active {
-      background: #000000 !important;
+      background: #020617 !important;
+      overflow: hidden;
+    }
+
+    body.theater-mode-active main {
+      padding: 0;
+      margin: 0;
+      max-width: 100%;
     }
 
     body.theater-mode-active .player-page-container {
-      background: #000000;
-      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
       border-radius: 0;
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+
+    body.theater-mode-active .player-split-layout,
+    body.theater-mode-active .player-main-col {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     body.theater-mode-active .video-viewport {
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95);
-      transform: scale(1.01);
-      z-index: 100;
+      width: min(94vw, 1500px);
+      aspect-ratio: 16 / 9;
+      height: auto;
+      max-height: 88vh;
+      border-radius: 18px;
+      box-shadow: 0 0 90px rgba(79, 70, 229, 0.4), 0 0 50px rgba(236, 72, 153, 0.3), 0 30px 80px rgba(0, 0, 0, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 1002;
     }
   </style>
 </head>
 <body>
+
+  <!-- Dynamic Ambient Glow Backdrop for Theater Mode -->
+  <div class="theater-backdrop-aura" id="theaterBackdropAura"></div>
+  
+  <!-- Floating Exit Button in Cinema Theater Mode -->
+  <button class="btn-exit-theater-floating" id="btnExitTheater" onclick="toggleTheaterMode()">
+    <i class="fa-solid fa-compress"></i> Exit Cinema
+  </button>
 
   <!-- Collapsible Left Sidebar -->
   <aside class="desktop-sidebar">
@@ -2882,10 +3004,16 @@
                 </button>
                 <h2 class="player-page-heading" id="playerPageTitle">Loading Player...</h2>
               </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <button class="btn-circle theater-btn" id="btnTheaterMode" onclick="toggleTheaterMode()" title="Toggle Theater Cinema Mode">
+
+              <!-- Centered Theater Mode Toggle -->
+              <div class="player-nav-center">
+                <button class="btn-theater-pill" id="btnTheaterMode" onclick="toggleTheaterMode()" title="Toggle Theater Cinema Glow Mode">
                   <i class="fa-solid fa-clapperboard"></i>
+                  <span id="theaterPillText">Theater Cinema Mode</span>
                 </button>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:8px;">
                 <button class="btn-circle fav" id="playerFavBtn" onclick="toggleFavoriteFromPlayer(event)">
                   <i class="fa-solid fa-heart"></i>
                 </button>
@@ -2899,15 +3027,15 @@
               <!-- Left / Main Column: Video Player & Details -->
               <div class="player-main-col">
                 <div class="video-viewport" id="videoViewport">
+                  <!-- Embed iframe (Sandbox removed to allow clean native streams) -->
                   <iframe 
                     id="playerFrame" 
                     src="" 
                     allowfullscreen="true" 
                     webkitallowfullscreen="true" 
                     mozallowfullscreen="true" 
-                    allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; clipboard-write *"
+                    allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *"
                     referrerpolicy="origin"
-                    credentialless
                     loading="eager"
                   ></iframe>
                 </div>
@@ -2915,7 +3043,7 @@
                 <div class="player-dock">
                   <div class="server-helper-tip">
                     <i class="fa-solid fa-circle-info"></i>
-                    <span>Smooth, buffer-free playback enabled. If current player buffers or fails, switch to another server below.</span>
+                    <span>Buffer-free playback enabled. If current server fails, switch servers below.</span>
                   </div>
 
                   <!-- Desktop Server Bar -->
@@ -3003,14 +3131,14 @@
                 </div>
               </div>
 
-              <!-- Right Column: Extended "Also Watch" & Commentary Sidebar -->
+              <!-- Right Column: Suggestions & Commentary Sidebar -->
               <aside class="player-also-watch-sidebar" id="playerAlsoWatchSidebar">
                 <div class="sidebar-also-heading">
                   <span><i class="fa-solid fa-film" style="color:var(--accent);"></i> Also Watch</span>
                   <span id="similarResultsCount" style="font-size:0.7rem; color:var(--primary); font-weight:700;">Related Picks</span>
                 </div>
                 
-                <!-- Neat 3-Col Mobile / Vertical Desktop Suggestions Grid -->
+                <!-- 2-Col Mobile Portrait Cards & Clean Desktop Rows -->
                 <div class="sidebar-rec-list" id="sidebarRecList">
                   <div style="text-align:center; padding:20px; color:var(--text-muted); grid-column:1/-1;">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> Loading titles...
@@ -3021,7 +3149,7 @@
                   <i class="fa-solid fa-angles-down"></i> Load More Related Titles
                 </button>
 
-                <!-- Desktop Worldwide Commentary & Reviews Section -->
+                <!-- Desktop Commentary & Reviews Section -->
                 <div class="desktop-commentary-section" id="desktopCommentarySection">
                   <div class="commentary-heading">
                     <i class="fa-solid fa-comments" style="color:var(--accent-cyan);"></i>
@@ -3035,7 +3163,7 @@
               </aside>
             </div>
 
-            <!-- Persistent Third-party Scraper Disclaimer on Every Playing Screen -->
+            <!-- Persistent Disclaimer Notice -->
             <div class="disclaimer-banner player-bottom-disclaimer" style="margin: 20px 18px 18px; border-radius: 12px;">
               <i class="fa-solid fa-shield-halved"></i>
               <span>Notice: Media streams are provided via third-party web scrapers. This site does not host or store files on its servers.</span>
@@ -3349,6 +3477,23 @@
   </div>
 
   <script>
+    /* In-Page Navigation Shield: Neutralizes embed ad redirects and unwanted window pop-ups */
+    window.open = function() { return null; };
+    window.onbeforeunload = function() { /* Prevent exit traps */ };
+
+    let redirectTimer = null;
+    window.addEventListener('blur', () => {
+      if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+        window.focus();
+        if (redirectTimer) clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+          if (window.location.href.indexOf(window.location.origin) === -1) {
+            window.stop();
+          }
+        }, 100);
+      }
+    });
+
     const TMDB_BASE = 'https://api.themoviedb.org/3';
     const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
@@ -3575,6 +3720,8 @@
     const themeIcon = document.getElementById('themeIcon');
     const themeLabel = document.getElementById('themeLabel');
     const btnTheaterMode = document.getElementById('btnTheaterMode');
+    const theaterPillText = document.getElementById('theaterPillText');
+    const theaterBackdropAura = document.getElementById('theaterBackdropAura');
 
     let auraReminderTimer = null;
 
@@ -3629,17 +3776,22 @@
       }
     }
 
+    /* Cinema Theater Mode: Isolates only the video screen centered */
     function toggleTheaterMode() {
       isTheaterMode = !isTheaterMode;
       document.body.classList.toggle('theater-mode-active', isTheaterMode);
+      
       if (btnTheaterMode) {
         btnTheaterMode.classList.toggle('active', isTheaterMode);
       }
+      if (theaterPillText) {
+        theaterPillText.textContent = isTheaterMode ? 'Exit Cinema' : 'Theater Cinema Mode';
+      }
+
       if (isTheaterMode) {
-        showToast('Theater Cinema Mode On');
-        videoViewport.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showToast('Cinema View: Centered Video Only');
       } else {
-        showToast('Theater Cinema Mode Off');
+        showToast('Restored Normal Mode');
       }
     }
 
@@ -5167,6 +5319,14 @@
       const isFav = favoritesList.some(f => f.id === item.id);
       playerFavBtn.classList.toggle('active', isFav);
 
+      /* Dynamic glowing aura background in theater mode */
+      const auraImgUrl = item.backdrop_path ? `${IMAGE_ORIGINAL}${item.backdrop_path}` : (item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '');
+      if (auraImgUrl) {
+        theaterBackdropAura.style.backgroundImage = `url(${auraImgUrl})`;
+      } else {
+        theaterBackdropAura.style.backgroundImage = 'none';
+      }
+
       catalogBrowserView.style.display = 'none';
       playerPageView.classList.add('active');
 
@@ -5536,26 +5696,33 @@
       }
     }
 
+    /* Suggestions Grid: Clean Portrait Cover-art with Visible Titles */
     function renderSimilarCardsBatch(items) {
       const fragment = document.createDocumentFragment();
 
       items.forEach(rec => {
-        if (!rec.poster_path || similarSeenSet.has(rec.id) || (activeMedia && rec.id === activeMedia.id)) return;
+        const thumbPath = rec.poster_path || rec.backdrop_path;
+        if (!thumbPath || similarSeenSet.has(rec.id) || (activeMedia && rec.id === activeMedia.id)) return;
         similarSeenSet.add(rec.id);
 
-        const poster = `${IMAGE_BASE}${rec.poster_path}`;
+        const thumbUrl = `${IMAGE_BASE}${thumbPath}`;
         const title = rec.title || rec.name || 'Untitled';
         const date = rec.release_date || rec.first_air_date || '';
-        const year = date ? date.split('-')[0] : '';
+        const year = date ? date.split('-')[0] : 'Feature';
         const rating = rec.vote_average ? rec.vote_average.toFixed(1) : 'NR';
 
         const card = document.createElement('div');
         card.className = 'sidebar-rec-card';
         card.innerHTML = `
-          <img src="${poster}" class="sidebar-rec-thumb" alt="${title}" loading="lazy" />
+          <div class="sidebar-rec-thumb-wrap">
+            <img src="${thumbUrl}" class="sidebar-rec-thumb" alt="${title}" loading="lazy" />
+          </div>
           <div class="sidebar-rec-info">
             <span class="sidebar-rec-title">${title}</span>
-            <span class="sidebar-rec-sub"><i class="fa-solid fa-star" style="color:#fbbf24;"></i> ${rating} • ${year}</span>
+            <div class="sidebar-rec-meta">
+              <span class="sidebar-rec-rating"><i class="fa-solid fa-star"></i> ${rating}</span>
+              <span>${year}</span>
+            </div>
           </div>
         `;
 
