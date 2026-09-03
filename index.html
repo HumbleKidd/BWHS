@@ -135,7 +135,6 @@
       overflow-x: hidden;
       text-rendering: optimizeSpeed;
       -webkit-font-smoothing: antialiased;
-      backface-visibility: hidden;
     }
 
     @media (min-width: 900px) {
@@ -243,6 +242,55 @@
       color: #ffffff !important;
       transform: scale(1.04);
       box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
+    }
+
+    /* Upgraded Modern Year Dropdown for Mobile */
+    .mobile-year-dropdown-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .mobile-year-select {
+      display: inline-block;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background: var(--surface);
+      color: var(--text-main);
+      border: 1.5px solid var(--primary);
+      border-radius: 9999px;
+      padding: 7px 32px 7px 14px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      outline: none;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .mobile-year-dropdown-wrap i {
+      position: absolute;
+      right: 12px;
+      pointer-events: none;
+      color: var(--primary);
+      font-size: 0.7rem;
+    }
+
+    .desktop-year-chips {
+      display: none;
+      gap: 8px;
+      align-items: center;
+    }
+
+    @media (min-width: 900px) {
+      .mobile-year-dropdown-wrap {
+        display: none;
+      }
+      .desktop-year-chips {
+        display: flex;
+      }
     }
 
     .desktop-sidebar {
@@ -1567,6 +1615,7 @@
       cursor: pointer;
     }
 
+    /* Player Page Container adheres naturally to theme backgrounds */
     .player-page-container {
       display: none;
       width: 100%;
@@ -1577,25 +1626,15 @@
       flex-direction: column;
       transform: translate3d(0, 0, 0);
       position: relative;
-      background-size: cover;
-      background-position: center top;
-      background-repeat: no-repeat;
+      background-color: var(--surface);
     }
 
     .player-page-container.active {
       display: flex;
     }
 
-    .player-backdrop-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.88);
-      z-index: 1;
-    }
-
     .player-inner-content {
       position: relative;
-      z-index: 2;
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -1606,13 +1645,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
     }
 
     .player-page-heading {
       font-size: 1.15rem;
       font-weight: 800;
-      color: #ffffff;
+      color: var(--text-main);
       display: -webkit-box;
       -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
@@ -1626,12 +1666,12 @@
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.18);
+      background: var(--surface-subtle);
       border: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #ffffff;
+      color: var(--text-main);
       cursor: pointer;
       font-size: 0.95rem;
       transition: transform 0.15s ease, background-color 0.15s ease;
@@ -1640,11 +1680,12 @@
     .btn-circle:hover {
       transform: scale(1.1);
       background: var(--primary);
+      color: #ffffff;
     }
 
     .btn-circle.fav.active {
       color: #ef4444;
-      background: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.15);
     }
 
     .player-split-layout {
@@ -1668,8 +1709,8 @@
 
     .player-also-watch-sidebar {
       width: 100%;
-      background: rgba(15, 23, 42, 0.55);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--surface-subtle);
+      border-top: 1px solid var(--border);
       padding: 16px 14px;
       display: flex;
       flex-direction: column;
@@ -1681,7 +1722,7 @@
         width: 340px;
         min-width: 340px;
         border-top: none;
-        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        border-left: 1px solid var(--border);
         max-height: 1200px;
         overflow-y: auto;
       }
@@ -1690,7 +1731,7 @@
     .sidebar-also-heading {
       font-size: 0.88rem;
       font-weight: 800;
-      color: #ffffff;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1699,10 +1740,11 @@
       cursor: pointer;
     }
 
+    /* Fixed mobile suggested layout: tight 3 movies per row grid */
     .sidebar-rec-list {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      gap: 8px;
     }
 
     @media (min-width: 1080px) {
@@ -1717,11 +1759,12 @@
       position: relative;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 6px;
+      gap: 4px;
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 5px;
       cursor: pointer;
+      box-shadow: var(--shadow-sm);
       transition: transform 0.15s ease, background-color 0.15s ease;
       contain: content;
     }
@@ -1736,19 +1779,13 @@
 
     .sidebar-rec-card:hover {
       transform: translateY(-2px);
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    @media (min-width: 1080px) {
-      .sidebar-rec-card:hover {
-        transform: translateX(4px);
-      }
+      box-shadow: var(--shadow-md);
     }
 
     .sidebar-rec-thumb {
       width: 100%;
       aspect-ratio: 2 / 3;
-      border-radius: 8px;
+      border-radius: 6px;
       object-fit: cover;
       flex-shrink: 0;
       background: #000;
@@ -1757,7 +1794,6 @@
     @media (min-width: 1080px) {
       .sidebar-rec-thumb {
         width: 50px;
-        border-radius: 6px;
       }
     }
 
@@ -1770,12 +1806,13 @@
     }
 
     .sidebar-rec-title {
-      font-size: 0.74rem;
-      font-weight: 800;
-      color: #ffffff;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-main);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.2;
     }
 
     @media (min-width: 1080px) {
@@ -1785,17 +1822,20 @@
     }
 
     .sidebar-rec-sub {
-      font-size: 0.65rem;
-      color: #93c5fd;
+      font-size: 0.62rem;
+      color: var(--primary);
       font-weight: 700;
       margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .btn-load-more-rec {
       grid-column: 1 / -1;
-      background: rgba(255, 255, 255, 0.15);
-      color: #ffffff;
-      border: none;
+      background: var(--surface);
+      color: var(--text-main);
+      border: 1px solid var(--border);
       padding: 10px;
       border-radius: 10px;
       font-size: 0.76rem;
@@ -1805,10 +1845,12 @@
       text-align: center;
       width: 100%;
       margin-top: 6px;
+      box-shadow: var(--shadow-sm);
     }
 
     .btn-load-more-rec:hover {
       background: var(--primary);
+      color: #ffffff;
     }
 
     .desktop-commentary-section {
@@ -1817,7 +1859,7 @@
       gap: 12px;
       margin-top: 18px;
       padding-top: 14px;
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      border-top: 1px solid var(--border);
     }
 
     @media (min-width: 1080px) {
@@ -1829,7 +1871,7 @@
     .commentary-heading {
       font-size: 0.84rem;
       font-weight: 800;
-      color: #ffffff;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -1838,13 +1880,14 @@
     }
 
     .comment-card {
-      background: rgba(255, 255, 255, 0.07);
+      background: var(--surface);
       border-radius: 10px;
       padding: 10px;
       display: flex;
       flex-direction: column;
       gap: 5px;
       contain: content;
+      box-shadow: var(--shadow-sm);
     }
 
     .comment-author-row {
@@ -1853,11 +1896,11 @@
       justify-content: space-between;
       font-size: 0.72rem;
       font-weight: 800;
-      color: #cbd5e1;
+      color: var(--text-muted);
     }
 
     .comment-author-name {
-      color: #ffffff;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 5px;
@@ -1871,7 +1914,7 @@
     .comment-text {
       font-size: 0.72rem;
       line-height: 1.45;
-      color: #e2e8f0;
+      color: var(--text-muted);
       display: -webkit-box;
       -webkit-line-clamp: 4;
       -webkit-box-orient: vertical;
@@ -1904,19 +1947,20 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      background: var(--surface);
     }
 
     .server-helper-tip {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255, 255, 255, 0.12);
+      background: var(--surface-subtle);
       border-left: 3px solid var(--accent);
       padding: 8px 12px;
       border-radius: 10px;
       font-size: 0.76rem;
       font-weight: 700;
-      color: #f8fafc;
+      color: var(--text-main);
     }
 
     .server-helper-tip i {
@@ -1941,7 +1985,7 @@
     .server-tag {
       font-size: 0.75rem;
       font-weight: 800;
-      color: #cbd5e1;
+      color: var(--text-muted);
       flex-shrink: 0;
     }
 
@@ -1949,19 +1993,20 @@
       padding: 7px 14px;
       border-radius: 10px;
       border: none;
-      background: rgba(255, 255, 255, 0.16);
+      background: var(--surface-subtle);
       font-size: 0.78rem;
       font-weight: 700;
-      color: #ffffff;
+      color: var(--text-main);
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
-      transition: transform 0.15s ease, background-color 0.15s ease;
+      transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
     }
 
     .srv-btn:hover {
       transform: translateY(-2px);
-      background: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary);
     }
 
     .srv-btn.active {
@@ -1973,14 +2018,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
+      background: var(--surface-subtle);
+      border: 1.5px solid var(--border);
       padding: 10px 14px;
       border-radius: 12px;
       cursor: pointer;
       font-size: 0.82rem;
       font-weight: 700;
-      color: #ffffff;
+      color: var(--text-main);
     }
 
     @media (min-width: 768px) {
@@ -1991,8 +2036,8 @@
 
     .tv-control-suite {
       display: none;
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
       padding: 14px;
       border-radius: 14px;
       flex-direction: column;
@@ -2009,7 +2054,7 @@
     .tv-suite-top select {
       padding: 8px 12px;
       border-radius: 8px;
-      border: none;
+      border: 1px solid var(--border);
       font-size: 0.82rem;
       font-weight: 700;
       background: var(--surface);
@@ -2030,7 +2075,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(255, 255, 255, 0.12);
+      background: var(--surface);
       padding: 9px 14px;
       border-radius: 10px;
       cursor: pointer;
@@ -2039,12 +2084,13 @@
       text-align: left;
       border: none;
       width: 100%;
-      color: #ffffff;
+      color: var(--text-main);
     }
 
     .ep-named-card:hover {
       transform: translateX(4px);
-      background: rgba(255, 255, 255, 0.22);
+      background: var(--primary-light);
+      color: var(--primary);
     }
 
     .ep-named-card.active {
@@ -2057,13 +2103,13 @@
       font-weight: 800;
       padding: 3px 6px;
       border-radius: 6px;
-      background: rgba(255, 255, 255, 0.25);
-      color: #ffffff;
+      background: var(--surface-subtle);
+      color: var(--text-main);
       flex-shrink: 0;
     }
 
     .ep-named-card.active .ep-num-pill {
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(0, 0, 0, 0.25);
       color: #ffffff;
     }
 
@@ -2077,16 +2123,17 @@
     }
 
     .details-section {
-      padding: 0 18px 24px;
+      padding: 18px;
       display: flex;
       flex-direction: column;
       gap: 20px;
+      background: var(--surface);
     }
 
     .overview-text {
       font-size: 0.9rem;
       line-height: 1.6;
-      color: #f8fafc;
+      color: var(--text-main);
     }
 
     .block-heading-wrap {
@@ -2101,7 +2148,7 @@
       font-size: 0.85rem;
       font-weight: 800;
       text-transform: uppercase;
-      color: #cbd5e1;
+      color: var(--text-muted);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -2111,7 +2158,7 @@
     .art-toggle-group {
       display: flex;
       gap: 4px;
-      background: rgba(255, 255, 255, 0.12);
+      background: var(--surface-subtle);
       padding: 2px;
       border-radius: 8px;
     }
@@ -2123,7 +2170,7 @@
       border-radius: 6px;
       font-size: 0.7rem;
       font-weight: 700;
-      color: #cbd5e1;
+      color: var(--text-muted);
       cursor: pointer;
     }
 
@@ -2146,7 +2193,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255, 255, 255, 0.12);
+      background: var(--surface-subtle);
       padding: 6px 12px 6px 6px;
       border-radius: 9999px;
       cursor: pointer;
@@ -2155,7 +2202,7 @@
     }
 
     .single-cast-chip:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: var(--primary-light);
       transform: translateY(-2px);
     }
 
@@ -2172,7 +2219,7 @@
       flex-direction: column;
       font-size: 0.72rem;
       font-weight: 700;
-      color: #ffffff;
+      color: var(--text-main);
       line-height: 1.1;
       white-space: nowrap;
     }
@@ -2203,7 +2250,7 @@
     .row-slider-track {
       width: 100%;
       height: 7px;
-      background: rgba(255, 255, 255, 0.18);
+      background: var(--surface-subtle);
       border-radius: 9999px;
       position: relative;
       cursor: pointer;
@@ -2240,7 +2287,7 @@
       flex-shrink: 0;
       border-radius: 12px;
       overflow: hidden;
-      background: rgba(255, 255, 255, 0.12);
+      background: var(--surface-subtle);
       border: none;
       cursor: pointer;
       transition: transform 0.2s ease;
@@ -2553,20 +2600,21 @@
       background: var(--primary);
       color: #ffffff;
       border: none;
-      padding: 8px 18px;
+      padding: 9px 24px;
       border-radius: 9999px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      display: flex;
+      font-size: 0.84rem;
+      font-weight: 800;
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       cursor: pointer;
       text-decoration: none;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, background-color 0.2s ease;
     }
 
     .btn-download-full:hover {
       transform: scale(1.05);
+      background: var(--primary-hover);
     }
 
     .btn-close-lightbox {
@@ -2739,8 +2787,6 @@
 
         <!-- FULL PAGE DEDICATED PLAYER VIEW -->
         <section class="player-page-container" id="playerPageView">
-          <div class="player-backdrop-overlay"></div>
-          
           <div class="player-inner-content">
             <div class="player-page-nav">
               <div style="display:flex; align-items:center; gap:10px;">
@@ -2805,7 +2851,7 @@
                   <!-- Named Episodes Suite -->
                   <div class="tv-control-suite" id="tvControlSuite">
                     <div class="tv-suite-top">
-                      <label style="font-size: 0.8rem; font-weight: 700; color:#ffffff;">Season Selection:</label>
+                      <label style="font-size: 0.8rem; font-weight: 700; color:var(--text-main);">Season Selection:</label>
                       <select id="seasonDropdown" onchange="handleSeasonChange()"></select>
                     </div>
                     <div class="episodes-grid" id="episodesGrid"></div>
@@ -2815,7 +2861,7 @@
                 <div class="details-section">
                   <p class="overview-text" id="playerOverview">Loading synopsis...</p>
 
-                  <!-- Extended Cast Bar (Clickable Title) -->
+                  <!-- Extended Cast Bar -->
                   <div>
                     <div class="block-heading-wrap">
                       <div class="block-heading" onclick="openFullCastDirectory()" title="Click to view all cast and crew">
@@ -2842,6 +2888,7 @@
                     </div>
                   </div>
 
+                  <!-- Official Artworks & Wallpapers: Portrait is Default -->
                   <div>
                     <div class="block-heading-wrap">
                       <div class="block-heading">
@@ -2849,8 +2896,8 @@
                         <span>Official Artworks & Wallpapers</span>
                       </div>
                       <div class="art-toggle-group">
-                        <button class="art-toggle-btn active" id="artLandscapeBtn" onclick="toggleArtworkView('backdrops')">Landscapes</button>
-                        <button class="art-toggle-btn" id="artPortraitBtn" onclick="toggleArtworkView('posters')">Portraits</button>
+                        <button class="art-toggle-btn active" id="artPortraitBtn" onclick="toggleArtworkView('posters')">Portraits</button>
+                        <button class="art-toggle-btn" id="artLandscapeBtn" onclick="toggleArtworkView('backdrops')">Landscapes</button>
                       </div>
                     </div>
                     <div class="row-scroll-container">
@@ -2873,7 +2920,7 @@
                   <span style="font-size:0.7rem; color:var(--primary); cursor:pointer;">View All <i class="fa-solid fa-arrow-right"></i></span>
                 </div>
                 <div class="sidebar-rec-list" id="sidebarRecList">
-                  <div style="text-align:center; padding:20px; color:#cbd5e1; grid-column:1/-1;">
+                  <div style="text-align:center; padding:20px; color:var(--text-muted); grid-column:1/-1;">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> Loading titles...
                   </div>
                 </div>
@@ -2905,7 +2952,14 @@
 
             <div class="filter-row">
               <span class="filter-label"><i class="fa-solid fa-calendar" style="color:var(--accent);"></i> Year:</span>
-              <select class="mobile-year-select" id="mobileYearSelect" onchange="handleMobileYearChange(this.value)"></select>
+              
+              <!-- Clean Custom Mobile Select Dropdown -->
+              <div class="mobile-year-dropdown-wrap">
+                <select class="mobile-year-select" id="mobileYearSelect" onchange="handleMobileYearChange(this.value)"></select>
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+
+              <!-- Desktop Chips Only -->
               <div class="desktop-year-chips" id="yearsContainer"></div>
             </div>
           </div>
@@ -3183,7 +3237,7 @@
       <img src="" id="lightboxImg" class="lightbox-img" alt="Artwork High Res Preview" />
       <div class="lightbox-actions">
         <button id="lightboxDownloadBtn" class="btn-download-full">
-          <i class="fa-solid fa-download"></i> Download Full HD
+          <i class="fa-solid fa-download"></i> Download
         </button>
         <button class="btn-close-lightbox" onclick="closeLightbox(null)">
           <i class="fa-solid fa-xmark"></i>
@@ -3288,7 +3342,7 @@
     let activeSeason = 1;
     let activeEpisode = 1;
     let seasonDataCache = {};
-    let currentArtworkType = 'backdrops';
+    let currentArtworkType = 'posters';
     let cachedArtworks = { backdrops: [], posters: [] };
     let cachedFullCast = [];
     let currentLightboxImgUrl = '';
@@ -3600,7 +3654,7 @@
     }
 
     async function downloadImageDirectly(imageUrl, filename = 'BWHS-Artwork.jpg') {
-      showToast('Starting HD download...');
+      showToast('Downloading artwork...');
       try {
         const response = await fetch(imageUrl, { mode: 'cors' });
         const blob = await response.blob();
@@ -3612,11 +3666,10 @@
         link.click();
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-        showToast('Download complete!');
+        showToast('Download complete');
       } catch (err) {
         const link = document.createElement('a');
         link.href = imageUrl;
-        link.target = '_blank';
         link.download = filename;
         document.body.appendChild(link);
         link.click();
@@ -4982,13 +5035,6 @@
       const isFav = favoritesList.some(f => f.id === item.id);
       playerFavBtn.classList.toggle('active', isFav);
 
-      const bgPath = item.backdrop_path || item.poster_path;
-      if (bgPath) {
-        playerPageView.style.backgroundImage = `url(${IMAGE_ORIGINAL}${bgPath})`;
-      } else {
-        playerPageView.style.backgroundImage = 'none';
-      }
-
       catalogBrowserView.style.display = 'none';
       playerPageView.classList.add('active');
 
@@ -5080,9 +5126,9 @@
     async function loadMediaArtworks(id, type) {
       artworksContainer.innerHTML = '';
       cachedArtworks = { backdrops: [], posters: [] };
-      currentArtworkType = 'backdrops';
-      document.getElementById('artLandscapeBtn').classList.add('active');
-      document.getElementById('artPortraitBtn').classList.remove('active');
+      currentArtworkType = 'posters';
+      document.getElementById('artPortraitBtn').classList.add('active');
+      document.getElementById('artLandscapeBtn').classList.remove('active');
 
       try {
         const data = await cachedFetch(`${TMDB_BASE}/${type}/${id}/images?api_key=${apiKey}`);
@@ -5095,8 +5141,8 @@
 
     function toggleArtworkView(type) {
       currentArtworkType = type;
-      document.getElementById('artLandscapeBtn').classList.toggle('active', type === 'backdrops');
       document.getElementById('artPortraitBtn').classList.toggle('active', type === 'posters');
+      document.getElementById('artLandscapeBtn').classList.toggle('active', type === 'backdrops');
       renderArtworksGallery();
     }
 
@@ -5106,7 +5152,7 @@
       const isLandscape = currentArtworkType === 'backdrops';
 
       if (list.length === 0) {
-        artworksContainer.innerHTML = '<span style="font-size:0.75rem; color:#cbd5e1; padding: 8px 0;">No official artworks found.</span>';
+        artworksContainer.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted); padding: 8px 0;">No official artworks found.</span>';
         return;
       }
 
@@ -5119,7 +5165,7 @@
         card.className = `art-card ${isLandscape ? 'landscape' : 'portrait'}`;
         card.innerHTML = `
           <img src="${thumbUrl}" alt="Official Artwork" loading="lazy" />
-          <div class="art-download-badge" title="Download High Res">
+          <div class="art-download-badge" title="Download">
             <i class="fa-solid fa-download"></i>
           </div>
         `;
@@ -5189,7 +5235,7 @@
 
           loadActorDedicatedShelf(cachedFullCast[0], 0);
         } else {
-          singleLineCastBar.innerHTML = '<span style="font-size:0.75rem; color:#cbd5e1;">Cast list unavailable.</span>';
+          singleLineCastBar.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">Cast list unavailable.</span>';
         }
       } catch (e) {
       }
@@ -5328,7 +5374,7 @@
     }
 
     async function loadSidebarAlsoWatch(id, type) {
-      sidebarRecList.innerHTML = '<div style="text-align:center; padding:15px; color:#cbd5e1; grid-column:1/-1;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading titles...</div>';
+      sidebarRecList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--text-muted); grid-column:1/-1;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading titles...</div>';
 
       try {
         let [p1, p2, p3] = await Promise.all([
@@ -5341,7 +5387,7 @@
 
         sidebarRecList.innerHTML = '';
         if (items.length === 0) {
-          sidebarRecList.innerHTML = '<span style="font-size:0.75rem; color:#cbd5e1; padding:8px; grid-column:1/-1;">No related titles available.</span>';
+          sidebarRecList.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted); padding:8px; grid-column:1/-1;">No related titles available.</span>';
           return;
         }
 
@@ -5349,7 +5395,7 @@
         let rendered = 0;
 
         items.forEach(rec => {
-          if (!rec.poster_path || seenRec.has(rec.id) || rendered >= 50) return;
+          if (!rec.poster_path || seenRec.has(rec.id) || rendered >= 48) return;
           seenRec.add(rec.id);
           rendered++;
 
@@ -5376,7 +5422,7 @@
           sidebarRecList.appendChild(card);
         });
 
-        if (items.length > 50) {
+        if (items.length > 48) {
           const loadMoreBtn = document.createElement('button');
           loadMoreBtn.className = 'btn-load-more-rec';
           loadMoreBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Load More Titles';
@@ -5384,12 +5430,12 @@
           sidebarRecList.appendChild(loadMoreBtn);
         }
       } catch (err) {
-        sidebarRecList.innerHTML = '<span style="font-size:0.75rem; color:#cbd5e1; grid-column:1/-1;">Failed to load recommendations.</span>';
+        sidebarRecList.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted); grid-column:1/-1;">Failed to load recommendations.</span>';
       }
     }
 
     async function loadMovieWorldwideCommentary(id, type) {
-      commentsListContainer.innerHTML = '<div style="text-align:center; padding:10px; color:#cbd5e1;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading comments...</div>';
+      commentsListContainer.innerHTML = '<div style="text-align:center; padding:10px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading comments...</div>';
       btnLoadMoreComments.style.display = 'none';
       cachedReviewsList = [];
       reviewsRenderCount = 0;
@@ -5404,13 +5450,13 @@
         commentsListContainer.innerHTML = '';
 
         if (cachedReviewsList.length === 0) {
-          commentsListContainer.innerHTML = '<span style="font-size:0.75rem; color:#94a3b8;">No global audience commentary submitted yet for this film.</span>';
+          commentsListContainer.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">No global audience commentary submitted yet for this film.</span>';
           return;
         }
 
         renderNextReviewsChunk();
       } catch (e) {
-        commentsListContainer.innerHTML = '<span style="font-size:0.75rem; color:#94a3b8;">Worldwide commentary currently offline.</span>';
+        commentsListContainer.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">Worldwide commentary currently offline.</span>';
       }
     }
 
@@ -5476,7 +5522,7 @@
         episodesGrid.innerHTML = '';
 
         if (episodes.length === 0) {
-          episodesGrid.innerHTML = '<p style="font-size:0.75rem; color:#cbd5e1; padding:6px;">No named episodes listed.</p>';
+          episodesGrid.innerHTML = '<p style="font-size:0.75rem; color:var(--text-muted); padding:6px;">No named episodes listed.</p>';
           return;
         }
 
@@ -5504,7 +5550,7 @@
           episodesGrid.appendChild(btn);
         });
       } catch (e) {
-        episodesGrid.innerHTML = '<p style="font-size:0.75rem; color:#cbd5e1; padding:6px;">Failed to load episode details.</p>';
+        episodesGrid.innerHTML = '<p style="font-size:0.75rem; color:var(--text-muted); padding:6px;">Failed to load episode details.</p>';
       }
     }
 
