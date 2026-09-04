@@ -3159,11 +3159,12 @@
                   <iframe 
                     id="playerFrame" 
                     src="" 
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-downloads"
                     allowfullscreen="true" 
                     webkitallowfullscreen="true" 
                     mozallowfullscreen="true" 
-                    allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *"
-                    referrerpolicy="origin"
+                    allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *"
+                    referrerpolicy="no-referrer"
                     loading="eager"
                   ></iframe>
                 </div>
@@ -3619,10 +3620,6 @@
   </div>
 
   <script>
-    /* In-Page Navigation Shield: Neutralizes embed ad redirects and unwanted window pop-ups */
-    window.open = function() { return null; };
-    window.onbeforeunload = function() { /* Prevent exit traps */ };
-
     let redirectTimer = null;
     window.addEventListener('blur', () => {
       if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
