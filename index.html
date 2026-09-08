@@ -2164,27 +2164,39 @@
       pointer-events: auto !important;
     }
 
-    /* Desktop Floating Video Dock under Cast Section */
+    /* Desktop Floating Mini Player — lower-left, small, menu-safe */
     @media (min-width: 1080px) {
       .video-viewport.is-floating-dock {
         position: fixed !important;
-        bottom: auto !important;
+        left: 0 !important;
+        top: 0 !important;
         right: auto !important;
-        width: min(720px, 52vw) !important;
-        max-width: calc(100vw - var(--sidebar-expanded-w) - 48px) !important;
+        bottom: auto !important;
+        width: 340px !important;
+        max-width: 28vw !important;
         aspect-ratio: 16 / 9 !important;
-        z-index: 45 !important; /* below expanded sidebar (60) so menu stays usable */
-        border-radius: 16px !important;
-        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 0 1.5px var(--primary) !important;
-        will-change: left, top, transform;
-        transition: opacity 0.25s ease, box-shadow 0.25s ease;
+        z-index: 45 !important;
+        border-radius: 14px !important;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 0 1.5px var(--primary) !important;
+        will-change: transform, opacity;
+        margin: 0 !important;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease !important;
+      }
+      .video-viewport.is-floating-dock.float-visible {
+        opacity: 1 !important;
+        pointer-events: auto !important;
       }
       .video-viewport.is-floating-dock.is-dragging {
         transition: none !important;
-        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 0 2px var(--primary) !important;
+        opacity: 1 !important;
       }
       .video-viewport.is-floating-dock .float-drag-handle {
         display: flex !important;
+      }
+      .video-viewport.is-floating-dock.is-dragging iframe {
+        pointer-events: none !important;
       }
       .float-drag-handle {
         display: none;
@@ -2192,35 +2204,25 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 32px;
-        z-index: 20;
+        height: 28px;
+        z-index: 30;
         cursor: grab;
         align-items: center;
         justify-content: center;
         background: linear-gradient(180deg, rgba(15,23,42,0.9), rgba(15,23,42,0.35));
-        border-radius: 16px 16px 0 0;
+        border-radius: 14px 14px 0 0;
         color: #fff;
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         font-weight: 700;
         gap: 6px;
         user-select: none;
         touch-action: none;
       }
-      .float-drag-handle:active {
-        cursor: grabbing;
-      }
-      .float-drag-handle i {
-        opacity: 0.85;
-      }
-      /* Spacer prevents layout jump when video goes fixed */
-      .video-viewport-wrapper.has-float-spacer {
-        min-height: 0;
-      }
+      .float-drag-handle:active { cursor: grabbing; }
       .float-dock-spacer {
         width: 100%;
-        aspect-ratio: 16 / 9;
         border-radius: 12px;
-        background: var(--surface-subtle);
+        background: transparent;
         pointer-events: none;
       }
     }
@@ -4158,204 +4160,7 @@
     document.addEventListener('webkitfullscreenchange', handleFullscreenOrientation);
     document.addEventListener('mozfullscreenchange', handleFullscreenOrientation);
 
-    // DESKTOP FLOATING DOCK + SMOOTH DRAGGABLE
-    let floatDockPos = null;
-    let isDraggingFloat = false;
-    let dragOffsetX = 0;
-    let dragOffsetY = 0;
-    let floatRaf = null;
-    let pendingFloatLeft = 0;
-    let pendingFloatTop = 0;
 
-    function getFloatSidebarClearance() {
-      const sidebar = document.querySelector('.desktop-sidebar');
-      if (!sidebar) return 92;
-      // Use actual rendered width so expanded hover never sits under the menu
-      return Math.max(sidebar.getBoundingClientRect().width, 68) + 20;
-    }
-
-    function defaultFloatPosition() {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const sidebarClear = getFloatSidebarClearance();
-      const width = Math.min(720, vw * 0.52, vw - sidebarClear - 40);
-      // Prefer measured height; fallback from aspect ratio
-      let height = videoViewport.offsetHeight || (width * 9 / 16);
-      // Center in the content area (right of sidebar), near bottom but not corner
-      const contentWidth = vw - sidebarClear - 24;
-      let left = sidebarClear + Math.max(12, (contentWidth - width) / 2);
-      let top = Math.max(80, vh - height - 32);
-      // Keep fully on screen
-      left = Math.min(left, vw - width - 16);
-      top = Math.min(top, vh - height - 16);
-      return { left, top, width };
-    }
-
-    function ensureFloatSpacer(on) {
-      const wrapper = document.getElementById('videoViewportWrapper');
-      if (!wrapper) return;
-      let spacer = document.getElementById('floatDockSpacer');
-      if (on) {
-        wrapper.classList.add('has-float-spacer');
-        if (!spacer) {
-          spacer = document.createElement('div');
-          spacer.id = 'floatDockSpacer';
-          spacer.className = 'float-dock-spacer';
-          // Insert spacer as sibling after viewport so layout height is preserved
-          wrapper.appendChild(spacer);
-        }
-        // Match current video height to avoid jump
-        const h = videoViewport.offsetHeight || Math.round((wrapper.clientWidth || 640) * 9 / 16);
-        spacer.style.height = h + 'px';
-        spacer.style.aspectRatio = 'auto';
-      } else {
-        wrapper.classList.remove('has-float-spacer');
-        if (spacer) spacer.remove();
-      }
-    }
-
-    function handleDesktopFloatingVideoDock() {
-      if (!videoViewport || !playerPageView) return;
-
-      if (window.innerWidth < 1080 || !playerPageView.classList.contains('active') || isTheaterMode) {
-        if (videoViewport.classList.contains('is-floating-dock')) {
-          videoViewport.classList.remove('is-floating-dock', 'is-dragging');
-          videoViewport.style.left = '';
-          videoViewport.style.top = '';
-          videoViewport.style.width = '';
-          ensureFloatSpacer(false);
-        }
-        return;
-      }
-
-      const castAnchor = document.getElementById('castBarAnchor');
-      if (!castAnchor) return;
-
-      const rect = castAnchor.getBoundingClientRect();
-      if (rect.bottom < 120) {
-        if (!videoViewport.classList.contains('is-floating-dock')) {
-          // Capture size before switching to fixed to avoid jump
-          ensureFloatSpacer(true);
-          videoViewport.classList.add('is-floating-dock');
-          applyFloatDockPosition(true);
-        } else if (!isDraggingFloat) {
-          // Nudge clear of expanded sidebar while scrolling
-          const minLeft = getFloatSidebarClearance();
-          if (!floatDockPos) {
-            applyFloatDockPosition(false);
-          } else if (floatDockPos.left < minLeft) {
-            floatDockPos.left = minLeft;
-            videoViewport.style.left = minLeft + 'px';
-          }
-        }
-      } else {
-        if (videoViewport.classList.contains('is-floating-dock')) {
-          videoViewport.classList.remove('is-floating-dock', 'is-dragging');
-          videoViewport.style.left = '';
-          videoViewport.style.top = '';
-          videoViewport.style.width = '';
-          ensureFloatSpacer(false);
-        }
-      }
-    }
-
-    function applyFloatDockPosition(forceDefault) {
-      if (!videoViewport || !videoViewport.classList.contains('is-floating-dock')) return;
-      if (forceDefault || !floatDockPos) {
-        const pos = defaultFloatPosition();
-        floatDockPos = { left: pos.left, top: pos.top };
-        videoViewport.style.width = pos.width + 'px';
-      }
-      const minLeft = getFloatSidebarClearance();
-      if (floatDockPos.left < minLeft) floatDockPos.left = minLeft;
-      videoViewport.style.left = floatDockPos.left + 'px';
-      videoViewport.style.top = floatDockPos.top + 'px';
-    }
-
-    function setupFloatingDrag() {
-      const handle = document.getElementById('floatDragHandle');
-      if (!handle || handle._dragBound) return;
-      handle._dragBound = true;
-
-      const flushMove = () => {
-        floatRaf = null;
-        if (!isDraggingFloat || !videoViewport) return;
-        videoViewport.style.left = pendingFloatLeft + 'px';
-        videoViewport.style.top = pendingFloatTop + 'px';
-        floatDockPos = { left: pendingFloatLeft, top: pendingFloatTop };
-      };
-
-      const onMove = (clientX, clientY) => {
-        if (!isDraggingFloat || !videoViewport) return;
-        const minLeft = getFloatSidebarClearance();
-        const maxL = window.innerWidth - videoViewport.offsetWidth - 8;
-        const maxT = window.innerHeight - videoViewport.offsetHeight - 8;
-        let left = clientX - dragOffsetX;
-        let top = clientY - dragOffsetY;
-        left = Math.max(minLeft, Math.min(maxL, left));
-        top = Math.max(8, Math.min(maxT, top));
-        pendingFloatLeft = left;
-        pendingFloatTop = top;
-        if (floatRaf == null) {
-          floatRaf = requestAnimationFrame(flushMove);
-        }
-      };
-
-      handle.addEventListener('pointerdown', (e) => {
-        if (!videoViewport.classList.contains('is-floating-dock')) return;
-        e.preventDefault();
-        e.stopPropagation();
-        isDraggingFloat = true;
-        videoViewport.classList.add('is-dragging');
-        handle.setPointerCapture(e.pointerId);
-        const rect = videoViewport.getBoundingClientRect();
-        dragOffsetX = e.clientX - rect.left;
-        dragOffsetY = e.clientY - rect.top;
-        handle.style.cursor = 'grabbing';
-      });
-
-      // Document-level move for smooth fast dragging
-      document.addEventListener('pointermove', (e) => {
-        if (!isDraggingFloat) return;
-        onMove(e.clientX, e.clientY);
-      }, { passive: true });
-
-      const endDrag = (e) => {
-        if (!isDraggingFloat) return;
-        isDraggingFloat = false;
-        videoViewport.classList.remove('is-dragging');
-        handle.style.cursor = 'grab';
-        if (floatRaf != null) {
-          cancelAnimationFrame(floatRaf);
-          floatRaf = null;
-          flushMove();
-        }
-        try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
-      };
-      handle.addEventListener('pointerup', endDrag);
-      handle.addEventListener('pointercancel', endDrag);
-      document.addEventListener('pointerup', endDrag);
-    }
-
-    // Keep float clear when sidebar expands on hover
-    (function bindSidebarFloatClearance() {
-      const sidebar = document.querySelector('.desktop-sidebar');
-      if (!sidebar) return;
-      const nudge = () => {
-        if (!videoViewport || !videoViewport.classList.contains('is-floating-dock') || isDraggingFloat) return;
-        const minLeft = getFloatSidebarClearance();
-        if (!floatDockPos) return;
-        if (floatDockPos.left < minLeft) {
-          floatDockPos.left = minLeft;
-          videoViewport.style.left = minLeft + 'px';
-        }
-      };
-      sidebar.addEventListener('mouseenter', () => setTimeout(nudge, 50));
-      sidebar.addEventListener('mouseleave', () => setTimeout(nudge, 50));
-      sidebar.addEventListener('transitionend', nudge);
-    })();
-
-    window.addEventListener('scroll', handleDesktopFloatingVideoDock, { passive: true });
 
     const TMDB_BASE = 'https://api.themoviedb.org/3';
     const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
@@ -4543,6 +4348,244 @@
     const playerFavBtn = document.getElementById('playerFavBtn');
     const playerFrame = document.getElementById('playerFrame');
     const videoViewport = document.getElementById('videoViewport');
+
+    // ===== FLOATING MINI PLAYER (after DOM refs exist) =====
+    let floatDockPos = null; // {x, y} translate
+    let isDraggingFloat = false;
+    let dragOriginX = 0;
+    let dragOriginY = 0;
+    let dragStartPosX = 0;
+    let dragStartPosY = 0;
+    let floatObserver = null;
+
+    function getFloatSidebarClearance() {
+      const sidebar = document.querySelector('.desktop-sidebar');
+      if (!sidebar) return 92;
+      // Always leave room for expanded menu so float never covers it
+      const expanded = 240;
+      const live = Math.ceil(sidebar.getBoundingClientRect().width);
+      return Math.max(live, expanded) + 16;
+    }
+
+    function ensureFloatSpacer(on) {
+      const wrapper = document.getElementById('videoViewportWrapper');
+      if (!wrapper || !videoViewport) return;
+      let spacer = document.getElementById('floatDockSpacer');
+      if (on) {
+        if (!spacer) {
+          spacer = document.createElement('div');
+          spacer.id = 'floatDockSpacer';
+          spacer.className = 'float-dock-spacer';
+          wrapper.appendChild(spacer);
+        }
+        // Match layout height so page does not jump
+        const h = Math.max(180, Math.round((wrapper.clientWidth || 640) * 9 / 16));
+        spacer.style.height = h + 'px';
+      } else if (spacer) {
+        spacer.remove();
+      }
+    }
+
+    function defaultFloatCorner() {
+      const side = getFloatSidebarClearance();
+      const vh = window.innerHeight;
+      const w = 340;
+      const h = w * 9 / 16;
+      // Lower-left, not extreme bottom — sit a bit above the bottom edge
+      const left = side + 12;
+      const top = Math.max(90, vh - h - 56);
+      return { x: left, y: top };
+    }
+
+    function applyFloatTransform() {
+      if (!videoViewport || !floatDockPos) return;
+      videoViewport.style.transform = 'translate3d(' + floatDockPos.x + 'px,' + floatDockPos.y + 'px,0)';
+    }
+
+    let floatExitTimer = null;
+
+    function getFloatTriggerEl() {
+      const shelves = document.getElementById('actorsMovieShelvesContainer');
+      if (shelves && shelves.children.length > 0) return shelves;
+      return document.getElementById('castBarAnchor')
+        || document.getElementById('videoViewportWrapper');
+    }
+
+    function enterFloatingDock() {
+      if (!videoViewport) return;
+      if (floatExitTimer) {
+        clearTimeout(floatExitTimer);
+        floatExitTimer = null;
+      }
+      videoViewport.classList.remove('float-fading');
+
+      if (videoViewport.classList.contains('is-floating-dock') && videoViewport.classList.contains('float-visible')) {
+        if (!isDraggingFloat && floatDockPos) {
+          const minX = getFloatSidebarClearance() + 12;
+          if (floatDockPos.x < minX) {
+            floatDockPos.x = minX;
+            applyFloatTransform();
+          }
+        }
+        return;
+      }
+
+      ensureFloatSpacer(true);
+      if (!floatDockPos) floatDockPos = defaultFloatCorner();
+      videoViewport.classList.add('is-floating-dock');
+      videoViewport.classList.remove('float-visible');
+      applyFloatTransform();
+
+      // Fade in only when appearing after section is fully gone
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (videoViewport && videoViewport.classList.contains('is-floating-dock')) {
+            videoViewport.classList.add('float-visible');
+          }
+        });
+      });
+    }
+
+    function forceExitFloatingDock() {
+      if (!videoViewport) return;
+      if (floatExitTimer) {
+        clearTimeout(floatExitTimer);
+        floatExitTimer = null;
+      }
+      videoViewport.classList.remove('float-visible', 'float-fading', 'is-floating-dock', 'is-dragging');
+      videoViewport.style.transform = '';
+      videoViewport.style.width = '';
+      videoViewport.style.maxWidth = '';
+      floatDockPos = null;
+      isDraggingFloat = false;
+      ensureFloatSpacer(false);
+    }
+
+    // Instant hide — no fade delay when section comes back into view
+    function exitFloatingDock() {
+      forceExitFloatingDock();
+    }
+
+    function updateFloatProgressive() {
+      if (!videoViewport || !playerPageView) return;
+      if (window.innerWidth < 1080 || !playerPageView.classList.contains('active') || isTheaterMode) {
+        forceExitFloatingDock();
+        return;
+      }
+
+      const trigger = getFloatTriggerEl();
+      const wrapper = document.getElementById('videoViewportWrapper');
+      if (!trigger) return;
+
+      const tRect = trigger.getBoundingClientRect();
+      const vRect = wrapper ? wrapper.getBoundingClientRect() : null;
+      const vh = window.innerHeight;
+
+      // Main player in view → instant full player (no delay)
+      if (vRect && vRect.top < vh * 0.7 && vRect.bottom > 120) {
+        forceExitFloatingDock();
+        return;
+      }
+
+      // Any part of "Watch more with" visible → mini gone immediately
+      const sectionVisible = tRect.bottom > 0 && tRect.top < vh;
+      if (sectionVisible) {
+        forceExitFloatingDock();
+        return;
+      }
+
+      // Section fully off-screen (scrolled past) → show mini
+      // bottom <= 0 means entire section is above the viewport
+      if (tRect.bottom <= 0) {
+        enterFloatingDock();
+        return;
+      }
+    }
+
+    function handleDesktopFloatingVideoDock() {
+      updateFloatProgressive();
+    }
+
+    function setupFloatingDockObserver() {
+      if (floatObserver) {
+        try { floatObserver.disconnect(); } catch (_) {}
+        floatObserver = null;
+      }
+      if (typeof IntersectionObserver === 'undefined') return;
+      floatObserver = new IntersectionObserver(() => updateFloatProgressive(), {
+        root: null,
+        threshold: [0, 0.05, 0.1, 0.25, 0.5, 0.75, 1]
+      });
+      const wrapper = document.getElementById('videoViewportWrapper');
+      const shelves = document.getElementById('actorsMovieShelvesContainer');
+      const cast = document.getElementById('castBarAnchor');
+      if (wrapper) floatObserver.observe(wrapper);
+      if (shelves) floatObserver.observe(shelves);
+      if (cast) floatObserver.observe(cast);
+      updateFloatProgressive();
+    }
+
+    function setupFloatingDrag() {
+      const handle = document.getElementById('floatDragHandle');
+      if (!handle || handle._dragBound) return;
+      handle._dragBound = true;
+
+      handle.addEventListener('pointerdown', (e) => {
+        if (!videoViewport || !videoViewport.classList.contains('is-floating-dock')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        isDraggingFloat = true;
+        videoViewport.classList.add('is-dragging');
+        dragOriginX = e.clientX;
+        dragOriginY = e.clientY;
+        dragStartPosX = floatDockPos ? floatDockPos.x : 0;
+        dragStartPosY = floatDockPos ? floatDockPos.y : 0;
+        try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+      });
+
+      document.addEventListener('pointermove', (e) => {
+        if (!isDraggingFloat || !videoViewport) return;
+        const dx = e.clientX - dragOriginX;
+        const dy = e.clientY - dragOriginY;
+        let x = dragStartPosX + dx;
+        let y = dragStartPosY + dy;
+        const side = getFloatSidebarClearance();
+        const w = videoViewport.offsetWidth || 340;
+        const h = videoViewport.offsetHeight || 190;
+        const maxX = window.innerWidth - w - 12;
+        const maxY = window.innerHeight - h - 12;
+        x = Math.max(side + 8, Math.min(maxX, x));
+        y = Math.max(8, Math.min(maxY, y));
+        floatDockPos = { x, y };
+        videoViewport.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+      });
+
+      const endDrag = () => {
+        if (!isDraggingFloat) return;
+        isDraggingFloat = false;
+        if (videoViewport) videoViewport.classList.remove('is-dragging');
+      };
+      document.addEventListener('pointerup', endDrag);
+      document.addEventListener('pointercancel', endDrag);
+    }
+
+    (function () {
+      const sidebar = document.querySelector('.desktop-sidebar');
+      if (!sidebar) return;
+      const nudge = () => {
+        if (!videoViewport || !floatDockPos || !videoViewport.classList.contains('is-floating-dock')) return;
+        const minX = getFloatSidebarClearance() + 12;
+        if (floatDockPos.x < minX) {
+          floatDockPos.x = minX;
+          applyFloatTransform();
+        }
+      };
+      sidebar.addEventListener('mouseenter', () => setTimeout(nudge, 40));
+      sidebar.addEventListener('mouseleave', () => setTimeout(nudge, 40));
+    })();
+
+    window.addEventListener('scroll', handleDesktopFloatingVideoDock, { passive: true });
+
     const singleLineCastBar = document.getElementById('singleLineCastBar');
     const artworksContainer = document.getElementById('artworksContainer');
     const sidebarRecList = document.getElementById('sidebarRecList');
@@ -4621,10 +4664,12 @@
       setupGlobalContextMenu();
       bindContextMenuUI();
       setupFloatingDrag();
+      setupFloatingDockObserver();
 
       window.addEventListener('resize', () => {
         updateAllSliders();
         handleDesktopFloatingVideoDock();
+        if (typeof setupFloatingDockObserver === 'function') setupFloatingDockObserver();
       });
     });
 
@@ -4664,9 +4709,7 @@
       document.body.classList.toggle('theater-mode-active', isTheaterMode);
       document.body.classList.remove('theater-chrome-visible');
       
-      if (videoViewport.classList.contains('is-floating-dock')) {
-        videoViewport.classList.remove('is-floating-dock');
-      }
+      if (typeof forceExitFloatingDock === 'function') forceExitFloatingDock(); else if (typeof exitFloatingDock === 'function') exitFloatingDock();
 
       if (btnTheaterMode) {
         btnTheaterMode.classList.toggle('active', isTheaterMode);
@@ -6838,6 +6881,7 @@
       }
 
       floatDockPos = null;
+      if (typeof forceExitFloatingDock === 'function') forceExitFloatingDock(); else if (typeof exitFloatingDock === 'function') exitFloatingDock();
       catalogBrowserView.style.display = 'none';
       playerPageView.classList.add('active');
 
@@ -6865,6 +6909,7 @@
 
       requestAnimationFrame(() => {
         setupRowSliderListener('serverBar', 'sliderServerThumb', 'sliderServerTrack');
+        if (typeof setupFloatingDockObserver === 'function') setupFloatingDockObserver();
       });
     }
 
@@ -6883,7 +6928,8 @@
         videoViewport.style.top = '';
         videoViewport.style.width = '';
       }
-      if (typeof ensureFloatSpacer === 'function') ensureFloatSpacer(false);
+      if (typeof forceExitFloatingDock === 'function') forceExitFloatingDock(); else if (typeof exitFloatingDock === 'function') exitFloatingDock();
+      if (floatObserver) { try { floatObserver.disconnect(); } catch(_){} floatObserver = null; }
       floatDockPos = null;
       playerPageView.classList.remove('active');
       catalogBrowserView.style.display = 'block';
@@ -7193,6 +7239,7 @@
         });
 
         setupRowSliderListener(scrollId, thumbId, trackId);
+        if (typeof setupFloatingDockObserver === 'function') setupFloatingDockObserver();
       } catch (err) {
       }
     }
