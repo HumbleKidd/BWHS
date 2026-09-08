@@ -3629,6 +3629,7 @@
                       allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *"
                       referrerpolicy="no-referrer"
                       loading="eager"
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-fullscreen allow-orientation-lock"
                     ></iframe>
                   </div>
                 </div>
@@ -4113,24 +4114,54 @@
   </div>
 
   <script>
-    // POP-UP & UNWANTED TAB BLOCKER (NO SANDBOX NEEDED)
+    // POP-UP & UNWANTED TAB BLOCKER
+    // Parent-level block (backup). Real iframe ads are stopped by sandbox (no allow-popups).
     const originalWindowOpen = window.open;
     window.open = function(url, target, features) {
-      if (!url || url === 'about:blank' || typeof url !== 'string' || !url.startsWith(window.location.origin)) {
+      try {
+        if (!url || url === 'about:blank') return null;
+        if (typeof url === 'string') {
+          const u = url.trim().toLowerCase();
+          // Only allow same-origin navigations; block every external/ad popup
+          if (!u.startsWith(window.location.origin.toLowerCase()) && !u.startsWith('/') && !u.startsWith('#')) {
+            return null;
+          }
+        } else {
+          return null;
+        }
+      } catch (_) {
         return null;
       }
       return originalWindowOpen.apply(this, arguments);
     };
 
+    // Stop target=_blank from random <a> clicks that somehow surface to the top window
+    document.addEventListener('click', (e) => {
+      const a = e.target && e.target.closest && e.target.closest('a[target="_blank"]');
+      if (!a) return;
+      const href = (a.getAttribute('href') || '').trim();
+      if (!href || href === '#' || href.startsWith('javascript:')) return;
+      try {
+        const abs = new URL(href, window.location.href);
+        if (abs.origin !== window.location.origin) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      } catch (_) {
+        e.preventDefault();
+      }
+    }, true);
+
     let iframeFocusTimestamp = 0;
     window.addEventListener('blur', () => {
       if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
         iframeFocusTimestamp = Date.now();
+        // Reclaim focus so ad tabs that slipped through don't stay in front
         setTimeout(() => {
-          if (Date.now() - iframeFocusTimestamp < 800) {
-            window.focus();
+          if (Date.now() - iframeFocusTimestamp < 1200) {
+            try { window.focus(); } catch (_) {}
           }
-        }, 50);
+        }, 30);
       }
     });
 
@@ -4279,7 +4310,7 @@
     let longPressTriggered = false;
     let touchStartPos = null;
 
-    const todayStr = '2026-08-31';
+    const todayStr = new Date().toISOString().slice(0, 10);
 
     const GENRES = [
       { id: null, name: 'All Genres' },
@@ -5692,12 +5723,13 @@
             scrollContainer.innerHTML = '';
 
             let renderedCount = 0;
+            const shelfSeen = new Set(); // local only — never share with main grid (fixes empty first shelf on cold load)
             items.forEach((item) => {
               const itemType = shelf.type === 'all' ? (item.media_type || 'movie') : shelf.type;
               const uniqueKey = `${itemType}_${item.id}`;
 
-              if (globalSeenKeys.has(uniqueKey) || renderedCount >= 18) return;
-              globalSeenKeys.add(uniqueKey);
+              if (shelfSeen.has(uniqueKey) || renderedCount >= 18) return;
+              shelfSeen.add(uniqueKey);
               renderedCount++;
 
               const poster = `${IMAGE_BASE}${item.poster_path}`;
@@ -7542,6 +7574,13 @@
 
     function executeStreamLoad() {
       const currentProvider = PROVIDERS[currentProviderIndex];
+      // Keep sandbox locked so embeds cannot open new tabs/windows (ads)
+      if (playerFrame && !playerFrame.hasAttribute('sandbox')) {
+        playerFrame.setAttribute(
+          'sandbox',
+          'allow-scripts allow-same-origin allow-forms allow-presentation allow-fullscreen allow-orientation-lock'
+        );
+      }
       playerFrame.src = getProviderUrl(currentProvider);
     }
 
