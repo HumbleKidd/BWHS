@@ -2168,19 +2168,44 @@
     @media (min-width: 1080px) {
       .video-viewport.is-floating-dock {
         position: fixed !important;
-        bottom: 24px !important;
-        left: calc(var(--sidebar-w) + 24px) !important;
+        bottom: auto !important;
+        right: auto !important;
         width: 440px !important;
         max-width: 32vw !important;
         aspect-ratio: 16 / 9 !important;
         z-index: 500 !important;
         border-radius: 16px !important;
         box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 0 1.5px var(--primary) !important;
-        animation: floatDockIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        /* left/top set by JS for drag */
       }
-      @keyframes floatDockIn {
-        from { transform: translateY(30px) scale(0.92); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
+      .video-viewport.is-floating-dock .float-drag-handle {
+        display: flex !important;
+      }
+      .float-drag-handle {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 28px;
+        z-index: 20;
+        cursor: grab;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, rgba(15,23,42,0.85), rgba(15,23,42,0.25));
+        border-radius: 16px 16px 0 0;
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        gap: 6px;
+        user-select: none;
+        touch-action: none;
+      }
+      .float-drag-handle:active {
+        cursor: grabbing;
+      }
+      .float-drag-handle i {
+        opacity: 0.85;
       }
     }
 
@@ -2978,7 +3003,8 @@
 
     body.theater-mode-active {
       background: #020617 !important;
-      overflow: hidden;
+      overflow: hidden !important;
+      display: block !important;
     }
 
     body.theater-mode-active main {
@@ -2988,43 +3014,243 @@
     }
 
     body.theater-mode-active .player-page-container {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      border-radius: 0;
+      position: fixed !important;
+      inset: 0 !important;
+      left: 0 !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      border-radius: 0 !important;
       background: transparent !important;
       box-shadow: none !important;
       border: none !important;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
+      z-index: 1000 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      max-width: none !important;
     }
 
     body.theater-mode-active .player-split-layout,
-    body.theater-mode-active .player-main-col {
-      width: 100%;
-      height: 100%;
+    body.theater-mode-active .player-main-col,
+    body.theater-mode-active .player-inner-content,
+    body.theater-mode-active .video-viewport-wrapper {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-direction: column !important;
+      background: transparent !important;
+      border: none !important;
+      position: relative !important;
+      left: 0 !important;
+      right: 0 !important;
+      top: 0 !important;
+      bottom: 0 !important;
+    }
+
+    body.theater-mode-active .player-also-watch-sidebar {
+      display: none !important;
+      width: 0 !important;
+      min-width: 0 !important;
+    }
+
+    body.theater-mode-active .desktop-sidebar {
+      display: none !important;
+      width: 0 !important;
+    }
+
+    body.theater-mode-active .app-body,
+    body.theater-mode-active .main-layout-wrapper,
+    body.theater-mode-active main#mainContainer {
+      width: 100vw !important;
+      max-width: 100vw !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      left: 0 !important;
+    }
+
+    body.theater-mode-active .video-viewport,
+    body.theater-mode-active .video-viewport.is-floating-dock {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      transform: translate(-50%, -50%) !important;
+      margin: 0 !important;
+      width: min(90vw, 1380px) !important;
+      max-width: 90vw !important;
+      aspect-ratio: 16 / 9 !important;
+      height: auto !important;
+      max-height: 85vh !important;
+      border-radius: 18px !important;
+      box-shadow: 0 0 90px rgba(79, 70, 229, 0.4), 0 0 50px rgba(236, 72, 153, 0.3), 0 30px 80px rgba(0, 0, 0, 0.95) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      z-index: 1002 !important;
+    }
+
+    /* Context Menu for long-press / right-click on thumbnails */
+    .ctx-menu-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      background: rgba(0,0,0,0.01);
+      display: none;
+    }
+    .ctx-menu-backdrop.active {
+      display: block !important;
+    }
+    .ctx-menu {
+      position: fixed;
+      z-index: 9010;
+      min-width: 210px;
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.28), 0 0 0 1px var(--border);
+      padding: 8px;
+      display: none !important;
+      flex-direction: column;
+      gap: 2px;
+      animation: ctxPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: top left;
+      pointer-events: auto;
+    }
+    .ctx-menu.active {
+      display: flex !important;
+    }
+    @keyframes ctxPop {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .ctx-menu-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      padding: 6px 12px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+    .ctx-menu-item {
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .ctx-menu-item:hover,
+    .ctx-menu-item:active {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .ctx-menu-item i {
+      width: 20px;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    .ctx-menu-item.danger:hover {
+      background: rgba(239, 68, 68, 0.12);
+      color: #ef4444;
+    }
+    .ctx-menu-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 8px;
+    }
+
+    /* Theater mode: pure video + auto-fade chrome (exit + ad notice) */
+    body.theater-mode-active .player-inner-content > .disclaimer-banner {
+      display: none !important;
+    }
+
+    body.theater-mode-active .btn-exit-theater-floating {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transition: opacity 0.4s ease !important;
+      display: inline-flex !important;
+      z-index: 1010 !important;
+    }
+    body.theater-mode-active.theater-chrome-visible .btn-exit-theater-floating {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    /* Adblock tip fades with chrome in theater */
+    body.theater-mode-active .player-adblock-notice {
+      display: flex !important;
+      position: fixed !important;
+      top: 18px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      z-index: 1008 !important;
+      margin: 0 !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transition: opacity 0.4s ease !important;
+      background: rgba(15, 23, 42, 0.9) !important;
+      color: #fff !important;
+      border: 1px solid rgba(255,255,255,0.15) !important;
+      max-width: 90vw !important;
+    }
+    body.theater-mode-active.theater-chrome-visible .player-adblock-notice {
+      opacity: 1 !important;
     }
 
     body.theater-mode-active .video-viewport {
-      width: min(94vw, 1500px);
-      aspect-ratio: 16 / 9;
-      height: auto;
-      max-height: 88vh;
-      border-radius: 18px;
-      box-shadow: 0 0 90px rgba(79, 70, 229, 0.4), 0 0 50px rgba(236, 72, 153, 0.3), 0 30px 80px rgba(0, 0, 0, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      z-index: 1002;
+      cursor: none;
+      /* keep true center */
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+    }
+    body.theater-mode-active.theater-chrome-visible .video-viewport {
+      cursor: default;
     }
   </style>
 </head>
 <body>
+
+
+  <!-- Thumbnail Context Menu (right-click / long-press) -->
+  <div class="ctx-menu-backdrop" id="ctxMenuBackdrop"></div>
+  <div class="ctx-menu" id="ctxMenu" role="menu">
+    <div class="ctx-menu-title" id="ctxMenuTitle">Options</div>
+    <button type="button" class="ctx-menu-item" id="ctxWatch" data-ctx-action="watch">
+      <i class="fa-solid fa-circle-play" style="color:var(--primary);"></i> Watch Now
+    </button>
+    <button type="button" class="ctx-menu-item" id="ctxNextPlay" data-ctx-action="nextplay">
+      <i class="fa-solid fa-list-check" style="color:#10b981;"></i> <span id="ctxNextPlayLabel">Add to Next Play</span>
+    </button>
+    <button type="button" class="ctx-menu-item" id="ctxFavorite" data-ctx-action="favorite">
+      <i class="fa-solid fa-heart" style="color:#ef4444;"></i> <span id="ctxFavoriteLabel">Add to Favorites</span>
+    </button>
+    <div class="ctx-menu-divider"></div>
+    <button type="button" class="ctx-menu-item" id="ctxShare" data-ctx-action="share">
+      <i class="fa-solid fa-share-nodes" style="color:var(--accent);"></i> Share Cover Art
+    </button>
+  </div>
 
   <!-- Dynamic Ambient Glow Backdrop for Theater Mode -->
   <div class="theater-backdrop-aura" id="theaterBackdropAura"></div>
@@ -3225,6 +3451,9 @@
               <div class="player-main-col">
                 <div class="video-viewport-wrapper" id="videoViewportWrapper">
                   <div class="video-viewport" id="videoViewport">
+                    <div class="float-drag-handle" id="floatDragHandle" title="Drag to move">
+                      <i class="fa-solid fa-grip-lines"></i> Drag
+                    </div>
                     <iframe 
                       id="playerFrame" 
                       src="" 
@@ -3736,18 +3965,20 @@
     document.addEventListener('webkitfullscreenchange', handleFullscreenOrientation);
     document.addEventListener('mozfullscreenchange', handleFullscreenOrientation);
 
-    // DESKTOP FLOATING DOCK FOR EMPTY BOTTOM SPACE BELOW CAST
-    function handleDesktopFloatingVideoDock() {
-      if (window.innerWidth < 1080) {
-        if (videoViewport.classList.contains('is-floating-dock')) {
-          videoViewport.classList.remove('is-floating-dock');
-        }
-        return;
-      }
+    // DESKTOP FLOATING DOCK + DRAGGABLE
+    let floatDockPos = null; // { left, top } user drag position
+    let isDraggingFloat = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
 
-      if (!playerPageView.classList.contains('active') || isTheaterMode) {
+    function handleDesktopFloatingVideoDock() {
+      if (!videoViewport) return;
+
+      if (window.innerWidth < 1080 || !playerPageView.classList.contains('active') || isTheaterMode) {
         if (videoViewport.classList.contains('is-floating-dock')) {
           videoViewport.classList.remove('is-floating-dock');
+          videoViewport.style.left = '';
+          videoViewport.style.top = '';
         }
         return;
       }
@@ -3757,10 +3988,77 @@
 
       const rect = castAnchor.getBoundingClientRect();
       if (rect.bottom < 120) {
-        videoViewport.classList.add('is-floating-dock');
+        if (!videoViewport.classList.contains('is-floating-dock')) {
+          videoViewport.classList.add('is-floating-dock');
+          applyFloatDockPosition();
+        } else if (!isDraggingFloat) {
+          applyFloatDockPosition();
+        }
       } else {
-        videoViewport.classList.remove('is-floating-dock');
+        if (videoViewport.classList.contains('is-floating-dock')) {
+          videoViewport.classList.remove('is-floating-dock');
+          videoViewport.style.left = '';
+          videoViewport.style.top = '';
+        }
       }
+    }
+
+    function applyFloatDockPosition() {
+      if (!videoViewport || !videoViewport.classList.contains('is-floating-dock')) return;
+      const defaultLeft = (typeof getComputedStyle !== 'undefined' ? 68 : 68) + 24; // sidebar + pad
+      const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w')) || 68;
+      if (floatDockPos) {
+        videoViewport.style.left = floatDockPos.left + 'px';
+        videoViewport.style.top = floatDockPos.top + 'px';
+      } else {
+        videoViewport.style.left = (sidebarW + 24) + 'px';
+        videoViewport.style.top = (window.innerHeight - videoViewport.offsetHeight - 24) + 'px';
+      }
+    }
+
+    function setupFloatingDrag() {
+      const handle = document.getElementById('floatDragHandle');
+      if (!handle || handle._dragBound) return;
+      handle._dragBound = true;
+
+      const onMove = (clientX, clientY) => {
+        if (!isDraggingFloat || !videoViewport) return;
+        let left = clientX - dragOffsetX;
+        let top = clientY - dragOffsetY;
+        const maxL = window.innerWidth - videoViewport.offsetWidth - 8;
+        const maxT = window.innerHeight - videoViewport.offsetHeight - 8;
+        left = Math.max(8, Math.min(maxL, left));
+        top = Math.max(8, Math.min(maxT, top));
+        floatDockPos = { left, top };
+        videoViewport.style.left = left + 'px';
+        videoViewport.style.top = top + 'px';
+      };
+
+      handle.addEventListener('pointerdown', (e) => {
+        if (!videoViewport.classList.contains('is-floating-dock')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        isDraggingFloat = true;
+        handle.setPointerCapture(e.pointerId);
+        const rect = videoViewport.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+        handle.style.cursor = 'grabbing';
+      });
+
+      handle.addEventListener('pointermove', (e) => {
+        if (!isDraggingFloat) return;
+        onMove(e.clientX, e.clientY);
+      });
+
+      const endDrag = (e) => {
+        if (!isDraggingFloat) return;
+        isDraggingFloat = false;
+        handle.style.cursor = 'grab';
+        try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+      };
+      handle.addEventListener('pointerup', endDrag);
+      handle.addEventListener('pointercancel', endDrag);
     }
 
     window.addEventListener('scroll', handleDesktopFloatingVideoDock, { passive: true });
@@ -3870,6 +4168,12 @@
     let similarCurrentPage = 1;
     let similarSeenSet = new Set();
     let isTheaterMode = false;
+    let theaterChromeTimer = null;
+    let ctxMenuItem = null;
+    let ctxMenuType = null;
+    let longPressTimer = null;
+    let longPressTriggered = false;
+    let touchStartPos = null;
 
     const todayStr = '2026-08-31';
 
@@ -4015,6 +4319,9 @@
       bindRowSliders();
       setupBrowserHistoryState();
       startRandomHistoryReminderAura();
+      setupGlobalContextMenu();
+      bindContextMenuUI();
+      setupFloatingDrag();
 
       window.addEventListener('resize', () => {
         updateAllSliders();
@@ -4056,6 +4363,7 @@
     function toggleTheaterMode() {
       isTheaterMode = !isTheaterMode;
       document.body.classList.toggle('theater-mode-active', isTheaterMode);
+      document.body.classList.remove('theater-chrome-visible');
       
       if (videoViewport.classList.contains('is-floating-dock')) {
         videoViewport.classList.remove('is-floating-dock');
@@ -4070,8 +4378,35 @@
 
       if (isTheaterMode) {
         showToast('Cinema View: Centered Video Only');
+        showTheaterChrome();
+        setupTheaterChromeListeners(true);
       } else {
         showToast('Restored Normal Mode');
+        clearTimeout(theaterChromeTimer);
+        setupTheaterChromeListeners(false);
+      }
+    }
+
+    function showTheaterChrome() {
+      if (!isTheaterMode) return;
+      document.body.classList.add('theater-chrome-visible');
+      clearTimeout(theaterChromeTimer);
+      theaterChromeTimer = setTimeout(() => {
+        if (isTheaterMode) {
+          document.body.classList.remove('theater-chrome-visible');
+        }
+      }, 2800);
+    }
+
+    function setupTheaterChromeListeners(enable) {
+      const events = ['mousemove', 'mousedown', 'touchstart', 'touchmove', 'keydown'];
+      events.forEach(ev => {
+        document.removeEventListener(ev, showTheaterChrome);
+      });
+      if (enable) {
+        events.forEach(ev => {
+          document.addEventListener(ev, showTheaterChrome, { passive: true });
+        });
       }
     }
 
@@ -4435,7 +4770,13 @@
         if (!e.target.closest('#themeToggleBtn') && !e.target.closest('#themePopupMenu')) {
           themePopupMenu.classList.remove('active');
         }
+        if (!e.target.closest('#ctxMenu') && !e.target.closest('.ctx-menu-backdrop')) {
+          // allow a short delay so menu item clicks fire first
+        }
       });
+      document.addEventListener('scroll', () => {
+        closeContextMenu();
+      }, { passive: true });
     }
 
     function toggleThemeDropdown(e) {
@@ -4759,6 +5100,12 @@
 
         const card = document.createElement('div');
         card.className = 'upcoming-card';
+        card._bwhsItem = item;
+        card._bwhsType = 'movie';
+        card.dataset.mediaId = String(item.id);
+        card.dataset.mediaType = 'movie';
+        card.dataset.mediaTitle = item.title || '';
+        if (item.poster_path) card.dataset.mediaPoster = item.poster_path;
         card.innerHTML = `
           <img src="${poster}" class="upcoming-poster" alt="${item.title}" loading="lazy" />
           <div class="upcoming-info">
@@ -5296,12 +5643,285 @@
       mediaGrid.appendChild(fragment);
     }
 
+
+    // Global delegated right-click / long-press so menus work on all thumbnails
+    function setupGlobalContextMenu() {
+      // Desktop right-click
+      document.addEventListener('contextmenu', (e) => {
+        const card = e.target.closest('.media-card, .shelf-card, .sidebar-rec-card, .upcoming-card, .panel-item-card, .hero-mini-poster');
+        if (!card) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const data = resolveCardMediaData(card);
+        if (data) openContextMenu(e.clientX, e.clientY, data.item, data.type);
+      }, true);
+
+      // Mobile long-press
+      let lpTimer = null;
+      let lpMoved = false;
+      let lpStart = null;
+      let lpCard = null;
+
+      document.addEventListener('touchstart', (e) => {
+        const card = e.target.closest('.media-card, .shelf-card, .sidebar-rec-card, .upcoming-card, .panel-item-card');
+        if (!card || e.target.closest('.fav-heart-btn') || e.target.closest('.btn-upcoming-reminder') || e.target.closest('.btn-upcoming-trailer')) {
+          return;
+        }
+        lpMoved = false;
+        lpCard = card;
+        const t = e.touches[0];
+        lpStart = { x: t.clientX, y: t.clientY };
+        clearTimeout(lpTimer);
+        lpTimer = setTimeout(() => {
+          if (!lpMoved && lpCard) {
+            longPressTriggered = true;
+            if (navigator.vibrate) { try { navigator.vibrate(30); } catch(_){} }
+            const data = resolveCardMediaData(lpCard);
+            if (data) openContextMenu(lpStart.x, lpStart.y, data.item, data.type);
+          }
+        }, 500);
+      }, { passive: true });
+
+      document.addEventListener('touchmove', (e) => {
+        if (!lpStart) return;
+        const t = e.touches[0];
+        if (Math.abs(t.clientX - lpStart.x) > 14 || Math.abs(t.clientY - lpStart.y) > 14) {
+          lpMoved = true;
+          clearTimeout(lpTimer);
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchend', () => {
+        clearTimeout(lpTimer);
+        lpTimer = null;
+        lpStart = null;
+        lpCard = null;
+        setTimeout(() => { longPressTriggered = false; }, 50);
+      }, { passive: true });
+
+      document.addEventListener('touchcancel', () => {
+        clearTimeout(lpTimer);
+        lpTimer = null;
+        lpStart = null;
+        lpCard = null;
+      }, { passive: true });
+    }
+
+    function resolveCardMediaData(card) {
+      // Prefer data attributes if present
+      if (card.dataset && card.dataset.mediaId) {
+        const id = parseInt(card.dataset.mediaId, 10);
+        const type = card.dataset.mediaType || 'movie';
+        const title = card.dataset.mediaTitle || '';
+        const poster = card.dataset.mediaPoster || '';
+        return {
+          item: {
+            id,
+            title: type === 'movie' ? title : undefined,
+            name: type !== 'movie' ? title : undefined,
+            poster_path: poster,
+            media_type: type
+          },
+          type
+        };
+      }
+      // Fallback: cards created via attachCardInteractions store _bwhsItem
+      if (card._bwhsItem) {
+        return { item: card._bwhsItem, type: card._bwhsType || (card._bwhsItem.title ? 'movie' : 'tv') };
+      }
+      return null;
+    }
+
     function attachCardInteractions(element, item, type) {
+      // Store for delegated context menu + attributes for reliability
+      element._bwhsItem = item;
+      element._bwhsType = type;
+      try {
+        element.dataset.mediaId = String(item.id);
+        element.dataset.mediaType = type || (item.title ? 'movie' : 'tv');
+        element.dataset.mediaTitle = item.title || item.name || '';
+        if (item.poster_path) element.dataset.mediaPoster = item.poster_path;
+      } catch (_) {}
+
       element.addEventListener('click', (e) => {
-        if (!e.target.closest('.fav-heart-btn')) {
+        if (longPressTriggered) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        if (!e.target.closest('.fav-heart-btn') && !e.target.closest('.ctx-menu') && !e.target.closest('.ctx-menu-item')) {
           openMediaPage(item, type);
         }
       });
+    }
+
+    function openContextMenu(x, y, item, type) {
+      if (!item || !item.id) return;
+      ctxMenuItem = item;
+      ctxMenuType = type || item.media_type || (item.title ? 'movie' : 'tv');
+      const menu = document.getElementById('ctxMenu');
+      const backdrop = document.getElementById('ctxMenuBackdrop');
+      const titleEl = document.getElementById('ctxMenuTitle');
+      const favLabel = document.getElementById('ctxFavoriteLabel');
+      const nextLabel = document.getElementById('ctxNextPlayLabel');
+      if (!menu || !backdrop) return;
+
+      const title = item.title || item.name || 'Title';
+      if (titleEl) titleEl.textContent = title;
+
+      const isFav = favoritesList.some(f => f.id === item.id);
+      if (favLabel) favLabel.textContent = isFav ? 'Remove from Favorites' : 'Add to Favorites';
+
+      const isNext = sharedMustWatchQueue.some(q => q.id === item.id);
+      if (nextLabel) nextLabel.textContent = isNext ? 'Remove from Next Play' : 'Add to Next Play';
+
+      backdrop.classList.add('active');
+      menu.classList.add('active');
+
+      requestAnimationFrame(() => {
+        const pad = 12;
+        const mw = menu.offsetWidth || 220;
+        const mh = menu.offsetHeight || 240;
+        let left = x;
+        let top = y;
+        if (left + mw > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - mw - pad);
+        if (top + mh > window.innerHeight - pad) top = Math.max(pad, window.innerHeight - mh - pad);
+        if (left < pad) left = pad;
+        if (top < pad) top = pad;
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+      });
+    }
+
+    function closeContextMenu() {
+      const menu = document.getElementById('ctxMenu');
+      const backdrop = document.getElementById('ctxMenuBackdrop');
+      if (menu) {
+        menu.classList.remove('active');
+        menu.style.removeProperty('display');
+      }
+      if (backdrop) backdrop.classList.remove('active');
+      ctxMenuItem = null;
+      ctxMenuType = null;
+    }
+
+    function bindContextMenuUI() {
+      const backdrop = document.getElementById('ctxMenuBackdrop');
+      const menu = document.getElementById('ctxMenu');
+      if (backdrop) {
+        backdrop.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          closeContextMenu();
+        });
+      }
+      if (menu) {
+        menu.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-ctx-action]');
+          if (!btn) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const action = btn.getAttribute('data-ctx-action');
+          // Close FIRST so menu never sticks
+          const item = ctxMenuItem;
+          const type = ctxMenuType;
+          closeContextMenu();
+          if (!item) return;
+          if (action === 'watch') {
+            openMediaPage(item, type);
+          } else if (action === 'nextplay') {
+            ctxMenuItem = item; ctxMenuType = type;
+            ctxActionNextPlay();
+          } else if (action === 'favorite') {
+            ctxMenuItem = item; ctxMenuType = type;
+            ctxActionFavorite();
+          } else if (action === 'share') {
+            ctxMenuItem = item; ctxMenuType = type;
+            ctxActionShare();
+          }
+        });
+      }
+      // Escape closes menu
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeContextMenu();
+      });
+    }
+
+    function ctxActionWatch() {
+      if (!ctxMenuItem) return;
+      const item = ctxMenuItem;
+      const type = ctxMenuType;
+      closeContextMenu();
+      openMediaPage(item, type);
+    }
+
+    async function ctxActionNextPlay() {
+      if (!ctxMenuItem) return;
+      const item = ctxMenuItem;
+      const id = item.id;
+      closeContextMenu();
+
+      const idx = sharedMustWatchQueue.findIndex(q => q.id === id);
+      if (idx > -1) {
+        sharedMustWatchQueue.splice(idx, 1);
+        showToast('Removed from Next Play');
+      } else {
+        // Prefer full data if available, else use item as-is
+        let data = item;
+        if (!item.poster_path && !item.overview) {
+          try {
+            data = await cachedFetch(`${TMDB_BASE}/${ctxMenuType || 'movie'}/${id}?api_key=${apiKey}`);
+          } catch (_) {}
+        }
+        if (data && data.id) {
+          sharedMustWatchQueue.unshift(data);
+          showToast('Added to Next Play');
+        }
+      }
+      localStorage.setItem('humble_shared_must_watch', JSON.stringify(sharedMustWatchQueue));
+      localStorage.setItem('humble_nextplay', JSON.stringify(sharedMustWatchQueue));
+      if (mustWatchCount) mustWatchCount.textContent = sharedMustWatchQueue.length;
+      if (currentType === 'nextplay') renderMustWatchAndNextPlay();
+    }
+
+    async function ctxActionFavorite() {
+      if (!ctxMenuItem) return;
+      const item = ctxMenuItem;
+      const id = item.id;
+      closeContextMenu();
+
+      const existingIdx = favoritesList.findIndex(f => f.id === id);
+      if (existingIdx > -1) {
+        favoritesList.splice(existingIdx, 1);
+        showToast('Removed from Favorites');
+      } else {
+        let data = item;
+        if (!item.poster_path) {
+          try {
+            data = await cachedFetch(`${TMDB_BASE}/${ctxMenuType || 'movie'}/${id}?api_key=${apiKey}`);
+          } catch (_) {}
+        }
+        favoritesList.unshift(data);
+        showToast('Added to Favorites');
+      }
+      localStorage.setItem('humble_favorites', JSON.stringify(favoritesList));
+      if (currentType === 'favorites') renderFavorites();
+    }
+
+    async function ctxActionShare() {
+      if (!ctxMenuItem) return;
+      const item = ctxMenuItem;
+      closeContextMenu();
+
+      const posterPath = item.poster_path;
+      if (!posterPath) {
+        showToast('No cover art available');
+        return;
+      }
+      const fullUrl = `${IMAGE_ORIGINAL}${posterPath}`;
+      const safeName = (item.title || item.name || 'Cover').replace(/[^a-zA-Z0-9]+/g, '_');
+      await downloadImageDirectly(fullUrl, `BWHS-${safeName}-Cover.jpg`);
+      showToast('Cover art ready to share');
     }
 
     async function showFunFacts(item) {
@@ -5578,6 +6198,12 @@
 
         const card = document.createElement('div');
         card.className = 'panel-item-card';
+        card._bwhsItem = item;
+        card._bwhsType = item.media_type || 'movie';
+        card.dataset.mediaId = String(item.id);
+        card.dataset.mediaType = item.media_type || 'movie';
+        card.dataset.mediaTitle = item.title || '';
+        if (item.poster_path) card.dataset.mediaPoster = item.poster_path;
         card.innerHTML = `
           <img src="${poster}" class="panel-poster" alt="${item.title}" loading="lazy" />
           <div class="panel-item-info">
@@ -5700,7 +6326,12 @@
 
     function closePlayerPage(pushHistory = true) {
       if (isTheaterMode) {
-        toggleTheaterMode();
+        isTheaterMode = false;
+        document.body.classList.remove('theater-mode-active', 'theater-chrome-visible');
+        clearTimeout(theaterChromeTimer);
+        setupTheaterChromeListeners(false);
+        if (btnTheaterMode) btnTheaterMode.classList.remove('active');
+        if (theaterPillText) theaterPillText.textContent = 'Theater Cinema Mode';
       }
       if (videoViewport.classList.contains('is-floating-dock')) {
         videoViewport.classList.remove('is-floating-dock');
@@ -5709,6 +6340,7 @@
       catalogBrowserView.style.display = 'block';
       activeMedia = null;
       playerFrame.src = '';
+      closeContextMenu();
 
       if (desktopRightPanel) {
         desktopRightPanel.classList.remove('player-hidden');
@@ -6076,9 +6708,8 @@
           </div>
         `;
 
-        card.addEventListener('click', () => {
-          openMediaPage(rec, rec.media_type || (rec.title ? 'movie' : 'tv'));
-        });
+        const recType = rec.media_type || (rec.title ? 'movie' : 'tv');
+        attachCardInteractions(card, rec, recType);
 
         fragment.appendChild(card);
       });
