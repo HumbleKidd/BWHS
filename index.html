@@ -2170,13 +2170,18 @@
         position: fixed !important;
         bottom: auto !important;
         right: auto !important;
-        width: 440px !important;
-        max-width: 32vw !important;
+        width: min(720px, 52vw) !important;
+        max-width: calc(100vw - var(--sidebar-expanded-w) - 48px) !important;
         aspect-ratio: 16 / 9 !important;
-        z-index: 500 !important;
+        z-index: 45 !important; /* below expanded sidebar (60) so menu stays usable */
         border-radius: 16px !important;
         box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 0 1.5px var(--primary) !important;
-        /* left/top set by JS for drag */
+        will-change: left, top, transform;
+        transition: opacity 0.25s ease, box-shadow 0.25s ease;
+      }
+      .video-viewport.is-floating-dock.is-dragging {
+        transition: none !important;
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 0 2px var(--primary) !important;
       }
       .video-viewport.is-floating-dock .float-drag-handle {
         display: flex !important;
@@ -2187,15 +2192,15 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 28px;
+        height: 32px;
         z-index: 20;
         cursor: grab;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(180deg, rgba(15,23,42,0.85), rgba(15,23,42,0.25));
+        background: linear-gradient(180deg, rgba(15,23,42,0.9), rgba(15,23,42,0.35));
         border-radius: 16px 16px 0 0;
         color: #fff;
-        font-size: 0.7rem;
+        font-size: 0.72rem;
         font-weight: 700;
         gap: 6px;
         user-select: none;
@@ -2206,6 +2211,17 @@
       }
       .float-drag-handle i {
         opacity: 0.85;
+      }
+      /* Spacer prevents layout jump when video goes fixed */
+      .video-viewport-wrapper.has-float-spacer {
+        min-height: 0;
+      }
+      .float-dock-spacer {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 12px;
+        background: var(--surface-subtle);
+        pointer-events: none;
       }
     }
 
@@ -3228,6 +3244,150 @@
     body.theater-mode-active.theater-chrome-visible .video-viewport {
       cursor: default;
     }
+
+    /* Find Similar section */
+    .find-similar-sticky {
+      display: none;
+      position: sticky;
+      top: 65px;
+      z-index: 35;
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-md);
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid var(--border);
+    }
+    .find-similar-sticky.active {
+      display: flex;
+    }
+    .find-similar-seed {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      background: var(--surface-subtle);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .find-similar-seed.visible {
+      display: flex;
+    }
+    .find-similar-seed:hover {
+      background: var(--primary-light);
+      transform: translateY(-1px);
+    }
+    .find-similar-seed img {
+      width: 42px;
+      height: 63px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #000;
+      flex-shrink: 0;
+    }
+    .find-similar-seed-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1;
+    }
+    .find-similar-seed-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .find-similar-seed-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .find-similar-seed-meta {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .find-similar-search-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .find-similar-search-row input {
+      flex: 1;
+      background: var(--surface-subtle);
+      border: none;
+      border-radius: 9999px;
+      padding: 10px 16px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text-main);
+      outline: none;
+    }
+    .find-similar-search-row input:focus {
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+      background: var(--surface);
+    }
+    .find-similar-search-row button {
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .find-similar-filters {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .find-similar-filters .filter-chip {
+      flex-shrink: 0;
+    }
+    .find-similar-suggestions {
+      display: none;
+      flex-direction: column;
+      max-height: 280px;
+      overflow-y: auto;
+      background: var(--surface-subtle);
+      border-radius: 12px;
+    }
+    .find-similar-suggestions.active {
+      display: flex;
+    }
+    .fs-suggest-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+    }
+    .fs-suggest-item:hover {
+      background: var(--primary-light);
+    }
+    .fs-suggest-item img {
+      width: 34px;
+      height: 50px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+    .fs-suggest-item span {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
   </style>
 </head>
 <body>
@@ -3312,6 +3472,10 @@
       <button class="sidebar-btn" id="sideActors" onclick="selectType('actors_page')">
         <i class="fa-solid fa-star" style="color: #eab308;"></i>
         <span>Top Stars</span>
+      </button>
+      <button class="sidebar-btn" id="sideFindsimilar" onclick="selectType('findsimilar')">
+        <i class="fa-solid fa-compass" style="color: #8b5cf6;"></i>
+        <span>Find Similar</span>
       </button>
       <button class="sidebar-btn" id="sideNextplay" onclick="selectType('nextplay')">
         <i class="fa-solid fa-list-check" style="color: #10b981;"></i>
@@ -3604,6 +3768,31 @@
 
         <!-- CATALOG BROWSER VIEW WRAPPER -->
         <div id="catalogBrowserView">
+          <!-- Find Similar sticky search panel -->
+          <div class="find-similar-sticky" id="findSimilarSticky">
+            <div class="find-similar-seed" id="findSimilarSeed" onclick="openFindSimilarSeed()">
+              <img id="findSimilarSeedPoster" src="" alt="" />
+              <div class="find-similar-seed-info">
+                <span class="find-similar-seed-label">Showing similar to</span>
+                <span class="find-similar-seed-title" id="findSimilarSeedTitle">—</span>
+                <span class="find-similar-seed-meta" id="findSimilarSeedMeta">Tap to open this title</span>
+              </div>
+              <i class="fa-solid fa-circle-play" style="color:var(--primary); font-size:1.1rem;"></i>
+            </div>
+            <div class="find-similar-search-row">
+              <input type="text" id="findSimilarInput" placeholder="Search a movie or show to find similar..." autocomplete="off" />
+              <button type="button" onclick="runFindSimilarSearch()"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            </div>
+            <div class="find-similar-suggestions" id="findSimilarSuggestions"></div>
+            <div class="find-similar-filters" id="findSimilarFilters">
+              <button class="filter-chip active" data-fs-filter="all" onclick="setFindSimilarFilter('all')">All</button>
+              <button class="filter-chip" data-fs-filter="movie" onclick="setFindSimilarFilter('movie')">Movies</button>
+              <button class="filter-chip" data-fs-filter="tv" onclick="setFindSimilarFilter('tv')">TV Shows</button>
+              <button class="filter-chip" data-fs-filter="animation" onclick="setFindSimilarFilter('animation')">Animation</button>
+              <button class="filter-chip" data-fs-filter="cartoon" onclick="setFindSimilarFilter('cartoon')">Cartoons</button>
+            </div>
+          </div>
+
           <!-- Top Placed Interactive Filter Suite with Horizontal Sliders -->
           <div class="top-filter-suite" id="topFilterSuite">
             <div class="filter-group-wrap">
@@ -3831,6 +4020,10 @@
         <i class="fa-solid fa-heart" style="color:#ef4444;"></i>
         <span>Saved Favorites</span>
       </button>
+      <button class="sheet-nav-item" onclick="selectType('findsimilar'); closeMoreSheet(null);">
+        <i class="fa-solid fa-compass" style="color:#8b5cf6;"></i>
+        <span>Find Similar</span>
+      </button>
       <button class="sheet-nav-item" onclick="selectType('nextplay'); closeMoreSheet(null);">
         <i class="fa-solid fa-list-check" style="color:#10b981;"></i>
         <span>Must Watch / Next Play</span>
@@ -3965,20 +4158,72 @@
     document.addEventListener('webkitfullscreenchange', handleFullscreenOrientation);
     document.addEventListener('mozfullscreenchange', handleFullscreenOrientation);
 
-    // DESKTOP FLOATING DOCK + DRAGGABLE
-    let floatDockPos = null; // { left, top } user drag position
+    // DESKTOP FLOATING DOCK + SMOOTH DRAGGABLE
+    let floatDockPos = null;
     let isDraggingFloat = false;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
+    let floatRaf = null;
+    let pendingFloatLeft = 0;
+    let pendingFloatTop = 0;
+
+    function getFloatSidebarClearance() {
+      const sidebar = document.querySelector('.desktop-sidebar');
+      if (!sidebar) return 92;
+      // Use actual rendered width so expanded hover never sits under the menu
+      return Math.max(sidebar.getBoundingClientRect().width, 68) + 20;
+    }
+
+    function defaultFloatPosition() {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const sidebarClear = getFloatSidebarClearance();
+      const width = Math.min(720, vw * 0.52, vw - sidebarClear - 40);
+      // Prefer measured height; fallback from aspect ratio
+      let height = videoViewport.offsetHeight || (width * 9 / 16);
+      // Center in the content area (right of sidebar), near bottom but not corner
+      const contentWidth = vw - sidebarClear - 24;
+      let left = sidebarClear + Math.max(12, (contentWidth - width) / 2);
+      let top = Math.max(80, vh - height - 32);
+      // Keep fully on screen
+      left = Math.min(left, vw - width - 16);
+      top = Math.min(top, vh - height - 16);
+      return { left, top, width };
+    }
+
+    function ensureFloatSpacer(on) {
+      const wrapper = document.getElementById('videoViewportWrapper');
+      if (!wrapper) return;
+      let spacer = document.getElementById('floatDockSpacer');
+      if (on) {
+        wrapper.classList.add('has-float-spacer');
+        if (!spacer) {
+          spacer = document.createElement('div');
+          spacer.id = 'floatDockSpacer';
+          spacer.className = 'float-dock-spacer';
+          // Insert spacer as sibling after viewport so layout height is preserved
+          wrapper.appendChild(spacer);
+        }
+        // Match current video height to avoid jump
+        const h = videoViewport.offsetHeight || Math.round((wrapper.clientWidth || 640) * 9 / 16);
+        spacer.style.height = h + 'px';
+        spacer.style.aspectRatio = 'auto';
+      } else {
+        wrapper.classList.remove('has-float-spacer');
+        if (spacer) spacer.remove();
+      }
+    }
 
     function handleDesktopFloatingVideoDock() {
-      if (!videoViewport) return;
+      if (!videoViewport || !playerPageView) return;
 
       if (window.innerWidth < 1080 || !playerPageView.classList.contains('active') || isTheaterMode) {
         if (videoViewport.classList.contains('is-floating-dock')) {
-          videoViewport.classList.remove('is-floating-dock');
+          videoViewport.classList.remove('is-floating-dock', 'is-dragging');
           videoViewport.style.left = '';
           videoViewport.style.top = '';
+          videoViewport.style.width = '';
+          ensureFloatSpacer(false);
         }
         return;
       }
@@ -3989,31 +4234,42 @@
       const rect = castAnchor.getBoundingClientRect();
       if (rect.bottom < 120) {
         if (!videoViewport.classList.contains('is-floating-dock')) {
+          // Capture size before switching to fixed to avoid jump
+          ensureFloatSpacer(true);
           videoViewport.classList.add('is-floating-dock');
-          applyFloatDockPosition();
+          applyFloatDockPosition(true);
         } else if (!isDraggingFloat) {
-          applyFloatDockPosition();
+          // Nudge clear of expanded sidebar while scrolling
+          const minLeft = getFloatSidebarClearance();
+          if (!floatDockPos) {
+            applyFloatDockPosition(false);
+          } else if (floatDockPos.left < minLeft) {
+            floatDockPos.left = minLeft;
+            videoViewport.style.left = minLeft + 'px';
+          }
         }
       } else {
         if (videoViewport.classList.contains('is-floating-dock')) {
-          videoViewport.classList.remove('is-floating-dock');
+          videoViewport.classList.remove('is-floating-dock', 'is-dragging');
           videoViewport.style.left = '';
           videoViewport.style.top = '';
+          videoViewport.style.width = '';
+          ensureFloatSpacer(false);
         }
       }
     }
 
-    function applyFloatDockPosition() {
+    function applyFloatDockPosition(forceDefault) {
       if (!videoViewport || !videoViewport.classList.contains('is-floating-dock')) return;
-      const defaultLeft = (typeof getComputedStyle !== 'undefined' ? 68 : 68) + 24; // sidebar + pad
-      const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w')) || 68;
-      if (floatDockPos) {
-        videoViewport.style.left = floatDockPos.left + 'px';
-        videoViewport.style.top = floatDockPos.top + 'px';
-      } else {
-        videoViewport.style.left = (sidebarW + 24) + 'px';
-        videoViewport.style.top = (window.innerHeight - videoViewport.offsetHeight - 24) + 'px';
+      if (forceDefault || !floatDockPos) {
+        const pos = defaultFloatPosition();
+        floatDockPos = { left: pos.left, top: pos.top };
+        videoViewport.style.width = pos.width + 'px';
       }
+      const minLeft = getFloatSidebarClearance();
+      if (floatDockPos.left < minLeft) floatDockPos.left = minLeft;
+      videoViewport.style.left = floatDockPos.left + 'px';
+      videoViewport.style.top = floatDockPos.top + 'px';
     }
 
     function setupFloatingDrag() {
@@ -4021,17 +4277,28 @@
       if (!handle || handle._dragBound) return;
       handle._dragBound = true;
 
+      const flushMove = () => {
+        floatRaf = null;
+        if (!isDraggingFloat || !videoViewport) return;
+        videoViewport.style.left = pendingFloatLeft + 'px';
+        videoViewport.style.top = pendingFloatTop + 'px';
+        floatDockPos = { left: pendingFloatLeft, top: pendingFloatTop };
+      };
+
       const onMove = (clientX, clientY) => {
         if (!isDraggingFloat || !videoViewport) return;
-        let left = clientX - dragOffsetX;
-        let top = clientY - dragOffsetY;
+        const minLeft = getFloatSidebarClearance();
         const maxL = window.innerWidth - videoViewport.offsetWidth - 8;
         const maxT = window.innerHeight - videoViewport.offsetHeight - 8;
-        left = Math.max(8, Math.min(maxL, left));
+        let left = clientX - dragOffsetX;
+        let top = clientY - dragOffsetY;
+        left = Math.max(minLeft, Math.min(maxL, left));
         top = Math.max(8, Math.min(maxT, top));
-        floatDockPos = { left, top };
-        videoViewport.style.left = left + 'px';
-        videoViewport.style.top = top + 'px';
+        pendingFloatLeft = left;
+        pendingFloatTop = top;
+        if (floatRaf == null) {
+          floatRaf = requestAnimationFrame(flushMove);
+        }
       };
 
       handle.addEventListener('pointerdown', (e) => {
@@ -4039,6 +4306,7 @@
         e.preventDefault();
         e.stopPropagation();
         isDraggingFloat = true;
+        videoViewport.classList.add('is-dragging');
         handle.setPointerCapture(e.pointerId);
         const rect = videoViewport.getBoundingClientRect();
         dragOffsetX = e.clientX - rect.left;
@@ -4046,20 +4314,46 @@
         handle.style.cursor = 'grabbing';
       });
 
-      handle.addEventListener('pointermove', (e) => {
+      // Document-level move for smooth fast dragging
+      document.addEventListener('pointermove', (e) => {
         if (!isDraggingFloat) return;
         onMove(e.clientX, e.clientY);
-      });
+      }, { passive: true });
 
       const endDrag = (e) => {
         if (!isDraggingFloat) return;
         isDraggingFloat = false;
+        videoViewport.classList.remove('is-dragging');
         handle.style.cursor = 'grab';
+        if (floatRaf != null) {
+          cancelAnimationFrame(floatRaf);
+          floatRaf = null;
+          flushMove();
+        }
         try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
       };
       handle.addEventListener('pointerup', endDrag);
       handle.addEventListener('pointercancel', endDrag);
+      document.addEventListener('pointerup', endDrag);
     }
+
+    // Keep float clear when sidebar expands on hover
+    (function bindSidebarFloatClearance() {
+      const sidebar = document.querySelector('.desktop-sidebar');
+      if (!sidebar) return;
+      const nudge = () => {
+        if (!videoViewport || !videoViewport.classList.contains('is-floating-dock') || isDraggingFloat) return;
+        const minLeft = getFloatSidebarClearance();
+        if (!floatDockPos) return;
+        if (floatDockPos.left < minLeft) {
+          floatDockPos.left = minLeft;
+          videoViewport.style.left = minLeft + 'px';
+        }
+      };
+      sidebar.addEventListener('mouseenter', () => setTimeout(nudge, 50));
+      sidebar.addEventListener('mouseleave', () => setTimeout(nudge, 50));
+      sidebar.addEventListener('transitionend', nudge);
+    })();
 
     window.addEventListener('scroll', handleDesktopFloatingVideoDock, { passive: true });
 
@@ -4168,6 +4462,11 @@
     let similarCurrentPage = 1;
     let similarSeenSet = new Set();
     let isTheaterMode = false;
+    let findSimilarSeed = null;
+    let findSimilarFilter = 'all';
+    let findSimilarPage = 1;
+    let findSimilarHasMore = true;
+    let findSimilarLoading = false;
     let theaterChromeTimer = null;
     let ctxMenuItem = null;
     let ctxMenuType = null;
@@ -4991,11 +5290,27 @@
       if (activeMobBtn) activeMobBtn.classList.add('active');
 
       upcomingViewContainer.style.display = 'none';
+      const fsSticky = document.getElementById('findSimilarSticky');
+      if (fsSticky) fsSticky.classList.toggle('active', type === 'findsimilar');
 
-      if (type === 'all' || type === 'upcoming' || type === 'favorites' || type === 'nextplay') {
+      if (type === 'all' || type === 'upcoming' || type === 'favorites' || type === 'nextplay' || type === 'findsimilar') {
         topFilterSuite.classList.remove('active');
       } else {
         topFilterSuite.classList.add('active');
+      }
+
+      // Fix sidebar active for findsimilar
+      document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
+      const sideMap = {
+        all: 'sideAll', movie: 'sideMovie', tv: 'sideTv', anime: 'sideAnime',
+        upcoming: 'sideUpcoming', latest: 'sideLatest', cartoon: 'sideCartoon',
+        animation: 'sideAnimation', actors_page: 'sideActors', nextplay: 'sideNextplay',
+        favorites: 'sideFav', findsimilar: 'sideFindsimilar'
+      };
+      const sideId = sideMap[type];
+      if (sideId) {
+        const b = document.getElementById(sideId);
+        if (b) b.classList.add('active');
       }
 
       if (type === 'upcoming') {
@@ -5011,6 +5326,24 @@
         actorsShowcaseSection.style.display = 'none';
         curatedShelvesContainer.innerHTML = '';
         renderTopStarsPage(1, true);
+        return;
+      }
+
+      if (type === 'findsimilar') {
+        heroSpotlight.style.display = 'none';
+        actorsShowcaseSection.style.display = 'none';
+        curatedShelvesContainer.innerHTML = '';
+        mediaGrid.innerHTML = '';
+        feedTitle.innerHTML = `<i class="fa-solid fa-compass" style="color:#8b5cf6;"></i> Find Similar`;
+        setupFindSimilarUI();
+        if (findSimilarSeed) {
+          loadFindSimilarResults(1, true);
+        } else {
+          mediaGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:48px 20px; color:var(--text-muted);">
+            <i class="fa-solid fa-clapperboard" style="font-size:2.5rem; margin-bottom:12px; color:var(--primary);"></i>
+            <p style="font-weight:700;">Search any film or show above to discover endless similar titles.</p>
+          </div>`;
+        }
         return;
       }
 
@@ -5416,6 +5749,10 @@
 
     async function fetchCatalog(page = 1, reset = false) {
       if (currentType === 'favorites' || currentType === 'nextplay' || currentType === 'upcoming') return;
+      if (currentType === 'findsimilar') {
+        loadFindSimilarResults(page, reset);
+        return;
+      }
       if (currentType === 'actors_page') {
         renderTopStarsPage(page, reset);
         return;
@@ -5924,6 +6261,212 @@
       showToast('Cover art ready to share');
     }
 
+
+    function setupFindSimilarUI() {
+      const input = document.getElementById('findSimilarInput');
+      if (!input || input._fsBound) return;
+      input._fsBound = true;
+      let debounce = null;
+      input.addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => previewFindSimilarSuggestions(input.value.trim()), 220);
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          runFindSimilarSearch();
+        }
+      });
+      updateFindSimilarSeedUI();
+      document.querySelectorAll('#findSimilarFilters .filter-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.getAttribute('data-fs-filter') === findSimilarFilter);
+      });
+    }
+
+    async function previewFindSimilarSuggestions(q) {
+      const box = document.getElementById('findSimilarSuggestions');
+      if (!box) return;
+      if (!q) {
+        box.classList.remove('active');
+        box.innerHTML = '';
+        return;
+      }
+      try {
+        const data = await cachedFetch(`${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(q)}`);
+        const results = (data.results || []).filter(i => (i.media_type === 'movie' || i.media_type === 'tv') && (i.poster_path) && isCleanCinemaContent(i)).slice(0, 8);
+        if (!results.length) {
+          box.classList.remove('active');
+          return;
+        }
+        box.innerHTML = '';
+        results.forEach(item => {
+          const type = item.media_type || (item.title ? 'movie' : 'tv');
+          const title = item.title || item.name || 'Untitled';
+          const year = (item.release_date || item.first_air_date || '').split('-')[0];
+          const row = document.createElement('div');
+          row.className = 'fs-suggest-item';
+          row.innerHTML = `<img src="${IMAGE_BASE}${item.poster_path}" alt="" loading="lazy" /><span>${title} ${year ? '('+year+')' : ''} · ${type === 'tv' ? 'TV' : 'Movie'}</span>`;
+          row.addEventListener('click', () => {
+            box.classList.remove('active');
+            box.innerHTML = '';
+            const input = document.getElementById('findSimilarInput');
+            if (input) input.value = title;
+            setFindSimilarSeed(item, type);
+          });
+          box.appendChild(row);
+        });
+        box.classList.add('active');
+      } catch (_) {
+        box.classList.remove('active');
+      }
+    }
+
+    async function runFindSimilarSearch() {
+      const input = document.getElementById('findSimilarInput');
+      const q = (input && input.value || '').trim();
+      if (!q) {
+        showToast('Type a movie or show name first');
+        return;
+      }
+      try {
+        const data = await cachedFetch(`${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(q)}`);
+        const results = (data.results || []).filter(i => (i.media_type === 'movie' || i.media_type === 'tv') && i.poster_path && isCleanCinemaContent(i));
+        if (!results.length) {
+          showToast('No matching titles found');
+          return;
+        }
+        const best = results[0];
+        const type = best.media_type || (best.title ? 'movie' : 'tv');
+        setFindSimilarSeed(best, type);
+      } catch (_) {
+        showToast('Search failed');
+      }
+    }
+
+    function setFindSimilarSeed(item, type) {
+      findSimilarSeed = { ...item, computedType: type || item.media_type || (item.title ? 'movie' : 'tv') };
+      const box = document.getElementById('findSimilarSuggestions');
+      if (box) {
+        box.classList.remove('active');
+        box.innerHTML = '';
+      }
+      updateFindSimilarSeedUI();
+      loadFindSimilarResults(1, true);
+    }
+
+    function updateFindSimilarSeedUI() {
+      const seedEl = document.getElementById('findSimilarSeed');
+      if (!seedEl) return;
+      if (!findSimilarSeed) {
+        seedEl.classList.remove('visible');
+        return;
+      }
+      seedEl.classList.add('visible');
+      const poster = document.getElementById('findSimilarSeedPoster');
+      const title = document.getElementById('findSimilarSeedTitle');
+      const meta = document.getElementById('findSimilarSeedMeta');
+      if (poster) poster.src = findSimilarSeed.poster_path ? `${IMAGE_BASE}${findSimilarSeed.poster_path}` : '';
+      if (title) title.textContent = findSimilarSeed.title || findSimilarSeed.name || 'Title';
+      const year = (findSimilarSeed.release_date || findSimilarSeed.first_air_date || '').split('-')[0];
+      const t = findSimilarSeed.computedType || findSimilarSeed.media_type || 'movie';
+      if (meta) meta.textContent = `${t === 'tv' ? 'TV Show' : 'Movie'}${year ? ' · ' + year : ''} · Tap to open`;
+      feedTitle.innerHTML = `<i class="fa-solid fa-compass" style="color:#8b5cf6;"></i> Similar to “${findSimilarSeed.title || findSimilarSeed.name || 'Title'}”`;
+    }
+
+    function openFindSimilarSeed() {
+      if (!findSimilarSeed) return;
+      const t = findSimilarSeed.computedType || findSimilarSeed.media_type || (findSimilarSeed.title ? 'movie' : 'tv');
+      openMediaPage(findSimilarSeed, t);
+    }
+
+    function setFindSimilarFilter(filter) {
+      findSimilarFilter = filter || 'all';
+      document.querySelectorAll('#findSimilarFilters .filter-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.getAttribute('data-fs-filter') === findSimilarFilter);
+      });
+      if (findSimilarSeed) loadFindSimilarResults(1, true);
+    }
+
+    async function loadFindSimilarResults(page = 1, reset = false) {
+      if (!findSimilarSeed) return;
+      if (findSimilarLoading) return;
+      if (!reset && !findSimilarHasMore) return;
+
+      findSimilarLoading = true;
+      if (reset) {
+        findSimilarPage = 1;
+        page = 1;
+        findSimilarHasMore = true;
+        globalSeenKeys.clear();
+        mediaGrid.innerHTML = '';
+        hasMorePages = true;
+      }
+
+      loadingSpinner.classList.add('active');
+      const type = findSimilarSeed.computedType || findSimilarSeed.media_type || 'movie';
+      const id = findSimilarSeed.id;
+
+      try {
+        const [rec, sim] = await Promise.all([
+          cachedFetch(`${TMDB_BASE}/${type}/${id}/recommendations?api_key=${apiKey}&page=${page}`),
+          cachedFetch(`${TMDB_BASE}/${type}/${id}/similar?api_key=${apiKey}&page=${page}`)
+        ]);
+
+        let items = [...(rec.results || []), ...(sim.results || [])];
+
+        // Fallback genre discover for endless scroll when recommendations run dry
+        if (items.length < 4 && findSimilarSeed.genre_ids && findSimilarSeed.genre_ids.length) {
+          const g = findSimilarSeed.genre_ids[0];
+          const discType = type === 'tv' ? 'tv' : 'movie';
+          const disc = await cachedFetch(`${TMDB_BASE}/discover/${discType}?api_key=${apiKey}&with_genres=${g}&sort_by=popularity.desc&page=${page}`);
+          items = items.concat(disc.results || []);
+        }
+
+        items = items.filter(isCleanCinemaContent).filter(i => i.id !== id);
+
+        // Apply user filter
+        items = items.filter(item => {
+          const mt = item.media_type || (item.title ? 'movie' : 'tv');
+          const genres = item.genre_ids || [];
+          const isAnim = genres.includes(16);
+          const isEng = item.original_language === 'en';
+          if (findSimilarFilter === 'all') return true;
+          if (findSimilarFilter === 'movie') return mt === 'movie' || (!!item.title && !item.name);
+          if (findSimilarFilter === 'tv') return mt === 'tv' || (!!item.name && !item.title);
+          if (findSimilarFilter === 'animation') return isAnim;
+          if (findSimilarFilter === 'cartoon') return (mt === 'tv' || item.name) && isAnim && isEng;
+          return true;
+        });
+
+        const total = Math.max(rec.total_pages || 1, sim.total_pages || 1, 1);
+        findSimilarHasMore = page < Math.min(total + 5, 500);
+        hasMorePages = findSimilarHasMore;
+        findSimilarPage = page;
+        currentPage = page;
+
+        if (items.length === 0 && reset) {
+          mediaGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);">
+            <p>No similar titles matched this filter. Try “All”.</p>
+          </div>`;
+        } else {
+          renderItems(items.map(i => ({
+            ...i,
+            media_type: i.media_type || (i.title ? 'movie' : 'tv')
+          })));
+        }
+      } catch (err) {
+        if (reset) {
+          mediaGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);">Failed to load similar titles.</div>`;
+        }
+        findSimilarHasMore = false;
+        hasMorePages = false;
+      } finally {
+        findSimilarLoading = false;
+        isLoading = false;
+        loadingSpinner.classList.remove('active');
+      }
+    }
+
     async function showFunFacts(item) {
       const type = item.computedType || (item.title ? 'movie' : 'tv');
       infoModalTitle.textContent = `Fun Facts & Trivia: ${item.title || item.name}`;
@@ -6294,6 +6837,7 @@
         theaterBackdropAura.style.backgroundImage = 'none';
       }
 
+      floatDockPos = null;
       catalogBrowserView.style.display = 'none';
       playerPageView.classList.add('active');
 
@@ -6334,8 +6878,13 @@
         if (theaterPillText) theaterPillText.textContent = 'Theater Cinema Mode';
       }
       if (videoViewport.classList.contains('is-floating-dock')) {
-        videoViewport.classList.remove('is-floating-dock');
+        videoViewport.classList.remove('is-floating-dock', 'is-dragging');
+        videoViewport.style.left = '';
+        videoViewport.style.top = '';
+        videoViewport.style.width = '';
       }
+      if (typeof ensureFloatSpacer === 'function') ensureFloatSpacer(false);
+      floatDockPos = null;
       playerPageView.classList.remove('active');
       catalogBrowserView.style.display = 'block';
       activeMedia = null;
