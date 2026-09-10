@@ -965,6 +965,16 @@
       flex-shrink: 0;
     }
 
+    .mobile-header-share {
+      display: inline-flex;
+    }
+
+    @media (min-width: 900px) {
+      .mobile-header-share {
+        display: none;
+      }
+    }
+
     .desktop-theme-wrapper {
       display: none;
       position: relative;
@@ -1873,7 +1883,25 @@
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
-      gap: 12px;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+
+    .player-page-nav .player-nav-left,
+    .player-page-nav .player-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .player-page-nav .player-nav-right {
+      margin-left: auto;
+    }
+
+    #playerShareBtn {
+      display: inline-flex !important;
+      flex-shrink: 0;
     }
 
     .player-page-heading {
@@ -1894,6 +1922,28 @@
       align-items: center;
       justify-content: center;
       flex: 1;
+      min-width: 0;
+    }
+
+    @media (max-width: 767px) {
+      .player-page-nav {
+        padding: 10px 10px;
+        gap: 6px;
+      }
+      .player-page-heading {
+        max-width: 42vw;
+        font-size: 0.86rem;
+      }
+      .btn-theater-pill span {
+        display: none;
+      }
+      .btn-theater-pill {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+      }
+      .player-nav-center {
+        flex: 0 1 auto;
+      }
     }
 
     .btn-theater-pill {
@@ -3502,7 +3552,10 @@
     </button>
     <div class="ctx-menu-divider"></div>
     <button type="button" class="ctx-menu-item" id="ctxShare" data-ctx-action="share">
-      <i class="fa-solid fa-share-nodes" style="color:var(--accent);"></i> Share Cover Art
+      <i class="fa-solid fa-share-nodes" style="color:var(--accent);"></i> Share Watch Link
+    </button>
+    <button type="button" class="ctx-menu-item" id="ctxShareCover" data-ctx-action="sharecover">
+      <i class="fa-solid fa-image" style="color:var(--primary);"></i> Share Cover Art
     </button>
   </div>
 
@@ -3629,6 +3682,9 @@
         </div>
 
         <div class="header-actions">
+          <button class="btn-circle mobile-header-share" id="mobileHeaderShareBtn" onclick="shareCurrentTitle(event)" title="Share this title" aria-label="Share">
+            <i class="fa-solid fa-share-nodes"></i>
+          </button>
           <div class="desktop-theme-wrapper">
             <button class="theme-toggle-btn" onclick="toggleThemeDropdown(event)" id="themeToggleBtn">
               <i class="fa-solid fa-sun" id="themeIcon"></i>
@@ -3683,7 +3739,7 @@
         <section class="player-page-container" id="playerPageView">
           <div class="player-inner-content">
             <div class="player-page-nav">
-              <div style="display:flex; align-items:center; gap:10px;">
+              <div class="player-nav-left">
                 <button class="btn-circle" id="playerBackPageBtn" onclick="handlePlayerBackNavigation()" title="Back to Catalog">
                   <i class="fa-solid fa-arrow-left"></i>
                 </button>
@@ -3698,11 +3754,11 @@
                 </button>
               </div>
 
-              <div style="display:flex; align-items:center; gap:8px;">
+              <div class="player-nav-right">
                 <button class="btn-circle fav" id="playerFavBtn" onclick="toggleFavoriteFromPlayer(event)" title="Save Favorite">
                   <i class="fa-solid fa-heart"></i>
                 </button>
-                <button class="btn-circle" id="playerShareBtn" onclick="shareCurrentTitle(event)" title="Share this title">
+                <button class="btn-circle" id="playerShareBtn" onclick="shareCurrentTitle(event)" title="Share this title" aria-label="Share this title">
                   <i class="fa-solid fa-share-nodes"></i>
                 </button>
               </div>
@@ -6894,6 +6950,9 @@
             ctxActionFavorite();
           } else if (action === 'share') {
             ctxMenuItem = item; ctxMenuType = type;
+            ctxActionShareLink();
+          } else if (action === 'sharecover') {
+            ctxMenuItem = item; ctxMenuType = type;
             ctxActionShare();
           }
         });
@@ -8353,32 +8412,40 @@
       setMetaTag('name', 'description', overview);
     }
 
-    async function shareCurrentTitle(e) {
-      if (e) e.stopPropagation();
-      if (!activeMedia) {
+    function buildShareCopy(item, shareUrl) {
+      const title = (item && (item.title || item.name)) || 'this title';
+      const url = shareUrl || window.location.href || 'https://bwhs.online';
+      const text = `Watch ${title} now at BWHS.online — Binge Watch Humble Streams`;
+      const message = `${text}\n${url}`;
+      return { title, url, text, message };
+    }
+
+    async function shareMediaItem(item, shareUrl) {
+      if (!item) {
         showToast('Nothing to share yet');
         return;
       }
-      const title = activeMedia.title || activeMedia.name || 'BWHS title';
-      const url = window.location.href;
-      const text = `Watch ${title} on BWHS`;
-      const imgPath = activeMedia.poster_path || activeMedia.backdrop_path;
+      const { title, url, text, message } = buildShareCopy(item, shareUrl);
+      const imgPath = item.poster_path || item.backdrop_path;
       const imgUrl = imgPath ? `${IMAGE_ORIGINAL}${imgPath}` : '';
-      syncSocialPreview(activeMedia);
+      syncSocialPreview(item);
 
       try {
-        if (imgUrl && navigator.share && navigator.canShare) {
-          const res = await fetch(imgUrl);
-          const blob = await res.blob();
-          const file = new File([blob], `${title.replace(/[^a-z0-9]+/gi, '_')}-cover.jpg`, { type: blob.type || 'image/jpeg' });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({ title, text, url, files: [file] });
-            showToast('Ready to share with cover art');
-            return;
-          }
-        }
         if (navigator.share) {
-          await navigator.share({ title, text, url });
+          const payload = { title: `Watch ${title} now at BWHS.online`, text, url };
+          if (imgUrl && navigator.canShare) {
+            try {
+              const res = await fetch(imgUrl);
+              const blob = await res.blob();
+              const file = new File([blob], `${title.replace(/[^a-z0-9]+/gi, '_')}-cover.jpg`, { type: blob.type || 'image/jpeg' });
+              if (navigator.canShare({ files: [file], ...payload })) {
+                await navigator.share({ ...payload, files: [file] });
+                showToast('Share sheet opened');
+                return;
+              }
+            } catch (_) {}
+          }
+          await navigator.share(payload);
           showToast('Share sheet opened');
           return;
         }
@@ -8386,11 +8453,32 @@
         if (err && err.name === 'AbortError') return;
       }
       try {
-        await navigator.clipboard.writeText(`${text}\n${url}`);
-        showToast('Link copied — cover preview uses this page');
+        await navigator.clipboard.writeText(message);
+        showToast('Copied: Watch ' + title + ' now at BWHS.online');
       } catch (_) {
-        showToast('Copy this link to share: ' + url);
+        showToast(message);
       }
+    }
+
+    async function shareCurrentTitle(e) {
+      if (e) e.stopPropagation();
+      if (!activeMedia) {
+        showToast('Nothing to share yet');
+        return;
+      }
+      await shareMediaItem(activeMedia, window.location.href);
+    }
+
+    async function ctxActionShareLink() {
+      if (!ctxMenuItem) return;
+      const item = ctxMenuItem;
+      const type = ctxMenuType || item.media_type || (item.title ? 'movie' : 'tv');
+      closeContextMenu();
+      const hash = type === 'tv'
+        ? `#/watch/tv/${item.id}/1/1`
+        : `#/watch/movie/${item.id}`;
+      const shareUrl = `${window.location.origin}${window.location.pathname}${hash}`;
+      await shareMediaItem(item, shareUrl);
     }
 
     function loadActiveStream() {
