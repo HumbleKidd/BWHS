@@ -9,17 +9,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>BWHS - Binge Watch Humble Streams</title>
+  <meta name="description" content="BWHS — binge popular movies and shows with a cinematic player, trending catalogs, and instant playback." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="BWHS" />
+  <meta property="og:title" content="BWHS - Binge Watch Humble Streams" />
+  <meta property="og:description" content="Stream trending movies and TV in a fast cinematic player. Popular titles, instant playback." />
+  <meta property="og:image" content="https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" />
+  <meta property="og:image:width" content="1280" />
+  <meta property="og:image:height" content="720" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BWHS - Binge Watch Humble Streams" />
+  <meta name="twitter:description" content="Stream trending movies and TV in a fast cinematic player." />
+  <meta name="twitter:image" content="https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://image.tmdb.org" />
   <link rel="preconnect" href="https://api.themoviedb.org" />
-  <link rel="dns-prefetch" href="https://vidfast.pro" />
-  <link rel="dns-prefetch" href="https://multiembed.mov" />
-  <link rel="dns-prefetch" href="https://player.videasy.net" />
-  <link rel="dns-prefetch" href="https://vidlink.pro" />
   <link rel="dns-prefetch" href="https://vixsrc.to" />
+  <link rel="dns-prefetch" href="https://player.videasy.net" />
   <link rel="dns-prefetch" href="https://vidapi.ru" />
+  <link rel="dns-prefetch" href="https://vidsrc.xyz" />
+  <link rel="dns-prefetch" href="https://moviesapi.club" />
+  <link rel="dns-prefetch" href="https://multiembed.mov" />
+  <link rel="dns-prefetch" href="https://vidlink.pro" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
@@ -160,7 +173,7 @@
       background-clip: padding-box;
     }
 
-    nav, aside, .filter-row, .shelf-scroll, .actors-scroll, .artworks-row, .parts-row, .actor-shelf-row, .single-line-cast-bar {
+    nav, aside, .filter-row, .shelf-scroll, .actors-scroll, .artworks-row, .parts-row, .actor-shelf-row, .single-line-cast-bar, .server-bar {
       scrollbar-width: none;
       -ms-overflow-style: none;
     }
@@ -169,7 +182,8 @@
     .filter-row::-webkit-scrollbar, .shelf-scroll::-webkit-scrollbar, 
     .actors-scroll::-webkit-scrollbar, .artworks-row::-webkit-scrollbar, 
     .parts-row::-webkit-scrollbar, .actor-shelf-row::-webkit-scrollbar, 
-    .single-line-cast-bar::-webkit-scrollbar {
+    .single-line-cast-bar::-webkit-scrollbar,
+    .server-bar::-webkit-scrollbar {
       display: none !important;
       width: 0 !important;
       height: 0 !important;
@@ -1277,6 +1291,39 @@
       transform: scale(1.05);
     }
 
+    .hero-nav-arrows {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      display: none;
+      gap: 8px;
+      z-index: 12;
+    }
+    @media (min-width: 900px) {
+      .hero-nav-arrows {
+        display: flex;
+      }
+    }
+    .hero-nav-arrow {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(15, 23, 42, 0.72);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .hero-nav-arrow:hover {
+      transform: scale(1.08);
+      background: var(--primary);
+    }
+
     .hero-indicators {
       position: absolute;
       top: 18px;
@@ -2341,29 +2388,38 @@
     }
 
     .srv-btn {
-      padding: 7px 14px;
-      border-radius: 10px;
+      padding: 8px 16px;
+      border-radius: 9999px;
       border: none;
-      background: var(--surface-subtle);
-      font-size: 0.78rem;
-      font-weight: 700;
+      background: linear-gradient(135deg, var(--surface-subtle), var(--primary-light));
+      font-size: 0.76rem;
+      font-weight: 800;
       color: var(--text-main);
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
-      transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
     }
 
+    .srv-btn:nth-child(2) { background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #fff; }
+    .srv-btn:nth-child(3) { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; }
+    .srv-btn:nth-child(4) { background: linear-gradient(135deg, #10b981, #06b6d4); color: #fff; }
+    .srv-btn:nth-child(5) { background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
+    .srv-btn:nth-child(6) { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: #fff; }
+    .srv-btn:nth-child(7) { background: linear-gradient(135deg, #ec4899, #f59e0b); color: #fff; }
+    .srv-btn:nth-child(8) { background: linear-gradient(135deg, #059669, #4f46e5); color: #fff; }
+    .srv-btn:nth-child(9) { background: linear-gradient(135deg, #0ea5e9, #6366f1); color: #fff; }
+    .srv-btn:nth-child(10) { background: linear-gradient(135deg, #d946ef, #f43f5e); color: #fff; }
+    .srv-btn:nth-child(11) { background: linear-gradient(135deg, #14b8a6, #3b82f6); color: #fff; }
+
     .srv-btn:hover {
-      transform: translateY(-2px);
-      background: var(--primary-light);
-      color: var(--primary);
+      transform: translateY(-2px) scale(1.03);
+      filter: brightness(1.08);
     }
 
     .srv-btn.active {
-      background: var(--primary);
-      color: #ffffff;
-      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
+      box-shadow: 0 0 0 2px #fff, 0 6px 16px rgba(79, 70, 229, 0.45);
+      transform: scale(1.06);
     }
 
     .mobile-server-selector {
@@ -3576,7 +3632,10 @@
             </button>
             
             <div class="theme-popup-menu" id="themePopupMenu">
-              <button class="theme-option-btn selected" id="opt-theme-day" onclick="previewThemeMode('day')">
+              <button class="theme-option-btn selected" id="opt-theme-auto" onclick="previewThemeMode('auto')">
+                <i class="fa-solid fa-circle-half-stroke" style="color:#64748b;"></i> Auto (Day / Night)
+              </button>
+              <button class="theme-option-btn" id="opt-theme-day" onclick="previewThemeMode('day')">
                 <i class="fa-solid fa-sun" style="color:#f59e0b;"></i> Day Mode
               </button>
               <button class="theme-option-btn" id="opt-theme-night" onclick="previewThemeMode('night')">
@@ -3635,11 +3694,11 @@
               </div>
 
               <div style="display:flex; align-items:center; gap:8px;">
-                <button class="btn-circle fav" id="playerFavBtn" onclick="toggleFavoriteFromPlayer(event)">
+                <button class="btn-circle fav" id="playerFavBtn" onclick="toggleFavoriteFromPlayer(event)" title="Save Favorite">
                   <i class="fa-solid fa-heart"></i>
                 </button>
-                <button class="btn-circle" onclick="handlePlayerBackNavigation()" title="Close View">
-                  <i class="fa-solid fa-xmark"></i>
+                <button class="btn-circle" id="playerShareBtn" onclick="shareCurrentTitle(event)" title="Share this title">
+                  <i class="fa-solid fa-share-nodes"></i>
                 </button>
               </div>
             </div>
@@ -3676,19 +3735,20 @@
                 <div class="player-dock">
                   <div class="server-helper-tip">
                     <i class="fa-solid fa-circle-info"></i>
-                    <span>Buffer-free playback enabled. If current server fails, switch servers below.</span>
+                    <span id="serverNowPlayingTip">Now playing from: VixSrc — switch below if this source stalls.</span>
                   </div>
 
                   <!-- Desktop Server Bar with Stylized Interactive Slider -->
                   <div class="server-bar-wrap">
                     <div class="server-bar" id="serverBar">
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
-                      <button class="srv-btn active" id="btn-vidfast" onclick="manualSwitchServer('vidfast')">VidFast (Smooth)</button>
-                      <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')">SuperEmbed (Adaptive)</button>
+                      <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-videasy" onclick="manualSwitchServer('videasy')">Videasy</button>
-                      <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')">VidLink</button>
-                      <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
+                      <button class="srv-btn" id="btn-vidsrc" onclick="manualSwitchServer('vidsrc')">VidSrc</button>
+                      <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')">VidLink</button>
+                      <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')">SuperEmbed</button>
+                      <button class="srv-btn" id="btn-moviesapi" onclick="manualSwitchServer('moviesapi')">MoviesAPI</button>
                     </div>
                     <div class="row-slider-track" id="sliderServerTrack">
                       <div class="row-slider-thumb" id="sliderServerThumb"></div>
@@ -3699,7 +3759,7 @@
                   <div class="mobile-server-selector" onclick="openServerSheet()">
                     <span>
                       <i class="fa-solid fa-server" style="color:var(--primary);"></i>
-                      <span id="mobServerLabel">Playing from: VidFast (Smooth)</span>
+                      <span id="mobServerLabel">Playing from: VixSrc</span>
                     </span>
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
@@ -3726,7 +3786,12 @@
                         <span class="view-all-hint" style="font-size:0.75rem; color:var(--primary); margin-left:8px; display:inline-flex; align-items:center; gap:4px;">View All Cast <i class="fa-solid fa-arrow-right"></i></span>
                       </div>
                     </div>
-                    <div class="single-line-cast-bar" id="singleLineCastBar"></div>
+                    <div class="row-scroll-container">
+                      <div class="single-line-cast-bar" id="singleLineCastBar"></div>
+                      <div class="row-slider-track" id="sliderCastTrack">
+                        <div class="row-slider-thumb" id="sliderCastThumb"></div>
+                      </div>
+                    </div>
                   </div>
 
                   <div id="partsSection" style="display: none;">
@@ -3749,7 +3814,7 @@
                     <div class="block-heading-wrap">
                       <div class="block-heading">
                         <i class="fa-solid fa-palette"></i>
-                        <span>Official Artworks & Wallpapers</span>
+                        <span>Film Artworks</span>
                       </div>
                       <div class="art-toggle-group">
                         <button class="art-toggle-btn active" id="artPortraitBtn" onclick="toggleArtworkView('posters')">Portraits</button>
@@ -3785,18 +3850,6 @@
                 <button class="btn-load-more-rec" id="btnLoadMoreRelated" onclick="loadMoreRelatedTitles()" style="display: none;">
                   <i class="fa-solid fa-angles-down"></i> Load More Related Titles
                 </button>
-
-                <!-- Desktop Commentary & Reviews Section -->
-                <div class="desktop-commentary-section" id="desktopCommentarySection">
-                  <div class="commentary-heading">
-                    <i class="fa-solid fa-comments" style="color:var(--accent-cyan);"></i>
-                    <span>Worldwide Commentary</span>
-                  </div>
-                  <div id="commentsListContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
-                  <button class="btn-load-more-rec" id="btnLoadMoreComments" onclick="loadMoreReviews()" style="display:none;">
-                    <i class="fa-solid fa-angle-down"></i> Load More Comments
-                  </button>
-                </div>
               </aside>
             </div>
 
@@ -3898,6 +3951,14 @@
           <section class="hero-spotlight" id="heroSpotlight">
             <img src="" id="heroBgImg" class="hero-bg" alt="Hero Featured Backdrop" />
             <div class="hero-overlay"></div>
+            <div class="hero-nav-arrows" id="heroNavArrows">
+              <button type="button" class="hero-nav-arrow" id="heroPrevBtn" title="Previous featured" aria-label="Previous featured">
+                <i class="fa-solid fa-chevron-left"></i>
+              </button>
+              <button type="button" class="hero-nav-arrow" id="heroNextBtn" title="Next featured" aria-label="Next featured">
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
             <div class="hero-indicators" id="heroIndicators"></div>
             <div class="hero-content">
               <div class="hero-mini-poster" id="heroMiniPosterWrap">
@@ -4023,6 +4084,9 @@
       <div class="mobile-settings-block" style="background:var(--surface-subtle); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px;">
         <span style="font-size:0.78rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;"><i class="fa-solid fa-palette"></i> Theme Palettes</span>
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
+          <button class="mob-theme-btn" onclick="previewThemeMode('auto')" style="background:var(--surface); border:none; color:var(--text-main); padding:6px 4px; border-radius:8px; font-size:0.7rem; font-weight:700; cursor:pointer;">
+            <i class="fa-solid fa-circle-half-stroke" style="color:#64748b;"></i> Auto
+          </button>
           <button class="mob-theme-btn" onclick="previewThemeMode('day')" style="background:var(--surface); border:none; color:var(--text-main); padding:6px 4px; border-radius:8px; font-size:0.7rem; font-weight:700; cursor:pointer;">
             <i class="fa-solid fa-sun" style="color:#f59e0b;"></i> Day
           </button>
@@ -4105,23 +4169,26 @@
         <span>Select Video Server</span>
         <button class="btn-circle" onclick="closeServerSheet(null)"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <button class="sheet-nav-item active" id="sheet-vidfast" onclick="selectServerFromSheet('vidfast')">
-        <span>VidFast (Smooth)</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-superembed" onclick="selectServerFromSheet('superembed')">
-        <span>SuperEmbed (Adaptive)</span>
+      <button class="sheet-nav-item active" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
+        <span>VixSrc</span>
       </button>
       <button class="sheet-nav-item" id="sheet-videasy" onclick="selectServerFromSheet('videasy')">
         <span>Videasy</span>
       </button>
+      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
+        <span>VidAPI</span>
+      </button>
+      <button class="sheet-nav-item" id="sheet-vidsrc" onclick="selectServerFromSheet('vidsrc')">
+        <span>VidSrc</span>
+      </button>
       <button class="sheet-nav-item" id="sheet-vidlink" onclick="selectServerFromSheet('vidlink')">
         <span>VidLink</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
-        <span>VixSrc</span>
+      <button class="sheet-nav-item" id="sheet-superembed" onclick="selectServerFromSheet('superembed')">
+        <span>SuperEmbed</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
-        <span>VidAPI</span>
+      <button class="sheet-nav-item" id="sheet-moviesapi" onclick="selectServerFromSheet('moviesapi')">
+        <span>MoviesAPI</span>
       </button>
     </div>
   </div>
@@ -4267,14 +4334,15 @@
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vidfast', 'superembed', 'videasy', 'vidlink', 'vixsrc', 'vidapi'];
+    const PROVIDERS = ['vixsrc', 'videasy', 'vidapi', 'vidsrc', 'vidlink', 'superembed', 'moviesapi'];
     const PROVIDER_NAMES = {
-      vidfast: 'VidFast (Smooth)',
-      superembed: 'SuperEmbed (Adaptive)',
-      videasy: 'Videasy',
-      vidlink: 'VidLink',
       vixsrc: 'VixSrc',
-      vidapi: 'VidAPI'
+      videasy: 'Videasy',
+      vidapi: 'VidAPI',
+      vidsrc: 'VidSrc',
+      vidlink: 'VidLink',
+      superembed: 'SuperEmbed',
+      moviesapi: 'MoviesAPI'
     };
     let currentProviderIndex = 0;
 
@@ -4348,7 +4416,7 @@
     let sharedMustWatchQueue = JSON.parse(localStorage.getItem('humble_shared_must_watch')) || JSON.parse(localStorage.getItem('humble_nextplay')) || [];
     let watchTimestamps = JSON.parse(localStorage.getItem('humble_timestamps')) || {};
 
-    let savedThemeMode = localStorage.getItem('humble_theme_mode') || 'day';
+    let savedThemeMode = localStorage.getItem('humble_theme_mode') || 'auto';
     let savedAccentColor = localStorage.getItem('humble_custom_accent') || '#4f46e5';
 
     let isCwPanelCollapsed = JSON.parse(localStorage.getItem('humble_cw_collapsed')) || false;
@@ -4746,6 +4814,12 @@
     document.addEventListener('DOMContentLoaded', () => {
       applyAccentColor(savedAccentColor);
       applyThemeMode(savedThemeMode);
+      try {
+        const scheme = window.matchMedia('(prefers-color-scheme: dark)');
+        scheme.addEventListener('change', () => {
+          if ((localStorage.getItem('humble_theme_mode') || 'auto') === 'auto') applyThemeMode('auto');
+        });
+      } catch (_) {}
       applyCwPanelState();
       buildGenreChips();
       buildYearChips();
@@ -4759,6 +4833,7 @@
       bindContextMenuUI();
       setupFloatingDrag();
       setupFloatingDockObserver();
+      setupHeroCarouselControls();
 
       // Deep-link router decides the first view (bookmark / shared URL)
       // so we don't load the default trending catalog twice.
@@ -4910,9 +4985,11 @@
         }
         if (item && item.id) {
           openMediaPage(item, route.mediaType, route.season || 1, route.episode || 1, false);
+          snapToPlayerView();
         } else {
           selectType('all', false);
           setRoute({ view: 'catalog', type: 'all' }, false);
+          window.scrollTo({ top: 0, behavior: 'auto' });
         }
         return;
       }
@@ -4950,6 +5027,8 @@
       } else if (!route.type) {
         selectType('all', false);
       }
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      syncSocialPreview(null);
     }
 
     function setupBrowserHistoryState() {
@@ -4970,7 +5049,14 @@
       });
 
       // Apply the initial route after the rest of the app has finished bootstrapping
-      setTimeout(() => applyRoute(initial), 60);
+      setTimeout(() => {
+        applyRoute(initial);
+        if (!initial || initial.view !== 'player') {
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        } else {
+          snapToPlayerView();
+        }
+      }, 60);
     }
 
     function handlePlayerBackNavigation() {
@@ -5406,28 +5492,55 @@
       themePopupMenu.classList.toggle('active');
     }
 
+    function resolveAutoTheme() {
+      try {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day';
+      } catch (_) {
+        return 'day';
+      }
+    }
+
     function applyThemeMode(mode) {
+      const requested = mode || 'auto';
+      const resolved = requested === 'auto' ? resolveAutoTheme() : requested;
+
       document.body.classList.remove('theme-night', 'theme-sunset', 'theme-lavender', 'theme-mint', 'theme-emerald', 'theme-royal');
       
       document.querySelectorAll('.theme-option-btn').forEach(b => b.classList.remove('selected'));
-      const activeOpt = document.getElementById(`opt-theme-${mode}`);
+      const activeOpt = document.getElementById(`opt-theme-${requested}`);
       if (activeOpt) activeOpt.classList.add('selected');
 
-      if (mode === 'day') {
+      if (resolved === 'night') document.body.classList.add('theme-night');
+      else if (resolved === 'sunset') document.body.classList.add('theme-sunset');
+      else if (resolved === 'lavender') document.body.classList.add('theme-lavender');
+      else if (resolved === 'mint') document.body.classList.add('theme-mint');
+      else if (resolved === 'emerald') document.body.classList.add('theme-emerald');
+      else if (resolved === 'royal') document.body.classList.add('theme-royal');
+
+      if (requested === 'auto') {
+        themeIcon.className = 'fa-solid fa-circle-half-stroke';
+        themeLabel.textContent = resolved === 'night' ? 'Auto · Dark' : 'Auto · Day';
+      } else if (resolved === 'day') {
         themeIcon.className = 'fa-solid fa-sun';
         themeLabel.textContent = 'Day';
-      } else if (mode === 'night') {
-        document.body.classList.add('theme-night');
+      } else if (resolved === 'night') {
         themeIcon.className = 'fa-solid fa-moon';
         themeLabel.textContent = 'Dark';
-      } else if (mode === 'sunset') {
-        document.body.classList.add('theme-sunset');
+      } else if (resolved === 'sunset') {
         themeIcon.className = 'fa-solid fa-cloud-sun';
         themeLabel.textContent = 'Sunset';
-      } else if (mode === 'lavender') {
-        document.body.classList.add('theme-lavender');
+      } else if (resolved === 'lavender') {
         themeIcon.className = 'fa-solid fa-wand-magic-sparkles';
         themeLabel.textContent = 'Lavender';
+      } else if (resolved === 'mint') {
+        themeIcon.className = 'fa-solid fa-leaf';
+        themeLabel.textContent = 'Mint';
+      } else if (resolved === 'emerald') {
+        themeIcon.className = 'fa-solid fa-gem';
+        themeLabel.textContent = 'Emerald';
+      } else if (resolved === 'royal') {
+        themeIcon.className = 'fa-solid fa-crown';
+        themeLabel.textContent = 'Royal';
       }
     }
 
@@ -5546,6 +5659,47 @@
           renderHeroSlide(next);
         }
       }, 7000);
+    }
+
+    function stepHeroSlide(dir) {
+      if (!heroItems.length) return;
+      const next = (currentHeroIndex + dir + heroItems.length) % heroItems.length;
+      renderHeroSlide(next);
+      startHeroInterval();
+    }
+
+    function setupHeroCarouselControls() {
+      const hero = document.getElementById('heroSpotlight');
+      const prevBtn = document.getElementById('heroPrevBtn');
+      const nextBtn = document.getElementById('heroNextBtn');
+      if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); stepHeroSlide(-1); });
+      if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); stepHeroSlide(1); });
+      if (!hero || hero._heroSwipeBound) return;
+      hero._heroSwipeBound = true;
+
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+
+      hero.addEventListener('touchstart', (e) => {
+        if (!e.touches || !e.touches[0]) return;
+        tracking = true;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }, { passive: true });
+
+      hero.addEventListener('touchend', (e) => {
+        if (!tracking) return;
+        tracking = false;
+        const t = (e.changedTouches && e.changedTouches[0]) || null;
+        if (!t) return;
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        if (Math.abs(dx) < 46 || Math.abs(dx) < Math.abs(dy)) return;
+        stepHeroSlide(dx < 0 ? 1 : -1);
+      }, { passive: true });
+
+      hero.addEventListener('touchcancel', () => { tracking = false; }, { passive: true });
     }
 
     async function loadTopActorsShowcase() {
@@ -6042,8 +6196,10 @@
       const excludeBadTvGenres = `&without_genres=10763,10764,10767,10766`;
 
       if (currentType === 'latest') {
-        const lte = yearQuery ? '' : `&primary_release_date.lte=${todayStr}`;
-        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}${lte}&sort_by=primary_release_date.desc&page=${page}${genreQuery}${yearQuery}`;
+        if (currentGenre || currentYearFilter) {
+          return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=popularity.desc&vote_count.gte=250&page=${page}${genreQuery}${yearQuery}`;
+        }
+        return `${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=${page}`;
       }
 
       if (currentType === 'cartoon') {
@@ -6189,7 +6345,7 @@
       } else if (searchQuery) {
         feedTitle.innerHTML = `<i class="fa-solid fa-magnifying-glass" style="color: var(--primary);"></i> Results for "${searchQuery}"`;
       } else if (currentType === 'latest') {
-        feedTitle.innerHTML = `<i class="fa-solid fa-bolt" style="color: var(--accent-cyan);"></i> Latests Releases${genreLabel}${yearLabel}`;
+        feedTitle.innerHTML = `<i class="fa-solid fa-bolt" style="color: var(--accent-cyan);"></i> Popular & Most Talked About${genreLabel}${yearLabel}`;
       } else if (currentType === 'cartoon') {
         feedTitle.innerHTML = `<i class="fa-solid fa-shapes" style="color: var(--accent);"></i> Cartoons Hub${genreLabel}${yearLabel}`;
       } else if (currentType === 'animation') {
@@ -7204,27 +7360,29 @@
         }, true);
       }
 
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      snapToPlayerView();
 
       loadCastData(item.id, type);
       loadMediaArtworks(item.id, type);
       loadFranchiseParts(item.id, type);
       loadSidebarAlsoWatch(item.id, type);
-      loadMovieWorldwideCommentary(item.id, type);
+      syncSocialPreview(activeMedia);
 
       if (type === 'tv') {
         tvControlSuite.style.display = 'flex';
-        await loadTvSeasons(item.id);
+        loadTvSeasons(item.id);
       } else {
         tvControlSuite.style.display = 'none';
       }
 
       loadActiveStream();
       addToHistory(item, activeSeason, activeEpisode);
+      snapToPlayerView();
 
       requestAnimationFrame(() => {
         setupRowSliderListener('serverBar', 'sliderServerThumb', 'sliderServerTrack');
         if (typeof setupFloatingDockObserver === 'function') setupFloatingDockObserver();
+        snapToPlayerView();
       });
     }
 
@@ -7418,6 +7576,7 @@
             singleLineCastBar.appendChild(chip);
           });
 
+          setupRowSliderListener('singleLineCastBar', 'sliderCastThumb', 'sliderCastTrack');
           loadActorDedicatedShelf(cachedFullCast[0], 0);
         } else {
           singleLineCastBar.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">Cast list unavailable.</span>';
@@ -7426,9 +7585,21 @@
       }
     }
 
-    function openFullCastDirectory(pushHistory = true) {
-      if (!activeMedia || cachedFullCast.length === 0) return;
-      const mediaTitle = activeMedia.title || activeMedia.name;
+    async function openFullCastDirectory(pushHistory = true) {
+      let mediaRef = activeMedia;
+      if ((!cachedFullCast || cachedFullCast.length === 0) && mediaRef && mediaRef.id) {
+        try {
+          const type = mediaRef.computedType || mediaRef.media_type || (mediaRef.title ? 'movie' : 'tv');
+          const data = await cachedFetch(`${TMDB_BASE}/${type}/${mediaRef.id}/credits?api_key=${apiKey}`);
+          cachedFullCast = (data.cast || []).filter(p => p.id && p.name);
+        } catch (_) {}
+      }
+      if ((!mediaRef || !mediaRef.id) && cachedFullCast.length === 0) return;
+      if (cachedFullCast.length === 0) {
+        showToast('Cast list is still loading — try again in a moment');
+        return;
+      }
+      const mediaTitle = (mediaRef && (mediaRef.title || mediaRef.name)) || 'This title';
       
       closePlayerPage(false);
       currentType = 'full_cast_view';
@@ -7453,11 +7624,11 @@
       globalSeenKeys.clear();
       hasMorePages = false;
 
-      if (pushHistory) {
+      if (pushHistory && mediaRef && mediaRef.id) {
         setRoute({
           view: 'full_cast',
-          id: activeMedia.id,
-          mediaType: activeMedia.computedType || (activeMedia.title ? 'movie' : 'tv')
+          id: mediaRef.id,
+          mediaType: mediaRef.computedType || mediaRef.media_type || (mediaRef.title ? 'movie' : 'tv')
         }, true);
       }
 
@@ -7519,7 +7690,7 @@
           <div class="block-heading-wrap">
             <div class="block-heading" onclick="filterByActor(${actor.id}, '${actor.name.replace(/'/g, "\\'")}')" title="Click to view full filmography">
               <i class="fa-solid fa-star" style="color: var(--accent);"></i>
-              <span>Watch more with ${actor.name} (${rawItems.length} Titles)</span>
+              <span>More With ${actor.name} (${rawItems.length} Titles)</span>
               <span class="view-all-hint" style="font-size:0.75rem; color:var(--primary); margin-left:8px; display:inline-flex; align-items:center; gap:4px;">View Full Filmography <i class="fa-solid fa-arrow-right"></i></span>
             </div>
           </div>
@@ -7813,47 +7984,64 @@
       if (!activeMedia) return '';
       const id = activeMedia.id;
       const isTv = activeMedia.computedType === 'tv';
+      const s = activeSeason || 1;
+      const e = activeEpisode || 1;
 
       switch (providerName) {
-        case 'vidfast':
+        case 'vidapi':
           return isTv
-            ? `https://vidfast.pro/tv/${id}/${activeSeason}/${activeEpisode}?autoPlay=true&next=1&title=false&poster=false`
-            : `https://vidfast.pro/movie/${id}?autoPlay=true&next=1&title=false&poster=false`;
+            ? `https://vidapi.ru/embed/tv/${id}/${s}/${e}?autoplay=1`
+            : `https://vidapi.ru/embed/movie/${id}?autoplay=1`;
 
-        case 'superembed':
+        case 'vidsrc':
           return isTv
-            ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${activeSeason}&e=${activeEpisode}`
-            : `https://multiembed.mov/?video_id=${id}&tmdb=1`;
+            ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}&autoplay=1`
+            : `https://vidsrc.xyz/embed/movie?tmdb=${id}&autoplay=1`;
+
+        case 'embedsu':
+          return isTv
+            ? `https://embed.su/embed/tv/${id}/${s}/${e}`
+            : `https://embed.su/embed/movie/${id}`;
+
+        case 'autoembed':
+          return isTv
+            ? `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}?autoplay=true`
+            : `https://player.autoembed.cc/embed/movie/${id}?autoplay=true`;
 
         case 'videasy':
           return isTv
-            ? `https://player.videasy.net/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=true&nextButton=false`
+            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=false`
             : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=false`;
 
         case 'vidlink':
           return isTv
-            ? `https://vidlink.pro/tv/${id}/${activeSeason}/${activeEpisode}?primaryColor=4f46e5&autoplay=true&next=1`
+            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&next=1`
             : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&next=1`;
 
         case 'vixsrc':
           return isTv
-            ? `https://vixsrc.to/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=1`
+            ? `https://vixsrc.to/tv/${id}/${s}/${e}?autoplay=1`
             : `https://vixsrc.to/movie/${id}?autoplay=1`;
 
-        case 'vidapi':
+        case 'superembed':
           return isTv
-            ? `https://vidapi.ru/embed/tv/${id}/${activeSeason}/${activeEpisode}?autoplay=1`
-            : `https://vidapi.ru/embed/movie/${id}?autoplay=1`;
+            ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`
+            : `https://multiembed.mov/?video_id=${id}&tmdb=1`;
 
-        case '2embed':
+        case 'twoembed':
           return isTv
-            ? `https://www.2embed.cc/embedtv/${id}&s=${activeSeason}&e=${activeEpisode}`
+            ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`
             : `https://www.2embed.cc/embed/${id}`;
+
+        case 'moviesapi':
+          return isTv
+            ? `https://moviesapi.club/tv/${id}-${s}-${e}`
+            : `https://moviesapi.club/movie/${id}`;
 
         default:
           return isTv
-            ? `https://vidfast.pro/tv/${id}/${activeSeason}/${activeEpisode}?autoPlay=true&title=false&poster=false`
-            : `https://vidfast.pro/movie/${id}?autoPlay=true&title=false&poster=false`;
+            ? `https://vidapi.ru/embed/tv/${id}/${s}/${e}?autoplay=1`
+            : `https://vidapi.ru/embed/movie/${id}?autoplay=1`;
       }
     }
 
@@ -7874,14 +8062,102 @@
       if (mobServerLabel) {
         mobServerLabel.textContent = `Playing from: ${PROVIDER_NAMES[activeName] || activeName}`;
       }
-      document.querySelectorAll('.sheet-nav-item').forEach(el => el.classList.remove('active'));
+      const tip = document.getElementById('serverNowPlayingTip');
+      if (tip) {
+        tip.textContent = `Now playing from: ${PROVIDER_NAMES[activeName] || activeName} — switch below if this source stalls.`;
+      }
+      document.querySelectorAll('#serverSheetBackdrop .sheet-nav-item').forEach(el => el.classList.remove('active'));
       const sheetItem = document.getElementById(`sheet-${activeName}`);
       if (sheetItem) sheetItem.classList.add('active');
+    }
+
+    function snapToPlayerView() {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      const viewport = document.getElementById('videoViewport') || document.getElementById('playerPageView');
+      if (viewport && typeof viewport.scrollIntoView === 'function') {
+        viewport.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'auto' });
+      }
+      if (playerPageView) playerPageView.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+
+    function setMetaTag(attr, key, value) {
+      if (!value) return;
+      let el = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', value);
+    }
+
+    function syncSocialPreview(item) {
+      const title = item ? (item.title || item.name || 'BWHS') : 'BWHS - Binge Watch Humble Streams';
+      const overview = item && item.overview
+        ? item.overview.slice(0, 160)
+        : 'Stream trending movies and TV in a fast cinematic player.';
+      const img = item && (item.backdrop_path || item.poster_path)
+        ? `${IMAGE_ORIGINAL}${item.backdrop_path || item.poster_path}`
+        : 'https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg';
+      const pageTitle = item ? `${title} · Watch on BWHS` : 'BWHS - Binge Watch Humble Streams';
+      document.title = pageTitle;
+      setMetaTag('property', 'og:title', pageTitle);
+      setMetaTag('property', 'og:description', overview);
+      setMetaTag('property', 'og:image', img);
+      setMetaTag('property', 'og:url', window.location.href);
+      setMetaTag('name', 'twitter:title', pageTitle);
+      setMetaTag('name', 'twitter:description', overview);
+      setMetaTag('name', 'twitter:image', img);
+      setMetaTag('name', 'description', overview);
+    }
+
+    async function shareCurrentTitle(e) {
+      if (e) e.stopPropagation();
+      if (!activeMedia) {
+        showToast('Nothing to share yet');
+        return;
+      }
+      const title = activeMedia.title || activeMedia.name || 'BWHS title';
+      const url = window.location.href;
+      const text = `Watch ${title} on BWHS`;
+      const imgPath = activeMedia.poster_path || activeMedia.backdrop_path;
+      const imgUrl = imgPath ? `${IMAGE_ORIGINAL}${imgPath}` : '';
+      syncSocialPreview(activeMedia);
+
+      try {
+        if (imgUrl && navigator.share && navigator.canShare) {
+          const res = await fetch(imgUrl);
+          const blob = await res.blob();
+          const file = new File([blob], `${title.replace(/[^a-z0-9]+/gi, '_')}-cover.jpg`, { type: blob.type || 'image/jpeg' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({ title, text, url, files: [file] });
+            showToast('Ready to share with cover art');
+            return;
+          }
+        }
+        if (navigator.share) {
+          await navigator.share({ title, text, url });
+          showToast('Share sheet opened');
+          return;
+        }
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+      try {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        showToast('Link copied — cover preview uses this page');
+      } catch (_) {
+        showToast('Copy this link to share: ' + url);
+      }
     }
 
     function loadActiveStream() {
       updateServerButtons();
       executeStreamLoad();
+      const name = PROVIDER_NAMES[PROVIDERS[currentProviderIndex] || PROVIDERS[0]] || 'server';
+      showToast(`Playing on ${name}`);
     }
 
     function executeStreamLoad() {
