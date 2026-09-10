@@ -3749,12 +3749,12 @@
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
                       <button class="srv-btn active" id="btn-videasy" onclick="manualSwitchServer('videasy')">Videasy</button>
                       <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
-                      <button class="srv-btn" id="btn-vidbolt" onclick="manualSwitchServer('vidbolt')">VidBolt (multi-language)</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
                       <button class="srv-btn" id="btn-vidsrc" onclick="manualSwitchServer('vidsrc')">VidSrc</button>
                       <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')">VidLink</button>
                       <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')">SuperEmbed</button>
                       <button class="srv-btn" id="btn-moviesapi" onclick="manualSwitchServer('moviesapi')">MoviesAPI</button>
+                      <button class="srv-btn" id="btn-vidbolt" onclick="manualSwitchServer('vidbolt')">VidBolt (multi-language)</button>
                     </div>
                     <div class="row-slider-track" id="sliderServerTrack">
                       <div class="row-slider-thumb" id="sliderServerThumb"></div>
@@ -4185,9 +4185,6 @@
       <button class="sheet-nav-item" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
         <span>VixSrc</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidbolt" onclick="selectServerFromSheet('vidbolt')">
-        <span>VidBolt (multi-language)</span>
-      </button>
       <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
         <span>VidAPI</span>
       </button>
@@ -4202,6 +4199,9 @@
       </button>
       <button class="sheet-nav-item" id="sheet-moviesapi" onclick="selectServerFromSheet('moviesapi')">
         <span>MoviesAPI</span>
+      </button>
+      <button class="sheet-nav-item" id="sheet-vidbolt" onclick="selectServerFromSheet('vidbolt')">
+        <span>VidBolt (multi-language)</span>
       </button>
     </div>
   </div>
@@ -4347,7 +4347,7 @@
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['videasy', 'vixsrc', 'vidbolt', 'vidapi', 'vidsrc', 'vidlink', 'superembed', 'moviesapi'];
+    const PROVIDERS = ['videasy', 'vixsrc', 'vidapi', 'vidsrc', 'vidlink', 'superembed', 'moviesapi', 'vidbolt'];
     const PROVIDER_NAMES = {
       videasy: 'Videasy',
       vixsrc: 'VixSrc',
@@ -4402,6 +4402,18 @@
       }
 
       return true;
+    }
+
+    function isWorldwideHit(item, seedSet) {
+      if (!item || !item.id || !item.poster_path) return false;
+      if (seedSet && seedSet.has(item.id)) return true;
+      const votes = Number(item.vote_count || 0);
+      const pop = Number(item.popularity || 0);
+      const rating = Number(item.vote_average || 0);
+      if (votes >= 1500 && rating >= 5.8) return true;
+      if (votes >= 800 && pop >= 35 && rating >= 6) return true;
+      if (pop >= 70 && votes >= 250) return true;
+      return false;
     }
 
     let currentType = 'all'; 
@@ -6137,17 +6149,24 @@
         if (Array.isArray(pack.results)) bag.push(...pack.results);
         else if (pack.id && (pack.poster_path || pack.backdrop_path)) bag.push(pack);
       });
-      return shuffleArray(bag.filter(isCleanCinemaContent));
+      const seedSet = new Set(seeds);
+      const unique = new Map();
+      bag.filter(isCleanCinemaContent).filter((item) => isWorldwideHit(item, seedSet)).forEach((item) => {
+        if (!unique.has(item.id)) unique.set(item.id, item);
+      });
+      return Array.from(unique.values()).sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0) || (b.popularity || 0) - (a.popularity || 0));
     }
 
     function buildHomeShelves() {
       const pinned = [
         { id: 'hotlist', title: "Tonight's Hotlist — Don't Scroll Past", icon: 'fa-fire-flame-curved', color: '#f59e0b', type: 'all', kind: 'endpoint', endpoint: `${TMDB_BASE}/trending/all/week?api_key=${apiKey}` },
+        { id: 'talkedmovie', title: 'Most Talked About Movies Right Now', icon: 'fa-comments', color: '#ec4899', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/trending/movie/week?api_key=${apiKey}` },
+        { id: 'worldpopular', title: 'What The Whole World Is Watching', icon: 'fa-globe', color: '#10b981', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/movie/popular?api_key=${apiKey}` },
         { id: 'bingeseries', title: "Shows People Won't Shut Up About", icon: 'fa-tv', color: '#3b82f6', type: 'tv', kind: 'endpoint', endpoint: `${TMDB_BASE}/trending/tv/week?api_key=${apiKey}` },
-        { id: 'animeheat', title: 'Shonen Heat Check', icon: 'fa-dragon', color: '#ec4899', type: 'tv', kind: 'endpoint', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc` }
+        { id: 'certifiedhits', title: 'Certified Hits — Everybody Knows These', icon: 'fa-star', color: '#f59e0b', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/movie/top_rated?api_key=${apiKey}` }
       ];
-      const themes = shuffleArray(THEME_CATEGORIES).slice(0, 9).map((c) => ({ ...c, kind: 'theme' }));
-      return shuffleArray(pinned.concat(themes));
+      const themes = shuffleArray(THEME_CATEGORIES).slice(0, 6).map((c) => ({ ...c, kind: 'theme' }));
+      return pinned.concat(themes);
     }
 
     function renderMoodsHub(reset = true) {
@@ -6315,11 +6334,12 @@
 
         shelfPromise
           .then(data => {
+            const seedSet = new Set(shelf.seeds || []);
             const items = (data.results || []).filter(i => {
-              if (!i.poster_path || !isCleanCinemaContent(i)) return false;
+              if (!i.poster_path || !isCleanCinemaContent(i) || !isWorldwideHit(i, seedSet)) return false;
               const date = i.release_date || i.first_air_date;
               return !date || date <= todayStr;
-            });
+            }).sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0));
 
             const scrollContainer = document.getElementById(shelfScrollId);
             if (!scrollContainer) return;
@@ -7576,6 +7596,8 @@
       }
 
       snapToPlayerView();
+      loadActiveStream();
+      addToHistory(item, activeSeason, activeEpisode);
 
       loadCastData(item.id, type);
       loadMediaArtworks(item.id, type);
@@ -7590,8 +7612,6 @@
         tvControlSuite.style.display = 'none';
       }
 
-      loadActiveStream();
-      addToHistory(item, activeSeason, activeEpisode);
       snapToPlayerView();
 
       requestAnimationFrame(() => {
@@ -8376,8 +8396,6 @@
     function loadActiveStream() {
       updateServerButtons();
       executeStreamLoad();
-      const name = PROVIDER_NAMES[PROVIDERS[currentProviderIndex] || PROVIDERS[0]] || 'server';
-      showToast(`Playing on ${name}`);
     }
 
     function executeStreamLoad() {
