@@ -26,8 +26,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://image.tmdb.org" />
   <link rel="preconnect" href="https://api.themoviedb.org" />
-  <link rel="dns-prefetch" href="https://vixsrc.to" />
   <link rel="dns-prefetch" href="https://player.videasy.net" />
+  <link rel="dns-prefetch" href="https://vixsrc.to" />
+  <link rel="dns-prefetch" href="https://vidbolt.xyz" />
   <link rel="dns-prefetch" href="https://vidapi.ru" />
   <link rel="dns-prefetch" href="https://vidsrc.xyz" />
   <link rel="dns-prefetch" href="https://moviesapi.club" />
@@ -3566,6 +3567,10 @@
         <i class="fa-solid fa-star" style="color: #eab308;"></i>
         <span>Top Stars</span>
       </button>
+      <button class="sidebar-btn" id="sideMoods" onclick="selectType('moods')">
+        <i class="fa-solid fa-layer-group" style="color: #f97316;"></i>
+        <span>Same Energy</span>
+      </button>
       <button class="sidebar-btn" id="sideFindsimilar" onclick="selectType('findsimilar')">
         <i class="fa-solid fa-compass" style="color: #8b5cf6;"></i>
         <span>Find Similar</span>
@@ -3735,15 +3740,16 @@
                 <div class="player-dock">
                   <div class="server-helper-tip">
                     <i class="fa-solid fa-circle-info"></i>
-                    <span id="serverNowPlayingTip">Now playing from: VixSrc — switch below if this source stalls.</span>
+                    <span id="serverNowPlayingTip">Now playing from: Videasy — switch below if this source stalls.</span>
                   </div>
 
                   <!-- Desktop Server Bar with Stylized Interactive Slider -->
                   <div class="server-bar-wrap">
                     <div class="server-bar" id="serverBar">
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
-                      <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
-                      <button class="srv-btn" id="btn-videasy" onclick="manualSwitchServer('videasy')">Videasy</button>
+                      <button class="srv-btn active" id="btn-videasy" onclick="manualSwitchServer('videasy')">Videasy</button>
+                      <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
+                      <button class="srv-btn" id="btn-vidbolt" onclick="manualSwitchServer('vidbolt')">VidBolt (multi-language)</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
                       <button class="srv-btn" id="btn-vidsrc" onclick="manualSwitchServer('vidsrc')">VidSrc</button>
                       <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')">VidLink</button>
@@ -3759,7 +3765,7 @@
                   <div class="mobile-server-selector" onclick="openServerSheet()">
                     <span>
                       <i class="fa-solid fa-server" style="color:var(--primary);"></i>
-                      <span id="mobServerLabel">Playing from: VixSrc</span>
+                      <span id="mobServerLabel">Playing from: Videasy</span>
                     </span>
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
@@ -4126,6 +4132,10 @@
         <i class="fa-solid fa-heart" style="color:#ef4444;"></i>
         <span>Saved Favorites</span>
       </button>
+      <button class="sheet-nav-item" onclick="selectType('moods'); closeMoreSheet(null);">
+        <i class="fa-solid fa-layer-group" style="color:#f97316;"></i>
+        <span>Same Energy Vault</span>
+      </button>
       <button class="sheet-nav-item" onclick="selectType('findsimilar'); closeMoreSheet(null);">
         <i class="fa-solid fa-compass" style="color:#8b5cf6;"></i>
         <span>Find Similar</span>
@@ -4169,11 +4179,14 @@
         <span>Select Video Server</span>
         <button class="btn-circle" onclick="closeServerSheet(null)"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <button class="sheet-nav-item active" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
+      <button class="sheet-nav-item active" id="sheet-videasy" onclick="selectServerFromSheet('videasy')">
+        <span>Videasy</span>
+      </button>
+      <button class="sheet-nav-item" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
         <span>VixSrc</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-videasy" onclick="selectServerFromSheet('videasy')">
-        <span>Videasy</span>
+      <button class="sheet-nav-item" id="sheet-vidbolt" onclick="selectServerFromSheet('vidbolt')">
+        <span>VidBolt (multi-language)</span>
       </button>
       <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
         <span>VidAPI</span>
@@ -4334,10 +4347,11 @@
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'videasy', 'vidapi', 'vidsrc', 'vidlink', 'superembed', 'moviesapi'];
+    const PROVIDERS = ['videasy', 'vixsrc', 'vidbolt', 'vidapi', 'vidsrc', 'vidlink', 'superembed', 'moviesapi'];
     const PROVIDER_NAMES = {
-      vixsrc: 'VixSrc',
       videasy: 'Videasy',
+      vixsrc: 'VixSrc',
+      vidbolt: 'VidBolt (multi-language)',
       vidapi: 'VidAPI',
       vidsrc: 'VidSrc',
       vidlink: 'VidLink',
@@ -4488,15 +4502,51 @@
       { id: 'classic', name: '1980s & Older', lte: '1989-12-31' }
     ];
 
-    const SHELF_CONFIGS = {
-      all: [
-        { title: 'Adrenaline Overdrive Blockbusters', icon: 'fa-fire-flame-curved', color: '#f59e0b', endpoint: `${TMDB_BASE}/trending/all/week?api_key=${apiKey}`, type: 'all' },
-        { title: 'Mind Benders & Unpredictable Plots', icon: 'fa-brain', color: '#8b5cf6', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=9648,878&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'High-Stakes Heists & Crime Sagas', icon: 'fa-gun', color: '#ef4444', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=80,53&primary_release_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'movie' },
-        { title: 'Unstoppable Anime & Shonen Battles', icon: 'fa-dragon', color: '#ec4899', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=ja&first_air_date.lte=${todayStr}&sort_by=popularity.desc`, type: 'tv' },
-        { title: 'Binge Till Sunrise: Global Hit Series', icon: 'fa-tv', color: '#3b82f6', endpoint: `${TMDB_BASE}/trending/tv/week?api_key=${apiKey}`, type: 'tv' }
-      ]
-    };
+    const THEME_CATEGORIES = [
+      { id: 'disaster', title: 'The Planet Just Quit', blurb: '2012 energy. Earth cracks, oceans stand up, you still buy popcorn.', icon: 'fa-volcano', color: '#f97316', type: 'movie', seeds: [14161, 435, 11817, 254128, 664, 336843, 438631, 6479, 17711] },
+      { id: 'parody', title: 'This Movie Is In On The Joke', blurb: 'Airplane!, Scary Movie, Spaceballs — spoofs that roast the genre while being the genre.', icon: 'fa-face-grin-squint', color: '#eab308', type: 'movie', seeds: [747, 8467, 11968, 11072, 11048, 957, 9377] },
+      { id: 'biganimals', title: 'Nature Filed A Complaint', blurb: 'Jaws. Anaconda. The Meg. Jurassic teeth, killer crocodiles, mutant beasts that do not miss.', icon: 'fa-paw', color: '#16a34a', type: 'movie', seeds: [578, 329, 10658, 332, 10047, 412117, 168259, 254, 345911, 11059, 13723] },
+      { id: 'timetravel', title: 'Break The Clock On Purpose', blurb: 'One more loop. One more paradox. Yesterday is still hiring.', icon: 'fa-clock-rotate-left', color: '#06b6d4', type: 'movie', seeds: [73, 2756, 137, 2062, 152601, 49047, 86829] },
+      { id: 'heist', title: 'One Last Job. Obviously.', blurb: 'Ocean\'s crew energy. Vaults, masks, and a plan that only works in the trailer.', icon: 'fa-mask', color: '#ef4444', type: 'movie', seeds: [161, 5, 50014, 107, 290595, 198184, 44214] },
+      { id: 'foundfootage', title: 'Somebody Should Not Have Hit Record', blurb: 'Blair Witch shaky-cam dread. Lost tapes. Things in the woods that hate cameras.', icon: 'fa-video', color: '#64748b', type: 'movie', seeds: [2667, 209400, 791373, 138843, 158999, 23827] },
+      { id: 'superhero', title: 'Capes, Crashes, City-Saving', blurb: 'Origin nights, team-ups, and a skyline that will not survive act two.', icon: 'fa-shield-halved', color: '#3b82f6', type: 'movie', seeds: [1726, 24428, 99861, 299536, 284054, 315635, 557] },
+      { id: 'survival', title: 'Make It To Morning', blurb: 'Stranded. Hunted. Outnumbered. The map is a suggestion.', icon: 'fa-person-hiking', color: '#d97706', type: 'movie', seeds: [281957, 109445, 44214, 96721, 300668, 218, 481848] },
+      { id: 'space', title: 'No Atmosphere. No Backup.', blurb: 'Silent hulls, first contact, and the kind of dark that has a pulse.', icon: 'fa-rocket', color: '#6366f1', type: 'movie', seeds: [157336, 49047, 369972, 168259, 152532, 62, 600] },
+      { id: 'vampires', title: 'Do Not Invite Them In', blurb: 'Fangs, blood pacts, beautiful people who skip breakfast forever.', icon: 'fa-moon', color: '#7c3aed', type: 'movie', seeds: [377, 11817, 414906, 646380, 616037, 649, 1422] },
+      { id: 'zombies', title: 'The Neighborhood Is Over', blurb: 'Dawn of the Dead pacing. The dead commute. You do not.', icon: 'fa-biohazard', color: '#22c55e', type: 'movie', seeds: [694, 196, 72190, 2088, 109624, 138843, 1948] },
+      { id: 'martial', title: 'One Punch Ends The Argument', blurb: 'Dojo politics, tournament nights, and fights that rewrite gravity.', icon: 'fa-hand-fist', color: '#f43f5e', type: 'movie', seeds: [393, 77948, 106646, 345911, 210577, 7451, 68718] },
+      { id: 'true', title: 'Unfortunately, This Happened', blurb: 'Stranger than the script. Real names. Real damage. Zero mercy.', icon: 'fa-book-open', color: '#0ea5e9', type: 'movie', seeds: [453, 1422, 68734, 152532, 314365, 438631, 400106] },
+      { id: 'mindbend', title: 'Your Brain Will File A Report', blurb: 'Inception layers. Unreliable memories. The twist already started.', icon: 'fa-brain', color: '#8b5cf6', type: 'movie', seeds: [27205, 1124, 77, 141, 493922, 210577, 419430] },
+      { id: 'feelgood', title: 'Leave The Lights On', blurb: 'Found family, warm endings, the kind of film that walks you home.', icon: 'fa-mug-hot', color: '#f59e0b', type: 'movie', seeds: [313369, 19404, 637, 12, 354912, 508439, 508442] },
+      { id: 'spy', title: 'Trust No One In A Nice Suit', blurb: 'Bond-level gadgets, double agents, and a dead drop in act one.', icon: 'fa-user-secret', color: '#334155', type: 'movie', seeds: [36643, 36557, 37724, 500, 10764, 76341, 245891] },
+      { id: 'kaiju', title: 'The Skyline Is An Appetizer', blurb: 'Godzilla, Kong, city-flattening titans. Bring a wider lens.', icon: 'fa-city', color: '#15803d', type: 'movie', seeds: [1678, 124905, 373571, 940322, 823464, 254] },
+      { id: 'haunted', title: 'The House Already Knows You', blurb: 'Conjuring-level dread. Hallways that breathe. Do not go upstairs.', icon: 'fa-ghost', color: '#475569', type: 'movie', seeds: [138843, 4232, 201085, 791373, 447332, 310131] },
+      { id: 'racing', title: 'Leave Rubber. Take Glory.', blurb: 'Nitro, last laps, and engines that argue louder than the cast.', icon: 'fa-flag-checkered', color: '#dc2626', type: 'movie', seeds: [9799, 51497, 168672, 337339, 384018, 9615] },
+      { id: 'sports', title: 'Underdogs Who Ruin The Odds', blurb: 'Last period. Last inning. The speech in the locker room actually works.', icon: 'fa-trophy', color: '#ca8a04', type: 'movie', seeds: [96721, 22970, 227, 60308, 227306, 1372] },
+      { id: 'war', title: 'Nobody Gets A Clean Ending', blurb: 'Mud, medals, and the kind of quiet after the blast.', icon: 'fa-helmet-un', color: '#57534e', type: 'movie', seeds: [857, 106646, 28, 324786, 530915, 14161] },
+      { id: 'romancechaos', title: 'Kiss First. Think Never.', blurb: 'Airports, almosts, and chemistry that ignores the plot.', icon: 'fa-heart', color: '#fb7185', type: 'movie', seeds: [313369, 19404, 11036, 508442, 4348, 4922] },
+      { id: 'heisthumor', title: 'Crime, But Make It Charming', blurb: 'Steal the painting. Flirt with the guard. Look great doing both.', icon: 'fa-gem', color: '#c026d3', type: 'movie', seeds: [5, 161, 107, 275, 50014, 395] },
+      { id: 'prison', title: 'The Walls Have A Guest List', blurb: 'Shawshank hope, escape math, and a tunnel nobody approved.', icon: 'fa-dungeon', color: '#78716c', type: 'movie', seeds: [278, 627, 146233, 627, 146] },
+      { id: 'court', title: 'Order In The Chaos', blurb: 'One witness. One lie. A verdict that should not land this hard.', icon: 'fa-gavel', color: '#1d4ed8', type: 'movie', seeds: [1422, 37799, 274, 228150, 339877] },
+      { id: 'robots', title: 'The Machines Clocked In Early', blurb: 'Ex Machina stares. Metal with opinions. You are the update.', icon: 'fa-robot', color: '#0891b2', type: 'movie', seeds: [264660, 38, 870, 137113, 2048, 294254] },
+      { id: 'pirates', title: 'Steal The Horizon', blurb: 'Black Pearl swagger. Maps that bite back. Rum optional.', icon: 'fa-skull-crossbones', color: '#92400e', type: 'movie', seeds: [22, 58, 285, 1865, 166428] },
+      { id: 'western', title: 'Dust, Guns, Unfinished Business', blurb: 'Wide streets. Narrow morals. The sunset is a warning.', icon: 'fa-hat-cowboy', color: '#b45309', type: 'movie', seeds: [273481, 398818, 68718, 44214, 121] },
+      { id: 'musical', title: 'They Are Going To Sing About It', blurb: 'Needless numbers, necessary feelings, choreography as plot armor.', icon: 'fa-music', color: '#db2777', type: 'movie', seeds: [4348, 313369, 511319, 511809, 508439] },
+      { id: 'christmas', title: 'Snow, Secrets, Second Chances', blurb: 'Lights up. Heart out. Somebody is coming home late.', icon: 'fa-sleigh', color: '#be123c', type: 'movie', seeds: [8871, 10719, 10373, 471474, 508442] },
+      { id: 'teenchaos', title: 'The Group Chat Survived', blurb: 'Prom politics, last summers, and a secret that will not stay in school.', icon: 'fa-user-group', color: '#7c3aed', type: 'movie', seeds: [1584, 210577, 10681, 4951, 277834] },
+      { id: 'conspiracy', title: 'The File Was Never Closed', blurb: 'Red strings, black sites, and a whistle that should have stayed unblown.', icon: 'fa-user-secret', color: '#0f766e', type: 'movie', seeds: [275, 1422, 49026, 1576, 205596] },
+      { id: 'whodunit', title: 'Everybody Is Lying Tastefully', blurb: 'Knives Out energy. A body, a mansion, a smile that is doing too much.', icon: 'fa-magnifying-glass', color: '#4f46e5', type: 'movie', seeds: [546554, 829280, 1422, 453, 96] },
+      { id: 'bodyhorror', title: 'Do Not Look Up What That Is', blurb: 'Flesh has notes. The transformation is the plot.', icon: 'fa-disease', color: '#9f1239', type: 'movie', seeds: [348, 8077, 310131, 419430, 138843] },
+      { id: 'cult', title: 'Smile. Drink. Do Not Leave.', blurb: 'Folk hymns, matching robes, and a town that already voted.', icon: 'fa-eye', color: '#6d28d9', type: 'movie', seeds: [530385, 530915, 310131, 447332, 419430] },
+      { id: 'heistcar', title: 'If It Has Wheels, It Is Leaving', blurb: 'Fast family chaos. One more ramp. The laws of physics can wait.', icon: 'fa-car-burst', color: '#ea580c', type: 'movie', seeds: [9799, 51497, 168672, 337339, 384018, 445571] },
+      { id: 'dystopia', title: 'The Future Sent A Warning', blurb: 'Rations, regimes, and a spark that starts in the slums.', icon: 'fa-building-shield', color: '#334155', type: 'movie', seeds: [70160, 131631, 54, 97, 218, 76341] },
+      { id: 'fairytale', title: 'The Storybook Bit Back', blurb: 'Curses with fine print. Forests that negotiate. Queens who do not blink.', icon: 'fa-wand-sparkles', color: '#a855f7', type: 'movie', seeds: [120, 121, 122, 259316, 420817, 10191] },
+      { id: 'ocean', title: 'Do Not Trust The Water', blurb: 'Abyss stares, submarine sweats, and something under the keel.', icon: 'fa-water', color: '#0369a1', type: 'movie', seeds: [578, 168259, 345911, 443463, 281338, 310] },
+      { id: 'boxing', title: 'Get Off The Mat', blurb: 'Rocky lungs. One more round. The crowd already picked a side.', icon: 'fa-hand-fist', color: '#b91c1c', type: 'movie', seeds: [1366, 96721, 177572, 312221, 227] }
+    ];
+    let currentThemeCat = null;
+    let moodHubQueue = [];
+    let moodHubShown = 0;
 
     const mediaGrid = document.getElementById('mediaGrid');
     const loadingSpinner = document.getElementById('loadingSpinner');
@@ -4887,7 +4937,8 @@
       stars: 'actors_page', actors: 'actors_page',
       'find-similar': 'findsimilar', findsimilar: 'findsimilar',
       'next-play': 'nextplay', nextplay: 'nextplay',
-      favorites: 'favorites', fav: 'favorites'
+      favorites: 'favorites', fav: 'favorites',
+      moods: 'moods', worlds: 'moods', similar: 'moods'
     };
     const TYPE_ROUTE_MAP = {
       all: 'trending',
@@ -4901,7 +4952,8 @@
       actors_page: 'stars',
       findsimilar: 'find-similar',
       nextplay: 'next-play',
-      favorites: 'favorites'
+      favorites: 'favorites',
+      moods: 'moods'
     };
 
     let _routeSilent = false; // prevent hashchange loops
@@ -5602,12 +5654,15 @@
 
     async function loadHeroFeatured() {
       try {
-        const randPage = Math.floor(Math.random() * 3) + 1;
-        const resMovies = await cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=${randPage}`);
+        const randPage = Math.floor(Math.random() * 8) + 1;
+        const altPage = Math.floor(Math.random() * 5) + 1;
+        const [resMovies, resDay] = await Promise.all([
+          cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=${randPage}`),
+          cachedFetch(`${TMDB_BASE}/trending/movie/day?api_key=${apiKey}&page=${altPage}`)
+        ]);
 
-        const combined = (resMovies.results || [])
-          .filter(i => i.backdrop_path && i.poster_path && i.overview && isCleanCinemaContent(i))
-          .sort(() => Math.random() - 0.5);
+        const combined = shuffleArray([...(resMovies.results || []), ...(resDay.results || [])])
+          .filter(i => i.backdrop_path && i.poster_path && i.overview && isCleanCinemaContent(i));
 
         heroItems = combined.slice(0, 8);
         
@@ -5704,8 +5759,9 @@
 
     async function loadTopActorsShowcase() {
       try {
-        const data = await cachedFetch(`${TMDB_BASE}/person/popular?api_key=${apiKey}&page=1`);
-        const actors = (data.results || []).filter(p => p.profile_path).slice(0, 16);
+        const pageNo = Math.floor(Math.random() * 6) + 1;
+        const data = await cachedFetch(`${TMDB_BASE}/person/popular?api_key=${apiKey}&page=${pageNo}`);
+        const actors = shuffleArray((data.results || []).filter(p => p.profile_path)).slice(0, 16);
 
         actorsScrollContainer.innerHTML = '';
         actors.forEach(person => {
@@ -5770,7 +5826,7 @@
       const fsSticky = document.getElementById('findSimilarSticky');
       if (fsSticky) fsSticky.classList.toggle('active', type === 'findsimilar');
 
-      if (type === 'all' || type === 'upcoming' || type === 'favorites' || type === 'nextplay' || type === 'findsimilar') {
+      if (type === 'all' || type === 'upcoming' || type === 'favorites' || type === 'nextplay' || type === 'findsimilar' || type === 'moods') {
         topFilterSuite.classList.remove('active');
       } else {
         topFilterSuite.classList.add('active');
@@ -5782,7 +5838,7 @@
         all: 'sideAll', movie: 'sideMovie', tv: 'sideTv', anime: 'sideAnime',
         upcoming: 'sideUpcoming', latest: 'sideLatest', cartoon: 'sideCartoon',
         animation: 'sideAnimation', actors_page: 'sideActors', nextplay: 'sideNextplay',
-        favorites: 'sideFav', findsimilar: 'sideFindsimilar'
+        favorites: 'sideFav', findsimilar: 'sideFindsimilar', moods: 'sideMoods'
       };
       const sideId = sideMap[type];
       if (sideId) {
@@ -5803,6 +5859,15 @@
         actorsShowcaseSection.style.display = 'none';
         curatedShelvesContainer.innerHTML = '';
         renderTopStarsPage(1, true);
+        return;
+      }
+
+      if (type === 'moods') {
+        heroSpotlight.style.display = 'none';
+        actorsShowcaseSection.style.display = 'none';
+        curatedShelvesContainer.innerHTML = '';
+        upcomingViewContainer.style.display = 'none';
+        renderMoodsHub();
         return;
       }
 
@@ -6039,6 +6104,124 @@
       }
     }
 
+    function shuffleArray(list) {
+      const arr = (list || []).slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+      }
+      return arr;
+    }
+
+    async function collectThemeItems(cat, page = 1) {
+      if (!cat) return [];
+      const seeds = cat.seeds || [];
+      const reqs = [];
+      const seedForPage = seeds[(page - 1) % Math.max(seeds.length, 1)];
+      if (seedForPage) {
+        reqs.push(cachedFetch(`${TMDB_BASE}/movie/${seedForPage}/recommendations?api_key=${apiKey}&page=${page}`));
+        reqs.push(cachedFetch(`${TMDB_BASE}/movie/${seedForPage}/similar?api_key=${apiKey}&page=${page}`));
+      }
+      if (page === 1) {
+        seeds.slice(0, 6).forEach((id) => {
+          reqs.push(cachedFetch(`${TMDB_BASE}/movie/${id}?api_key=${apiKey}`));
+          reqs.push(cachedFetch(`${TMDB_BASE}/movie/${id}/similar?api_key=${apiKey}&page=1`));
+        });
+      }
+      const packs = await Promise.all(reqs);
+      const bag = [];
+      packs.forEach((pack) => {
+        if (!pack) return;
+        if (Array.isArray(pack.results)) bag.push(...pack.results);
+        else if (pack.id && (pack.poster_path || pack.backdrop_path)) bag.push(pack);
+      });
+      return shuffleArray(bag.filter(isCleanCinemaContent));
+    }
+
+    function buildHomeShelves() {
+      const pinned = [
+        { id: 'hotlist', title: "Tonight's Hotlist — Don't Scroll Past", icon: 'fa-fire-flame-curved', color: '#f59e0b', type: 'all', kind: 'endpoint', endpoint: `${TMDB_BASE}/trending/all/week?api_key=${apiKey}` },
+        { id: 'bingeseries', title: "Shows People Won't Shut Up About", icon: 'fa-tv', color: '#3b82f6', type: 'tv', kind: 'endpoint', endpoint: `${TMDB_BASE}/trending/tv/week?api_key=${apiKey}` },
+        { id: 'animeheat', title: 'Shonen Heat Check', icon: 'fa-dragon', color: '#ec4899', type: 'tv', kind: 'endpoint', endpoint: `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=16&with_original_language=ja&sort_by=popularity.desc` }
+      ];
+      const themes = shuffleArray(THEME_CATEGORIES).slice(0, 9).map((c) => ({ ...c, kind: 'theme' }));
+      return shuffleArray(pinned.concat(themes));
+    }
+
+    function renderMoodsHub(reset = true) {
+      feedTitle.innerHTML = `<i class="fa-solid fa-bolt" style="color:#f97316;"></i> Same Energy — tap a craving`;
+      if (reset) {
+        mediaGrid.innerHTML = '';
+        globalSeenKeys.clear();
+        moodHubQueue = shuffleArray(THEME_CATEGORIES);
+        moodHubShown = 0;
+      }
+      appendMoodCards(14);
+    }
+
+    function appendMoodCards(count) {
+      const slice = moodHubQueue.slice(moodHubShown, moodHubShown + count);
+      moodHubShown += slice.length;
+      hasMorePages = moodHubShown < moodHubQueue.length;
+      slice.forEach((cat) => {
+        const card = document.createElement('div');
+        card.className = 'media-card';
+        card.innerHTML = `
+          <div class="poster-wrap" style="aspect-ratio:16/10; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, ${cat.color}33, var(--surface-subtle));">
+            <i class="fa-solid ${cat.icon}" style="font-size:2.4rem; color:${cat.color};"></i>
+            <span class="badge-pill tag" style="background:${cat.color};">Craving</span>
+          </div>
+          <div class="card-body">
+            <div class="card-title">${cat.title}</div>
+            <div class="card-footer" style="flex-direction:column; align-items:flex-start; gap:4px;">
+              <span style="color:var(--text-muted); font-size:0.68rem; font-weight:600; line-height:1.3;">${cat.blurb}</span>
+              <span class="play-link"><i class="fa-solid fa-arrow-right"></i> Open this lane</span>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', () => openThemeCategory(cat.id));
+        mediaGrid.appendChild(card);
+      });
+    }
+
+    async function openThemeCategory(id) {
+      const cat = THEME_CATEGORIES.find((c) => c.id === id);
+      if (!cat) return;
+      currentThemeCat = cat;
+      currentType = 'theme_lane';
+      currentPersonId = null;
+      currentPersonName = '';
+      currentKeywordId = null;
+      currentKeywordName = '';
+      searchQuery = '';
+      if (searchInput) searchInput.value = '';
+      curatedShelvesContainer.innerHTML = '';
+      closePlayerPage(false);
+      heroSpotlight.style.display = 'none';
+      actorsShowcaseSection.style.display = 'none';
+      upcomingViewContainer.style.display = 'none';
+      topFilterSuite.classList.remove('active');
+      searchFilterSuite.classList.remove('active');
+      feedTitle.innerHTML = `<i class="fa-solid ${cat.icon}" style="color:${cat.color};"></i> ${cat.title}`;
+      mediaGrid.innerHTML = '';
+      globalSeenKeys.clear();
+      currentPage = 1;
+      hasMorePages = true;
+      isLoading = true;
+      loadingSpinner.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      try {
+        const items = await collectThemeItems(cat, 1);
+        renderItems(items);
+      } catch (_) {
+      } finally {
+        isLoading = false;
+        loadingSpinner.classList.remove('active');
+      }
+    }
+
     function resetToHome() {
       selectType('all');
     }
@@ -6085,7 +6268,7 @@
 
     async function loadCuratedShelves() {
       curatedShelvesContainer.innerHTML = '';
-      const shelves = SHELF_CONFIGS[currentType];
+      const shelves = currentType === 'all' ? buildHomeShelves() : null;
       if (!shelves || searchQuery || currentGenre || currentYearFilter) return;
 
       for (let index = 0; index < shelves.length; index++) {
@@ -6099,7 +6282,7 @@
         shelfElem.id = `shelfSec_${currentType}_${index}`;
         shelfElem.innerHTML = `
           <div class="shelf-header">
-            <h3 class="shelf-title" onclick="openDedicatedCategory('${shelf.title.replace(/'/g, "\\'")}', '${shelf.endpoint}', '${shelf.type}')">
+            <h3 class="shelf-title" data-shelf-kind="${shelf.kind || 'endpoint'}" data-shelf-id="${shelf.id || ''}" data-shelf-endpoint="${(shelf.endpoint || '').replace(/"/g, '&quot;')}" data-shelf-type="${shelf.type || 'movie'}">
               <i class="fa-solid ${shelf.icon}" style="color: ${shelf.color};"></i>
               <span>${shelf.title}</span>
               <span class="view-all-hint">View All <i class="fa-solid fa-chevron-right"></i></span>
@@ -6117,8 +6300,20 @@
           </div>
         `;
         curatedShelvesContainer.appendChild(shelfElem);
+        const titleEl = shelfElem.querySelector('.shelf-title');
+        if (titleEl) {
+          titleEl.style.cursor = 'pointer';
+          titleEl.addEventListener('click', () => {
+            if (shelf.kind === 'theme') openThemeCategory(shelf.id);
+            else openDedicatedCategory(shelf.title, shelf.endpoint, shelf.type);
+          });
+        }
 
-        cachedFetch(shelf.endpoint)
+        const shelfPromise = shelf.kind === 'theme'
+          ? collectThemeItems(shelf, 1).then(list => ({ results: list }))
+          : cachedFetch(shelf.endpoint);
+
+        shelfPromise
           .then(data => {
             const items = (data.results || []).filter(i => {
               if (!i.poster_path || !isCleanCinemaContent(i)) return false;
@@ -6234,6 +6429,26 @@
 
     async function fetchCatalog(page = 1, reset = false) {
       if (currentType === 'favorites' || currentType === 'nextplay' || currentType === 'upcoming') return;
+      if (currentType === 'moods') {
+        if (reset) renderMoodsHub(true);
+        else appendMoodCards(12);
+        return;
+      }
+      if (currentType === 'theme_lane' && currentThemeCat) {
+        if (isLoading) return;
+        currentPage = page;
+        isLoading = true;
+        loadingSpinner.classList.add('active');
+        try {
+          const extra = await collectThemeItems(currentThemeCat, page);
+          if (!extra.length) hasMorePages = false;
+          renderItems(extra);
+        } finally {
+          isLoading = false;
+          loadingSpinner.classList.remove('active');
+        }
+        return;
+      }
       if (currentType === 'findsimilar') {
         loadFindSimilarResults(page, reset);
         return;
@@ -8013,6 +8228,11 @@
             ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=false`
             : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=false`;
 
+        case 'vidbolt':
+          return isTv
+            ? `https://vidbolt.xyz/embed/tv/${id}/${s}/${e}?autoplay=1`
+            : `https://vidbolt.xyz/embed/movie/${id}?autoplay=1`;
+
         case 'vidlink':
           return isTv
             ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&next=1`
@@ -8040,8 +8260,8 @@
 
         default:
           return isTv
-            ? `https://vidapi.ru/embed/tv/${id}/${s}/${e}?autoplay=1`
-            : `https://vidapi.ru/embed/movie/${id}?autoplay=1`;
+            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=false`
+            : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=false`;
       }
     }
 
