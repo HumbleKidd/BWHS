@@ -1129,6 +1129,8 @@
       box-shadow: var(--shadow-md);
       transform: translate3d(0, 0, 0);
       contain: paint;
+      transition: opacity 0.2s ease;
+      opacity: 0;
     }
 
     @media (min-width: 768px) {
@@ -1364,6 +1366,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      transition: opacity 0.2s ease;
     }
 
     .actors-scroll {
@@ -4403,7 +4406,7 @@
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['videasy', 'vixsrc', 'vidapi', 'vidsrc', 'vidlink', 'superembed', 'moviesapi', 'vidbolt'];
+    const PROVIDERS = ['videasy', 'vidsrc', 'vixsrc', 'vidlink', 'vidapi', 'superembed', 'moviesapi', 'vidbolt'];
     const PROVIDER_NAMES = {
       videasy: 'Videasy',
       vixsrc: 'VixSrc',
@@ -4928,6 +4931,9 @@
     const serverBar = document.getElementById('serverBar');
 
     let auraReminderTimer = null;
+    let homeBootstrapPromise = null;
+    let playerFailoverTimer = null;
+    const SITE_SHARE_IMAGE = 'https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg';
 
     document.addEventListener('DOMContentLoaded', () => {
       applyAccentColor(savedAccentColor);
@@ -4959,12 +4965,10 @@
 
       // Always warm these lightweight pieces
       renderContinueWatchingPanels();
-      const initialRoute = parseRoute(getHashRoute());
-      if (!initialRoute || initialRoute.view === 'catalog') {
-        if (!initialRoute || initialRoute.type === 'all' || !initialRoute.type) {
-          loadHeroFeatured();
-          loadTopActorsShowcase();
-          loadCuratedShelves();
+      const bootRoute = parseRoute(getHashRoute());
+      if (!bootRoute || bootRoute.view === 'catalog') {
+        if (!bootRoute.type || bootRoute.type === 'all') {
+          bootstrapHomeView();
         }
       }
 
@@ -5148,7 +5152,7 @@
         selectType('all', false);
       }
       window.scrollTo({ top: 0, behavior: 'auto' });
-      syncSocialPreview(null);
+      syncSocialPreview(activeMedia || getShareablePageContext().item);
     }
 
     function setupBrowserHistoryState() {
@@ -5722,17 +5726,23 @@
 
     async function loadHeroFeatured() {
       try {
-        const randPage = Math.floor(Math.random() * 8) + 1;
-        const altPage = Math.floor(Math.random() * 5) + 1;
-        const [resMovies, resDay] = await Promise.all([
-          cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=${randPage}`),
-          cachedFetch(`${TMDB_BASE}/trending/movie/day?api_key=${apiKey}&page=${altPage}`)
+        const [resWeek, resDay] = await Promise.all([
+          cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`),
+          cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=1`)
         ]);
 
-        const combined = shuffleArray([...(resMovies.results || []), ...(resDay.results || [])])
+        const combined = [...(resWeek.results || []), ...(resDay.results || [])]
           .filter(i => i.backdrop_path && i.poster_path && i.overview && isCleanCinemaContent(i));
 
-        heroItems = combined.slice(0, 8);
+        const unique = [];
+        const seen = new Set();
+        combined.forEach((item) => {
+          if (seen.has(item.id)) return;
+          seen.add(item.id);
+          unique.push(item);
+        });
+
+        heroItems = unique.slice(0, 8);
         
         if (heroItems.length > 0) {
           heroIndicators.innerHTML = '';
@@ -5745,11 +5755,47 @@
 
           renderHeroSlide(0);
           startHeroInterval();
-          heroSpotlight.style.display = 'flex';
         }
       } catch (err) {
-        heroSpotlight.style.display = 'none';
+        heroItems = [];
       }
+    }
+
+    async function bootstrapHomeView() {
+      if (homeBootstrapPromise) return homeBootstrapPromise;
+      if (heroSpotlight) {
+        heroSpotlight.style.opacity = '0';
+        heroSpotlight.style.display = 'flex';
+      }
+      if (actorsShowcaseSection) {
+        actorsShowcaseSection.style.opacity = '0';
+        actorsShowcaseSection.style.display = 'flex';
+      }
+
+      homeBootstrapPromise = Promise.all([
+        loadHeroFeatured(),
+        loadTopActorsShowcase(),
+        loadCuratedShelves(),
+        fetchCatalog(1, true)
+      ]).then(() => {
+        if (heroSpotlight && heroItems.length) {
+          heroSpotlight.style.display = 'flex';
+          heroSpotlight.style.opacity = '1';
+        } else if (heroSpotlight) {
+          heroSpotlight.style.display = 'none';
+        }
+        if (actorsShowcaseSection) {
+          actorsShowcaseSection.style.display = 'flex';
+          actorsShowcaseSection.style.opacity = '1';
+        }
+      }).catch(() => {
+        if (heroSpotlight) heroSpotlight.style.opacity = '1';
+        if (actorsShowcaseSection) actorsShowcaseSection.style.opacity = '1';
+      }).finally(() => {
+        homeBootstrapPromise = null;
+      });
+
+      return homeBootstrapPromise;
     }
 
     function renderHeroSlide(index) {
@@ -5958,12 +6004,12 @@
       }
 
       if (type === 'all') {
-        heroSpotlight.style.display = 'flex';
-        actorsShowcaseSection.style.display = 'flex';
-      } else {
-        heroSpotlight.style.display = 'none';
-        actorsShowcaseSection.style.display = 'none';
+        bootstrapHomeView();
+        return;
       }
+
+      heroSpotlight.style.display = 'none';
+      actorsShowcaseSection.style.display = 'none';
 
       if (type === 'favorites') {
         curatedShelvesContainer.innerHTML = '';
@@ -6215,10 +6261,8 @@
 
     function buildHomeShelves() {
       const pinned = [
-        { id: 'hotlist', title: "Tonight's Hotlist — Don't Scroll Past", icon: 'fa-fire-flame-curved', color: '#f59e0b', type: 'all', kind: 'endpoint', endpoint: `${TMDB_BASE}/trending/all/week?api_key=${apiKey}` },
-        { id: 'talkedmovie', title: 'Most Talked About Movies Right Now', icon: 'fa-comments', color: '#ec4899', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/trending/movie/week?api_key=${apiKey}` },
-        { id: 'worldpopular', title: 'What The Whole World Is Watching', icon: 'fa-globe', color: '#10b981', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/movie/popular?api_key=${apiKey}` },
-        { id: 'bingeseries', title: "Shows People Won't Shut Up About", icon: 'fa-tv', color: '#3b82f6', type: 'tv', kind: 'endpoint', endpoint: `${TMDB_BASE}/trending/tv/week?api_key=${apiKey}` },
+        { id: 'nowmovies', title: 'Most Popular Movies Right Now', icon: 'fa-film', color: '#ec4899', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/movie/now_playing?api_key=${apiKey}` },
+        { id: 'nowtv', title: "Shows People Won't Shut Up About", icon: 'fa-tv', color: '#3b82f6', type: 'tv', kind: 'endpoint', endpoint: `${TMDB_BASE}/tv/popular?api_key=${apiKey}` },
         { id: 'certifiedhits', title: 'Certified Hits — Everybody Knows These', icon: 'fa-star', color: '#f59e0b', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/movie/top_rated?api_key=${apiKey}` }
       ];
       const themes = shuffleArray(THEME_CATEGORIES).slice(0, 6).map((c) => ({ ...c, kind: 'theme' }));
@@ -6346,6 +6390,7 @@
       const shelves = currentType === 'all' ? buildHomeShelves() : null;
       if (!shelves || searchQuery || currentGenre || currentYearFilter) return;
 
+      const shelfJobs = [];
       for (let index = 0; index < shelves.length; index++) {
         const shelf = shelves[index];
         const shelfScrollId = `shelfScroll_${currentType}_${index}`;
@@ -6388,14 +6433,15 @@
           ? collectThemeItems(shelf, 1).then(list => ({ results: list }))
           : cachedFetch(shelf.endpoint);
 
-        shelfPromise
+        const job = shelfPromise
           .then(data => {
             const seedSet = new Set(shelf.seeds || []);
             const items = (data.results || []).filter(i => {
-              if (!i.poster_path || !isCleanCinemaContent(i) || !isWorldwideHit(i, seedSet)) return false;
+              if (!i.poster_path || !isCleanCinemaContent(i)) return false;
+              if (shelf.kind === 'theme' && !isWorldwideHit(i, seedSet)) return false;
               const date = i.release_date || i.first_air_date;
               return !date || date <= todayStr;
-            }).sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0));
+            }).sort((a, b) => (b.popularity || 0) - (a.popularity || 0) || (b.vote_count || 0) - (a.vote_count || 0));
 
             const scrollContainer = document.getElementById(shelfScrollId);
             if (!scrollContainer) return;
@@ -6437,7 +6483,9 @@
             setupRowSliderListener(shelfScrollId, sliderThumbId, sliderTrackId);
           })
           .catch(() => shelfElem.remove());
+        shelfJobs.push(job);
       }
+      await Promise.all(shelfJobs);
     }
 
     function buildEndpoint(page) {
@@ -8413,31 +8461,100 @@
     }
 
     function buildShareCopy(item, shareUrl) {
-      const title = (item && (item.title || item.name)) || 'this title';
+      const title = (item && (item.title || item.name)) || 'BWHS';
       const url = shareUrl || window.location.href || 'https://bwhs.online';
-      const text = `Watch ${title} now at BWHS.online — Binge Watch Humble Streams`;
+      const isSite = !item || item._shareKind === 'page';
+      const text = isSite
+        ? `Binge Watch Humble Streams — ${title}`
+        : `Watch ${title} now at BWHS.online — Binge Watch Humble Streams`;
       const message = `${text}\n${url}`;
       return { title, url, text, message };
     }
 
-    async function shareMediaItem(item, shareUrl) {
-      if (!item) {
-        showToast('Nothing to share yet');
-        return;
+    function getShareablePageContext() {
+      if (activeMedia && activeMedia.id) {
+        return {
+          item: activeMedia,
+          url: window.location.href
+        };
       }
-      const { title, url, text, message } = buildShareCopy(item, shareUrl);
-      const imgPath = item.poster_path || item.backdrop_path;
-      const imgUrl = imgPath ? `${IMAGE_ORIGINAL}${imgPath}` : '';
-      syncSocialPreview(item);
+      if (heroItems && heroItems[currentHeroIndex]) {
+        const item = heroItems[currentHeroIndex];
+        const type = item.media_type || (item.title ? 'movie' : 'tv');
+        const hash = type === 'tv' ? `#/watch/tv/${item.id}/1/1` : `#/watch/movie/${item.id}`;
+        return {
+          item,
+          url: `${window.location.origin}${window.location.pathname}${hash}`
+        };
+      }
+      const firstCard = document.querySelector('.media-card[data-media-id], .shelf-card[data-media-id], .panel-item-card[data-media-id]');
+      if (firstCard && firstCard.dataset.mediaId) {
+        const type = firstCard.dataset.mediaType || 'movie';
+        const id = firstCard.dataset.mediaId;
+        const title = firstCard.dataset.mediaTitle || document.title;
+        const poster = firstCard.dataset.mediaPoster || '';
+        const hash = type === 'tv' ? `#/watch/tv/${id}/1/1` : `#/watch/movie/${id}`;
+        return {
+          item: {
+            id,
+            title: type === 'movie' ? title : undefined,
+            name: type !== 'movie' ? title : undefined,
+            poster_path: poster,
+            media_type: type
+          },
+          url: `${window.location.origin}${window.location.pathname}${hash}`
+        };
+      }
+      const pageTitles = {
+        all: 'Trending on BWHS',
+        movie: 'Movies on BWHS',
+        tv: 'TV Shows on BWHS',
+        anime: 'Anime Universe on BWHS',
+        upcoming: 'Upcoming on BWHS',
+        latest: 'Latest Releases on BWHS',
+        cartoon: 'Cartoons Hub on BWHS',
+        animation: 'Animation on BWHS',
+        actors_page: 'Top Stars on BWHS',
+        moods: 'Same Energy on BWHS',
+        findsimilar: 'Find Similar on BWHS',
+        nextplay: 'Must Watch on BWHS',
+        favorites: 'Saved Favorites on BWHS'
+      };
+      return {
+        item: {
+          title: pageTitles[currentType] || 'BWHS - Binge Watch Humble Streams',
+          backdrop_path: null,
+          poster_path: null,
+          _shareKind: 'page'
+        },
+        url: window.location.href
+      };
+    }
+
+    async function shareMediaItem(item, shareUrl) {
+      const ctxItem = item || getShareablePageContext().item;
+      const { title, url, text, message } = buildShareCopy(ctxItem, shareUrl || window.location.href);
+      const imgPath = ctxItem && (ctxItem.poster_path || ctxItem.backdrop_path);
+      const imgUrl = imgPath ? `${IMAGE_ORIGINAL}${imgPath}` : SITE_SHARE_IMAGE;
+      syncSocialPreview(ctxItem && ctxItem.id ? ctxItem : null);
+
+      const tryShareFile = async () => {
+        try {
+          const res = await fetch(imgUrl);
+          const blob = await res.blob();
+          const file = new File([blob], `${String(title).replace(/[^a-z0-9]+/gi, '_')}-cover.jpg`, { type: blob.type || 'image/jpeg' });
+          return file;
+        } catch (_) {
+          return null;
+        }
+      };
 
       try {
         if (navigator.share) {
-          const payload = { title: `Watch ${title} now at BWHS.online`, text, url };
-          if (imgUrl && navigator.canShare) {
+          const payload = { title: `${title} · BWHS.online`, text, url };
+          const file = await tryShareFile();
+          if (file && navigator.canShare) {
             try {
-              const res = await fetch(imgUrl);
-              const blob = await res.blob();
-              const file = new File([blob], `${title.replace(/[^a-z0-9]+/gi, '_')}-cover.jpg`, { type: blob.type || 'image/jpeg' });
               if (navigator.canShare({ files: [file], ...payload })) {
                 await navigator.share({ ...payload, files: [file] });
                 showToast('Share sheet opened');
@@ -8454,19 +8571,18 @@
       }
       try {
         await navigator.clipboard.writeText(message);
-        showToast('Copied: Watch ' + title + ' now at BWHS.online');
+        showToast('Copied share link + image ready');
+        if (imgUrl) downloadImageDirectly(imgUrl, `BWHS-${String(title).replace(/[^a-zA-Z0-9]+/g, '_')}-Cover.jpg`);
       } catch (_) {
         showToast(message);
+        if (imgUrl) downloadImageDirectly(imgUrl, `BWHS-${String(title).replace(/[^a-zA-Z0-9]+/g, '_')}-Cover.jpg`);
       }
     }
 
     async function shareCurrentTitle(e) {
       if (e) e.stopPropagation();
-      if (!activeMedia) {
-        showToast('Nothing to share yet');
-        return;
-      }
-      await shareMediaItem(activeMedia, window.location.href);
+      const ctx = getShareablePageContext();
+      await shareMediaItem(ctx.item, ctx.url);
     }
 
     async function ctxActionShareLink() {
@@ -8492,13 +8608,16 @@
       const url = getProviderUrl(currentProvider);
       if (!url) return;
 
+      if (playerFailoverTimer) {
+        clearTimeout(playerFailoverTimer);
+        playerFailoverTimer = null;
+      }
+
       // CRITICAL: Never put sandbox on the player iframe.
-      // VidFast / VidLink / many providers detect sandbox and black-screen or refuse to play.
       if (playerFrame.hasAttribute('sandbox')) {
         playerFrame.removeAttribute('sandbox');
       }
 
-      // Full permissive allow list so autoplay + fullscreen + PiP work instantly
       playerFrame.setAttribute(
         'allow',
         'autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *; clipboard-read *; clipboard-write *'
@@ -8507,11 +8626,40 @@
       playerFrame.setAttribute('webkitallowfullscreen', 'true');
       playerFrame.setAttribute('mozallowfullscreen', 'true');
       playerFrame.setAttribute('referrerpolicy', 'no-referrer');
-      playerFrame.removeAttribute('sandbox'); // belt + suspenders
+      playerFrame.removeAttribute('sandbox');
 
-      // Instant direct load — no about:blank delay (that can break autoplay on some browsers)
-      // Opening the player is already a user gesture, so autoplay is allowed.
+      let markedReady = false;
+      const markReady = () => {
+        markedReady = true;
+        if (playerFailoverTimer) {
+          clearTimeout(playerFailoverTimer);
+          playerFailoverTimer = null;
+        }
+      };
+      playerFrame.onload = markReady;
+      playerFrame.onerror = () => {
+        if (!markedReady) autoFailoverPlayer();
+      };
+
       playerFrame.src = url;
+
+      // If a source hangs / black-screens, hop to the next embed automatically.
+      playerFailoverTimer = setTimeout(() => {
+        if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active')) {
+          autoFailoverPlayer();
+        }
+      }, 9000);
+    }
+
+    function autoFailoverPlayer() {
+      if (!activeMedia) return;
+      const next = (currentProviderIndex + 1) % PROVIDERS.length;
+      if (next === 0 && currentProviderIndex === PROVIDERS.length - 1) return;
+      currentProviderIndex = next;
+      updateServerButtons();
+      executeStreamLoad();
+      const name = PROVIDER_NAMES[PROVIDERS[currentProviderIndex]] || PROVIDERS[currentProviderIndex];
+      showToast('Switching source to ' + name);
     }
 
     function openServerSheet() {
