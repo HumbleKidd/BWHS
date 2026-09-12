@@ -2631,12 +2631,18 @@
       box-shadow: var(--shadow-md);
     }
     .ep-named-card.active {
-      background: linear-gradient(135deg, rgba(79,70,229,0.16), var(--surface) 60%);
+      background: linear-gradient(135deg, rgba(79,70,229,0.22), var(--surface) 60%);
       color: var(--text-main);
-      box-shadow: 0 4px 12px rgba(79,70,229,0.22);
+      box-shadow: 0 0 0 1px rgba(245,158,11,0.45), 0 0 18px rgba(236,72,153,0.55), 0 0 28px rgba(79,70,229,0.35);
+      animation: epNowPlaying 1.6s ease-in-out infinite;
+      z-index: 2;
     }
     .ep-named-card.active::before {
       background: linear-gradient(135deg, #f59e0b, #ec4899, #4f46e5);
+    }
+    @keyframes epNowPlaying {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 0 12px rgba(236,72,153,0.4), 0 0 18px rgba(79,70,229,0.25); }
+      50% { box-shadow: 0 0 0 2px rgba(245,158,11,0.85), 0 0 22px rgba(236,72,153,0.7), 0 0 34px rgba(79,70,229,0.45); }
     }
 
     .ep-num-pill {
@@ -2663,30 +2669,23 @@
       flex: 1;
     }
 
-    .next-ep-banner {
+    .leftoff-banner {
       display: none;
-      align-items: center;
-      justify-content: space-between;
+      align-items: flex-start;
       gap: 10px;
-      padding: 8px 12px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, rgba(79,70,229,0.16), rgba(236,72,153,0.14));
-      border: 1px solid rgba(79,70,229,0.25);
-      font-size: 0.78rem;
-      font-weight: 800;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(245,158,11,0.16), rgba(79,70,229,0.12));
+      border: 1px solid rgba(245,158,11,0.35);
+      box-shadow: 0 0 16px rgba(245,158,11,0.18);
+      font-size: 0.8rem;
+      font-weight: 700;
       color: var(--text-main);
+      margin: 0 0 4px;
     }
-    .next-ep-banner.active { display: flex; }
-    .next-ep-banner button {
-      border: none;
-      background: var(--primary);
-      color: #fff;
-      border-radius: 9999px;
-      padding: 5px 10px;
-      font-size: 0.7rem;
-      font-weight: 800;
-      cursor: pointer;
-    }
+    .leftoff-banner.active { display: flex; }
+    .leftoff-banner i { color: #f59e0b; margin-top: 2px; }
+    .leftoff-banner strong { font-weight: 800; color: var(--primary); }
 
     .details-section {
       padding: 18px;
@@ -3861,6 +3860,9 @@
               </div>
 
               <div class="player-nav-right">
+                <button class="tv-auto-btn auto-fs" id="btnAutoFs" onclick="toggleAutoFullscreen()" title="Auto fullscreen for movies and shows">
+                  <i class="fa-solid fa-expand"></i> <span id="autoFsLabel">Auto FS Off</span>
+                </button>
                 <button class="btn-circle fav" id="playerFavBtn" onclick="toggleFavoriteFromPlayer(event)" title="Save Favorite">
                   <i class="fa-solid fa-heart"></i>
                 </button>
@@ -3900,6 +3902,10 @@
                 </div>
 
                 <div class="player-dock">
+                  <div class="leftoff-banner" id="leftOffBanner">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span id="leftOffBannerText">Catch up from where you left off.</span>
+                  </div>
                   <div class="server-helper-tip">
                     <i class="fa-solid fa-circle-info"></i>
                     <span id="serverNowPlayingTip">Now playing from: VixSrc — switch below if this source stalls.</span>
@@ -3939,18 +3945,6 @@
                       <div class="season-pill-wrap">
                         <select id="seasonDropdown" onchange="handleSeasonChange()"></select>
                       </div>
-                    </div>
-                    <div class="tv-auto-toggles">
-                      <button type="button" class="tv-auto-btn auto-skip" id="btnAutoSkip" onclick="toggleAutoSkipEpisodes()">
-                        <i class="fa-solid fa-forward-step"></i> <span id="autoSkipLabel">Auto Skip Off</span>
-                      </button>
-                      <button type="button" class="tv-auto-btn auto-fs" id="btnAutoFs" onclick="toggleAutoFullscreen()">
-                        <i class="fa-solid fa-expand"></i> <span id="autoFsLabel">Auto Fullscreen Off</span>
-                      </button>
-                    </div>
-                    <div class="next-ep-banner" id="nextEpBanner">
-                      <span id="nextEpBannerText">Next episode starting…</span>
-                      <button type="button" onclick="playNextEpisode(true)">Play now</button>
                     </div>
                     <div class="episodes-grid" id="episodesGrid"></div>
                   </div>
@@ -4629,14 +4623,8 @@
     let activeEpisode = 1;
     let seasonDataCache = {};
     let currentSeasonEpisodes = [];
-    let autoSkipEpisodes = localStorage.getItem('humble_auto_skip') === '1';
     let autoFullscreenOn = localStorage.getItem('humble_auto_fs') === '1';
-    let autoSkipTimer = null;
     let autoFsTimer = null;
-    let autoSkipDeadline = 0;
-    let autoSkipKey = '';
-    let autoSkipBusy = false;
-    let lastEmbedProgress = { t: 0, d: 0, at: 0 };
     const EP_STROKES = [
       'linear-gradient(135deg, #4f46e5, #06b6d4)',
       'linear-gradient(135deg, #ec4899, #f59e0b)',
@@ -5094,7 +5082,6 @@
       setupFloatingDockObserver();
       setupHeroCarouselControls();
       initTvAutoPrefs();
-      bindEmbedEndedListener();
 
       // Deep-link router decides the first view (bookmark / shared URL)
       // so we don't load the default trending catalog twice.
@@ -7837,8 +7824,16 @@
       }
       const loadId = ++mediaSessionId;
       activeMedia = { ...item, computedType: type };
-      activeSeason = prefSeason;
-      activeEpisode = prefEpisode;
+      let season = prefSeason || 1;
+      let episode = prefEpisode || 1;
+      const prevWatch = (watchHistory || []).find(h => Number(h.id) === Number(item.id));
+      const openedAtDefault = Number(prefSeason || 1) === 1 && Number(prefEpisode || 1) === 1;
+      if (prevWatch && openedAtDefault && (type === 'tv' || prevWatch.media_type === 'tv')) {
+        season = prevWatch.season || 1;
+        episode = prevWatch.episode || 1;
+      }
+      activeSeason = season;
+      activeEpisode = episode;
       currentProviderIndex = 0;
       similarCurrentPage = 1;
       similarSeenSet.clear();
@@ -7942,7 +7937,6 @@
       activeMedia = null;
       playerFrame.src = '';
       playerNavStack = [];
-      clearAutoSkipTimer();
       clearAutoFsTimer();
       closeContextMenu();
 
@@ -8493,6 +8487,7 @@
 
           episodesGrid.appendChild(btn);
         });
+        updateLeftOffBanner();
       } catch (e) {
         episodesGrid.innerHTML = '<p style="font-size:0.75rem; color:var(--text-muted); padding:6px;">Failed to load episode details.</p>';
       }
@@ -8784,36 +8779,19 @@
     function loadActiveStream() {
       updateServerButtons();
       executeStreamLoad();
-      scheduleAutoSkipForCurrentEpisode();
       scheduleAutoFullscreen();
+      updateLeftOffBanner();
     }
 
     function initTvAutoPrefs() {
-      syncAutoSkipButton();
       syncAutoFsButton();
-    }
-
-    function syncAutoSkipButton() {
-      const btn = document.getElementById('btnAutoSkip');
-      const lab = document.getElementById('autoSkipLabel');
-      if (btn) btn.classList.toggle('active', autoSkipEpisodes);
-      if (lab) lab.textContent = autoSkipEpisodes ? 'Auto Skip On' : 'Auto Skip Off';
     }
 
     function syncAutoFsButton() {
       const btn = document.getElementById('btnAutoFs');
       const lab = document.getElementById('autoFsLabel');
       if (btn) btn.classList.toggle('active', autoFullscreenOn);
-      if (lab) lab.textContent = autoFullscreenOn ? 'Auto Fullscreen On' : 'Auto Fullscreen Off';
-    }
-
-    function toggleAutoSkipEpisodes() {
-      autoSkipEpisodes = !autoSkipEpisodes;
-      localStorage.setItem('humble_auto_skip', autoSkipEpisodes ? '1' : '0');
-      syncAutoSkipButton();
-      showToast(autoSkipEpisodes ? 'Auto skip next episode on' : 'Auto skip off');
-      if (autoSkipEpisodes) scheduleAutoSkipForCurrentEpisode();
-      else clearAutoSkipTimer();
+      if (lab) lab.textContent = autoFullscreenOn ? 'Auto FS On' : 'Auto FS Off';
     }
 
     function toggleAutoFullscreen() {
@@ -8825,78 +8803,10 @@
       else clearAutoFsTimer();
     }
 
-    function clearAutoSkipTimer() {
-      if (autoSkipTimer) {
-        clearTimeout(autoSkipTimer);
-        autoSkipTimer = null;
-      }
-    }
-
     function clearAutoFsTimer() {
       if (autoFsTimer) {
         clearTimeout(autoFsTimer);
         autoFsTimer = null;
-      }
-    }
-
-    function isTvShow(item) {
-      const media = item || activeMedia;
-      if (!media) return false;
-      const t = media.computedType || media.media_type || '';
-      if (t === 'tv' || t === 'anime' || t === 'cartoon') return true;
-      if (t === 'movie') return false;
-      return !!(media.name && !media.title);
-    }
-
-    function currentEpisodeRuntimeMs() {
-      const ep = (currentSeasonEpisodes || []).find(e => Number(e.episode_number) === Number(activeEpisode));
-      let mins = 0;
-      if (ep && ep.runtime) mins = Number(ep.runtime) || 0;
-      if (!mins && activeMedia && activeMedia.episode_run_time && activeMedia.episode_run_time[0]) {
-        mins = Number(activeMedia.episode_run_time[0]) || 0;
-      }
-      if (!mins) mins = 22;
-      return Math.max(45, (mins * 60 - 6) * 1000);
-    }
-
-    function currentSkipKey() {
-      if (!activeMedia) return '';
-      return `${activeMedia.id}_s${activeSeason}_e${activeEpisode}`;
-    }
-
-    function hideNextEpBanner() {
-      const b = document.getElementById('nextEpBanner');
-      if (b) b.classList.remove('active');
-    }
-
-    function showNextEpBanner(label) {
-      const b = document.getElementById('nextEpBanner');
-      const t = document.getElementById('nextEpBannerText');
-      if (t) t.textContent = label || 'Next episode starting…';
-      if (b) b.classList.add('active');
-    }
-
-    function scheduleAutoSkipForCurrentEpisode() {
-      clearAutoSkipTimer();
-      hideNextEpBanner();
-      if (!autoSkipEpisodes) return;
-      if (!isTvShow()) return;
-      const key = currentSkipKey();
-      if (key !== autoSkipKey) {
-        autoSkipKey = key;
-        autoSkipDeadline = Date.now() + currentEpisodeRuntimeMs();
-        lastEmbedProgress = { t: 0, d: 0, at: 0 };
-      }
-      const warnAt = Math.max(1000, autoSkipDeadline - Date.now() - 12000);
-      const fireAt = Math.max(1500, autoSkipDeadline - Date.now());
-      autoSkipTimer = setTimeout(() => {
-        showNextEpBanner('Next episode in 10s…');
-        autoSkipTimer = setTimeout(() => playNextEpisode(true), 10000);
-      }, warnAt);
-      if (fireAt <= 12000) {
-        clearAutoSkipTimer();
-        showNextEpBanner('Next episode starting…');
-        autoSkipTimer = setTimeout(() => playNextEpisode(true), fireAt);
       }
     }
 
@@ -8940,41 +8850,45 @@
       else requestPlayerFullscreen();
     }
 
-    function bindEmbedEndedListener() {
-      window.addEventListener('message', (e) => {
-        if (!autoSkipEpisodes || !isTvShow()) return;
-        const d = e.data;
-        let ended = false;
-        let cur = null;
-        let dur = null;
-        const sniff = (obj) => {
-          if (!obj || typeof obj !== 'object') return;
-          const ev = String(obj.event || obj.type || obj.action || obj.name || obj.state || '');
-          if (/ended|complete|finished|endedplayback|next.?episode/i.test(ev)) ended = true;
-          if (obj.data && typeof obj.data === 'object') sniff(obj.data);
-          if (typeof obj.currentTime === 'number') cur = obj.currentTime;
-          if (typeof obj.duration === 'number') dur = obj.duration;
-          if (typeof obj.time === 'number') cur = obj.time;
-        };
-        if (typeof d === 'string') {
-          ended = /ended|complete|finished|next.?episode/i.test(d);
-          try { sniff(JSON.parse(d)); } catch (_) {}
-        } else {
-          sniff(d);
-        }
-        if (typeof cur === 'number' && typeof dur === 'number' && dur > 30) {
-          lastEmbedProgress = { t: cur, d: dur, at: Date.now() };
-          if (cur >= dur - 1.25) ended = true;
-        }
-        if (ended) playNextEpisode(true);
-      });
+    function findHistoryEntry(item) {
+      if (!item || !item.id) return null;
+      return (watchHistory || []).find(h => Number(h.id) === Number(item.id)) || null;
     }
 
-    function playEpisode(epNum, fromAuto) {
+    function updateLeftOffBanner() {
+      const banner = document.getElementById('leftOffBanner');
+      const text = document.getElementById('leftOffBannerText');
+      if (!banner || !text) return;
+      if (!activeMedia) {
+        banner.classList.remove('active');
+        return;
+      }
+      const prev = findHistoryEntry(activeMedia);
+      const type = activeMedia.computedType || activeMedia.media_type || (activeMedia.title ? 'movie' : 'tv');
+      const title = activeMedia.title || activeMedia.name || 'this title';
+      const savedTime = (watchTimestamps && watchTimestamps[activeMedia.id]) || '';
+      let epName = '';
+      if (currentSeasonEpisodes && currentSeasonEpisodes.length) {
+        const ep = currentSeasonEpisodes.find(e => Number(e.episode_number) === Number(activeEpisode));
+        if (ep && ep.name) epName = ep.name;
+      }
+      if (type === 'tv' || type === 'anime' || type === 'cartoon' || (!activeMedia.title && activeMedia.name)) {
+        const label = epName
+          ? `You left off at Season ${activeSeason}, Episode ${activeEpisode} — ${epName}`
+          : `You left off at Season ${activeSeason}, Episode ${activeEpisode}`;
+        text.innerHTML = `<strong>${title}</strong><br>${label}${savedTime ? ` · last seen ${savedTime}` : ''}. The glowing pill is the current episode.`;
+        banner.classList.add('active');
+      } else if (prev || savedTime) {
+        text.innerHTML = `<strong>${title}</strong><br>You left off this film${savedTime ? ` around ${savedTime}` : ''}. Resume here to catch up.`;
+        banner.classList.add('active');
+      } else {
+        banner.classList.remove('active');
+      }
+    }
+
+    function playEpisode(epNum) {
       if (!activeMedia) return;
       activeEpisode = Number(epNum);
-      autoSkipKey = '';
-      hideNextEpBanner();
       document.querySelectorAll('.ep-named-card').forEach(b => {
         const n = parseInt(b.getAttribute('data-ep'), 10);
         const on = n === Number(epNum);
@@ -8993,43 +8907,7 @@
         season: activeSeason,
         episode: activeEpisode
       }, false);
-      if (fromAuto) showToast('Now playing episode ' + activeEpisode);
-    }
-
-    async function playNextEpisode(fromAuto) {
-      if (!activeMedia || !isTvShow()) return;
-      if (autoSkipBusy) return;
-      autoSkipBusy = true;
-      setTimeout(() => { autoSkipBusy = false; }, 4000);
-      hideNextEpBanner();
-      let list = currentSeasonEpisodes || [];
-      if (!list.length && activeMedia.id) {
-        try {
-          const seasonKey = `${activeMedia.id}_s${activeSeason}`;
-          if (!seasonDataCache[seasonKey]) {
-            seasonDataCache[seasonKey] = await cachedFetch(`${TMDB_BASE}/tv/${activeMedia.id}/season/${activeSeason}?api_key=${apiKey}`);
-          }
-          list = (seasonDataCache[seasonKey].episodes || []);
-          currentSeasonEpisodes = list;
-        } catch (_) {}
-      }
-      const idx = list.findIndex(e => Number(e.episode_number) === Number(activeEpisode));
-      if (idx > -1 && idx < list.length - 1) {
-        playEpisode(list[idx + 1].episode_number, fromAuto);
-        return;
-      }
-      // Last ep of season — try next season
-      const nextSeason = activeSeason + 1;
-      const opt = seasonDropdown && [...seasonDropdown.options].find(o => parseInt(o.value, 10) === nextSeason);
-      if (!opt) {
-        if (fromAuto) showToast('Last episode of the show');
-        return;
-      }
-      activeSeason = nextSeason;
-      activeEpisode = 1;
-      if (seasonDropdown) seasonDropdown.value = String(nextSeason);
-      await renderNamedEpisodeList(activeMedia.id, activeSeason);
-      playEpisode(1, fromAuto);
+      updateLeftOffBanner();
     }
 
     function executeStreamLoad() {
