@@ -2579,38 +2579,34 @@
     }
 
     .episodes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-      gap: 10px;
-      max-height: 340px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      max-height: 220px;
       overflow-y: auto;
       padding: 4px 2px 8px;
+      align-items: flex-start;
     }
     @media (max-width: 640px) {
       .episodes-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        max-height: 280px;
-        gap: 8px;
-      }
-    }
-    @media (min-width: 1080px) {
-      .episodes-grid {
-        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        max-height: 200px;
+        gap: 6px;
       }
     }
 
     .ep-named-card {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
       gap: 6px;
       background: var(--surface);
-      padding: 10px 12px;
-      border-radius: 14px;
+      padding: 5px 10px 5px 6px;
+      border-radius: 9999px;
       cursor: pointer;
       text-align: left;
-      width: 100%;
-      min-height: 78px;
+      width: auto;
+      max-width: 100%;
+      min-height: 0;
       color: var(--text-main);
       position: relative;
       border: 2px solid transparent;
@@ -2622,7 +2618,7 @@
       content: '';
       position: absolute;
       inset: -2px;
-      border-radius: 16px;
+      border-radius: 9999px;
       padding: 2px;
       background: var(--ep-stroke, linear-gradient(135deg, #4f46e5, #06b6d4));
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -2631,22 +2627,22 @@
       pointer-events: none;
     }
     .ep-named-card:hover {
-      transform: translateY(-3px);
+      transform: translateY(-2px);
       box-shadow: var(--shadow-md);
     }
     .ep-named-card.active {
-      background: linear-gradient(160deg, rgba(79,70,229,0.18), var(--surface) 55%);
+      background: linear-gradient(135deg, rgba(79,70,229,0.16), var(--surface) 60%);
       color: var(--text-main);
-      box-shadow: 0 8px 18px rgba(79,70,229,0.22);
+      box-shadow: 0 4px 12px rgba(79,70,229,0.22);
     }
     .ep-named-card.active::before {
       background: linear-gradient(135deg, #f59e0b, #ec4899, #4f46e5);
     }
 
     .ep-num-pill {
-      font-size: 0.68rem;
+      font-size: 0.62rem;
       font-weight: 800;
-      padding: 3px 8px;
+      padding: 2px 6px;
       border-radius: 9999px;
       background: var(--surface-subtle);
       color: var(--text-main);
@@ -2658,12 +2654,38 @@
     }
 
     .ep-name-text {
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      line-height: 1.2;
+      overflow: visible;
+      text-overflow: unset;
       flex: 1;
+    }
+
+    .next-ep-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(79,70,229,0.16), rgba(236,72,153,0.14));
+      border: 1px solid rgba(79,70,229,0.25);
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .next-ep-banner.active { display: flex; }
+    .next-ep-banner button {
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 9999px;
+      padding: 5px 10px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      cursor: pointer;
     }
 
     .details-section {
@@ -3617,105 +3639,9 @@
       color: var(--text-main);
     }
 
-    /* First-visit / welcome-back overlay */
-    .welcome-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 20000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(8, 6, 20, 0.28);
-      backdrop-filter: blur(18px) saturate(1.4);
-      -webkit-backdrop-filter: blur(18px) saturate(1.4);
-      pointer-events: none;
-    }
-    .welcome-overlay.active {
-      display: flex;
-      animation: welcomeFadeOut 4s ease forwards;
-    }
-    @keyframes welcomeFadeOut {
-      0% { opacity: 1; }
-      82% { opacity: 1; }
-      100% { opacity: 0; visibility: hidden; }
-    }
-    .welcome-card {
-      position: relative;
-      min-width: min(86vw, 420px);
-      max-width: 460px;
-      padding: 28px 26px 24px;
-      border-radius: 24px;
-      text-align: center;
-      color: #fff;
-      background:
-        radial-gradient(120% 140% at 12% 8%, rgba(236, 72, 153, 0.55), transparent 46%),
-        radial-gradient(110% 130% at 92% 88%, rgba(79, 70, 229, 0.7), transparent 50%),
-        linear-gradient(145deg, #1e1b4b 0%, #4f46e5 48%, #ec4899 100%);
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.18),
-        0 24px 60px rgba(79, 70, 229, 0.45),
-        0 0 80px rgba(236, 72, 153, 0.35);
-      animation: welcomePop 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-      overflow: hidden;
-    }
-    .welcome-card::before {
-      content: '';
-      position: absolute;
-      inset: -40%;
-      background: conic-gradient(from 120deg, #f59e0b, #ec4899, #6366f1, #06b6d4, #f59e0b);
-      opacity: 0.22;
-      animation: welcomeSpin 4s linear infinite;
-    }
-    @keyframes welcomePop {
-      0% { transform: scale(0.72) translateY(18px); opacity: 0; }
-      70% { transform: scale(1.04) translateY(0); opacity: 1; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes welcomeSpin {
-      to { transform: rotate(360deg); }
-    }
-    .welcome-card-inner {
-      position: relative;
-      z-index: 2;
-    }
-    .welcome-kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.72rem;
-      font-weight: 800;
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
-      color: #fde68a;
-      margin-bottom: 8px;
-    }
-    .welcome-card h2 {
-      font-size: 1.55rem;
-      font-weight: 800;
-      letter-spacing: -0.4px;
-      margin: 0 0 8px;
-      line-height: 1.15;
-    }
-    .welcome-card p {
-      margin: 0;
-      font-size: 0.92rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.88);
-      line-height: 1.4;
-    }
   </style>
 </head>
 <body>
-
-  <div class="welcome-overlay" id="welcomeOverlay" aria-hidden="true">
-    <div class="welcome-card">
-      <div class="welcome-card-inner">
-        <div class="welcome-kicker" id="welcomeKicker"><i class="fa-solid fa-clapperboard"></i> BWHS</div>
-        <h2 id="welcomeHeadline">Welcome to BWHS</h2>
-        <p id="welcomeSub">Binge Watch Humble Streams — lights, camera, play.</p>
-      </div>
-    </div>
-  </div>
 
   <!-- Thumbnail Context Menu (right-click / long-press) -->
   <div class="ctx-menu-backdrop" id="ctxMenuBackdrop"></div>
@@ -4021,6 +3947,10 @@
                       <button type="button" class="tv-auto-btn auto-fs" id="btnAutoFs" onclick="toggleAutoFullscreen()">
                         <i class="fa-solid fa-expand"></i> <span id="autoFsLabel">Auto Fullscreen Off</span>
                       </button>
+                    </div>
+                    <div class="next-ep-banner" id="nextEpBanner">
+                      <span id="nextEpBannerText">Next episode starting…</span>
+                      <button type="button" onclick="playNextEpisode(true)">Play now</button>
                     </div>
                     <div class="episodes-grid" id="episodesGrid"></div>
                   </div>
@@ -4703,6 +4633,10 @@
     let autoFullscreenOn = localStorage.getItem('humble_auto_fs') === '1';
     let autoSkipTimer = null;
     let autoFsTimer = null;
+    let autoSkipDeadline = 0;
+    let autoSkipKey = '';
+    let autoSkipBusy = false;
+    let lastEmbedProgress = { t: 0, d: 0, at: 0 };
     const EP_STROKES = [
       'linear-gradient(135deg, #4f46e5, #06b6d4)',
       'linear-gradient(135deg, #ec4899, #f59e0b)',
@@ -5161,7 +5095,6 @@
       setupHeroCarouselControls();
       initTvAutoPrefs();
       bindEmbedEndedListener();
-      showWelcomeGreeting();
 
       // Deep-link router decides the first view (bookmark / shared URL)
       // so we don't load the default trending catalog twice.
@@ -5419,30 +5352,6 @@
       }
     }
 
-    function showWelcomeGreeting() {
-      const overlay = document.getElementById('welcomeOverlay');
-      const headline = document.getElementById('welcomeHeadline');
-      const sub = document.getElementById('welcomeSub');
-      const kicker = document.getElementById('welcomeKicker');
-      if (!overlay) return;
-      const seen = localStorage.getItem('bwhs_has_visited');
-      if (!seen) {
-        if (kicker) kicker.innerHTML = '<i class="fa-solid fa-clapperboard"></i> FIRST PLAY';
-        if (headline) headline.textContent = 'Welcome to BWHS';
-        if (sub) sub.textContent = 'Binge Watch Humble Streams — pick a title and press play.';
-        localStorage.setItem('bwhs_has_visited', '1');
-      } else {
-        if (kicker) kicker.innerHTML = '<i class="fa-solid fa-rotate-right"></i> BACK AGAIN';
-        if (headline) headline.textContent = 'Welcome back';
-        if (sub) sub.textContent = 'Your next binge is already waiting. Dive back in.';
-      }
-      overlay.classList.add('active');
-      overlay.setAttribute('aria-hidden', 'false');
-      setTimeout(() => {
-        overlay.classList.remove('active');
-        overlay.setAttribute('aria-hidden', 'true');
-      }, 4000);
-    }
 
     function toggleTheaterMode() {
       isTheaterMode = !isTheaterMode;
@@ -8930,25 +8839,65 @@
       }
     }
 
+    function isTvShow(item) {
+      const media = item || activeMedia;
+      if (!media) return false;
+      const t = media.computedType || media.media_type || '';
+      if (t === 'tv' || t === 'anime' || t === 'cartoon') return true;
+      if (t === 'movie') return false;
+      return !!(media.name && !media.title);
+    }
+
     function currentEpisodeRuntimeMs() {
-      const ep = (currentSeasonEpisodes || []).find(e => e.episode_number === activeEpisode);
+      const ep = (currentSeasonEpisodes || []).find(e => Number(e.episode_number) === Number(activeEpisode));
       let mins = 0;
       if (ep && ep.runtime) mins = Number(ep.runtime) || 0;
       if (!mins && activeMedia && activeMedia.episode_run_time && activeMedia.episode_run_time[0]) {
         mins = Number(activeMedia.episode_run_time[0]) || 0;
       }
-      if (!mins) mins = 24;
-      // Advance a few seconds before the official runtime so the next ep is ready
-      return Math.max(90, (mins * 60 - 8) * 1000);
+      if (!mins) mins = 22;
+      return Math.max(45, (mins * 60 - 6) * 1000);
+    }
+
+    function currentSkipKey() {
+      if (!activeMedia) return '';
+      return `${activeMedia.id}_s${activeSeason}_e${activeEpisode}`;
+    }
+
+    function hideNextEpBanner() {
+      const b = document.getElementById('nextEpBanner');
+      if (b) b.classList.remove('active');
+    }
+
+    function showNextEpBanner(label) {
+      const b = document.getElementById('nextEpBanner');
+      const t = document.getElementById('nextEpBannerText');
+      if (t) t.textContent = label || 'Next episode starting…';
+      if (b) b.classList.add('active');
     }
 
     function scheduleAutoSkipForCurrentEpisode() {
       clearAutoSkipTimer();
+      hideNextEpBanner();
       if (!autoSkipEpisodes) return;
-      if (!activeMedia || activeMedia.computedType !== 'tv') return;
+      if (!isTvShow()) return;
+      const key = currentSkipKey();
+      if (key !== autoSkipKey) {
+        autoSkipKey = key;
+        autoSkipDeadline = Date.now() + currentEpisodeRuntimeMs();
+        lastEmbedProgress = { t: 0, d: 0, at: 0 };
+      }
+      const warnAt = Math.max(1000, autoSkipDeadline - Date.now() - 12000);
+      const fireAt = Math.max(1500, autoSkipDeadline - Date.now());
       autoSkipTimer = setTimeout(() => {
-        playNextEpisode(true);
-      }, currentEpisodeRuntimeMs());
+        showNextEpBanner('Next episode in 10s…');
+        autoSkipTimer = setTimeout(() => playNextEpisode(true), 10000);
+      }, warnAt);
+      if (fireAt <= 12000) {
+        clearAutoSkipTimer();
+        showNextEpBanner('Next episode starting…');
+        autoSkipTimer = setTimeout(() => playNextEpisode(true), fireAt);
+      }
     }
 
     function scheduleAutoFullscreen() {
@@ -8993,15 +8942,29 @@
 
     function bindEmbedEndedListener() {
       window.addEventListener('message', (e) => {
-        if (!autoSkipEpisodes) return;
-        if (!activeMedia || activeMedia.computedType !== 'tv') return;
+        if (!autoSkipEpisodes || !isTvShow()) return;
         const d = e.data;
         let ended = false;
+        let cur = null;
+        let dur = null;
+        const sniff = (obj) => {
+          if (!obj || typeof obj !== 'object') return;
+          const ev = String(obj.event || obj.type || obj.action || obj.name || obj.state || '');
+          if (/ended|complete|finished|endedplayback|next.?episode/i.test(ev)) ended = true;
+          if (obj.data && typeof obj.data === 'object') sniff(obj.data);
+          if (typeof obj.currentTime === 'number') cur = obj.currentTime;
+          if (typeof obj.duration === 'number') dur = obj.duration;
+          if (typeof obj.time === 'number') cur = obj.time;
+        };
         if (typeof d === 'string') {
           ended = /ended|complete|finished|next.?episode/i.test(d);
-        } else if (d && typeof d === 'object') {
-          const ev = String(d.event || d.type || d.action || d.name || '');
-          ended = /ended|complete|finished|endedplayback/i.test(ev);
+          try { sniff(JSON.parse(d)); } catch (_) {}
+        } else {
+          sniff(d);
+        }
+        if (typeof cur === 'number' && typeof dur === 'number' && dur > 30) {
+          lastEmbedProgress = { t: cur, d: dur, at: Date.now() };
+          if (cur >= dur - 1.25) ended = true;
         }
         if (ended) playNextEpisode(true);
       });
@@ -9009,10 +8972,16 @@
 
     function playEpisode(epNum, fromAuto) {
       if (!activeMedia) return;
-      activeEpisode = epNum;
+      activeEpisode = Number(epNum);
+      autoSkipKey = '';
+      hideNextEpBanner();
       document.querySelectorAll('.ep-named-card').forEach(b => {
         const n = parseInt(b.getAttribute('data-ep'), 10);
-        b.classList.toggle('active', n === epNum);
+        const on = n === Number(epNum);
+        b.classList.toggle('active', on);
+        if (on) {
+          try { b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (_) {}
+        }
       });
       loadActiveStream();
       addToHistory(activeMedia, activeSeason, activeEpisode);
@@ -9024,13 +8993,27 @@
         season: activeSeason,
         episode: activeEpisode
       }, false);
-      if (fromAuto) showToast('Next episode playing');
+      if (fromAuto) showToast('Now playing episode ' + activeEpisode);
     }
 
     async function playNextEpisode(fromAuto) {
-      if (!activeMedia || activeMedia.computedType !== 'tv') return;
-      const list = currentSeasonEpisodes || [];
-      const idx = list.findIndex(e => e.episode_number === activeEpisode);
+      if (!activeMedia || !isTvShow()) return;
+      if (autoSkipBusy) return;
+      autoSkipBusy = true;
+      setTimeout(() => { autoSkipBusy = false; }, 4000);
+      hideNextEpBanner();
+      let list = currentSeasonEpisodes || [];
+      if (!list.length && activeMedia.id) {
+        try {
+          const seasonKey = `${activeMedia.id}_s${activeSeason}`;
+          if (!seasonDataCache[seasonKey]) {
+            seasonDataCache[seasonKey] = await cachedFetch(`${TMDB_BASE}/tv/${activeMedia.id}/season/${activeSeason}?api_key=${apiKey}`);
+          }
+          list = (seasonDataCache[seasonKey].episodes || []);
+          currentSeasonEpisodes = list;
+        } catch (_) {}
+      }
+      const idx = list.findIndex(e => Number(e.episode_number) === Number(activeEpisode));
       if (idx > -1 && idx < list.length - 1) {
         playEpisode(list[idx + 1].episode_number, fromAuto);
         return;
