@@ -2276,6 +2276,7 @@
     .video-viewport-wrapper {
       position: relative;
       width: 100%;
+      aspect-ratio: 16 / 9;
     }
 
     .video-viewport {
@@ -2308,8 +2309,8 @@
         top: 0 !important;
         right: auto !important;
         bottom: auto !important;
-        width: 420px !important;
-        max-width: 34vw !important;
+        width: 470px !important;
+        max-width: 36vw !important;
         aspect-ratio: 16 / 9 !important;
         z-index: 45 !important;
         border-radius: 14px !important;
@@ -2318,7 +2319,7 @@
         margin: 0 !important;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.3s ease !important;
+        transition: opacity 0.35s ease !important;
       }
       .video-viewport.is-floating-dock.float-visible {
         opacity: 1 !important;
@@ -3943,7 +3944,7 @@
 
                   <div class="tv-auto-toggles" id="tvAutoTogglesBar" style="justify-content:flex-start;">
                     <button class="tv-auto-btn auto-fs" id="btnAutoFs" onclick="toggleAutoFullscreen()" title="Auto fullscreen for movies and shows">
-                      <i class="fa-solid fa-expand"></i> <span id="autoFsLabel">Auto FS Off</span>
+                      <i class="fa-solid fa-expand"></i> <span id="autoFsLabel">Auto Fullscreen Off</span>
                     </button>
                   </div>
 
@@ -3995,7 +3996,7 @@
                   </div>
 
                   <!-- Official Artworks & Wallpapers: Portrait is Default -->
-                  <div>
+                  <div id="filmArtworksSection">
                     <div class="block-heading-wrap">
                       <div class="block-heading">
                         <i class="fa-solid fa-palette"></i>
@@ -4789,32 +4790,19 @@
     }
 
     function ensureFloatSpacer(on) {
-      const wrapper = document.getElementById('videoViewportWrapper');
-      if (!wrapper || !videoViewport) return;
-      let spacer = document.getElementById('floatDockSpacer');
-      if (on) {
-        if (!spacer) {
-          spacer = document.createElement('div');
-          spacer.id = 'floatDockSpacer';
-          spacer.className = 'float-dock-spacer';
-          wrapper.appendChild(spacer);
-        }
-        // Match layout height so page does not jump
-        const h = Math.max(180, Math.round((wrapper.clientWidth || 640) * 9 / 16));
-        spacer.style.height = h + 'px';
-      } else if (spacer) {
-        spacer.remove();
-      }
+      // Wrapper keeps aspect-ratio so the page never jumps when the player floats.
+      const spacer = document.getElementById('floatDockSpacer');
+      if (spacer) spacer.remove();
     }
 
     function defaultFloatCorner() {
       const side = getFloatSidebarClearance();
       const vh = window.innerHeight;
-      const w = 420;
+      const w = 470;
       const h = w * 9 / 16;
-      // Lower-left, lifted further off the bottom edge
+      // Lower-left, lifted a little more off the bottom
       const left = side + 12;
-      const top = Math.max(80, vh - h - 118);
+      const top = Math.max(76, vh - h - 92);
       return { x: left, y: top };
     }
 
@@ -4826,9 +4814,8 @@
     let floatExitTimer = null;
 
     function getFloatTriggerEl() {
-      const shelves = document.getElementById('actorsMovieShelvesContainer');
-      if (shelves && shelves.children.length > 0) return shelves;
-      return document.getElementById('castBarAnchor')
+      return document.getElementById('filmArtworksSection')
+        || document.getElementById('castBarAnchor')
         || document.getElementById('videoViewportWrapper');
     }
 
@@ -4895,31 +4882,20 @@
       }
 
       const trigger = getFloatTriggerEl();
-      const wrapper = document.getElementById('videoViewportWrapper');
       if (!trigger) return;
 
       const tRect = trigger.getBoundingClientRect();
-      const vRect = wrapper ? wrapper.getBoundingClientRect() : null;
-      const vh = window.innerHeight;
+      const artBottom = tRect.bottom;
+      const isFloating = videoViewport.classList.contains('is-floating-dock');
 
-      // Main player in view → instant full player (no delay)
-      if (vRect && vRect.top < vh * 0.7 && vRect.bottom > 120) {
-        forceExitFloatingDock();
-        return;
-      }
-
-      // Any part of "Watch more with" visible → mini gone immediately
-      const sectionVisible = tRect.bottom > 0 && tRect.top < vh;
-      if (sectionVisible) {
-        forceExitFloatingDock();
-        return;
-      }
-
-      // Section fully off-screen (scrolled past) → show mini
-      // bottom <= 0 means entire section is above the viewport
-      if (tRect.bottom <= 0) {
+      // Hysteresis so it does not flicker / fight at the artwork edge.
+      // Show after the bottom of Film Artworks has left the top of the view.
+      if (!isFloating && artBottom <= 92) {
         enterFloatingDock();
         return;
+      }
+      if (isFloating && artBottom > 168) {
+        forceExitFloatingDock();
       }
     }
 
@@ -4935,14 +4911,13 @@
       if (typeof IntersectionObserver === 'undefined') return;
       floatObserver = new IntersectionObserver(() => updateFloatProgressive(), {
         root: null,
-        threshold: [0, 0.05, 0.1, 0.25, 0.5, 0.75, 1]
+        threshold: [0, 0.08, 0.2, 0.4, 0.7, 1],
+        rootMargin: '0px 0px -8% 0px'
       });
+      const art = document.getElementById('filmArtworksSection');
       const wrapper = document.getElementById('videoViewportWrapper');
-      const shelves = document.getElementById('actorsMovieShelvesContainer');
-      const cast = document.getElementById('castBarAnchor');
+      if (art) floatObserver.observe(art);
       if (wrapper) floatObserver.observe(wrapper);
-      if (shelves) floatObserver.observe(shelves);
-      if (cast) floatObserver.observe(cast);
       updateFloatProgressive();
     }
 
@@ -8800,7 +8775,7 @@
       const btn = document.getElementById('btnAutoFs');
       const lab = document.getElementById('autoFsLabel');
       if (btn) btn.classList.toggle('active', autoFullscreenOn);
-      if (lab) lab.textContent = autoFullscreenOn ? 'Auto FS On' : 'Auto FS Off';
+      if (lab) lab.textContent = autoFullscreenOn ? 'Auto Fullscreen On' : 'Auto Fullscreen Off';
     }
 
     function toggleAutoFullscreen() {
