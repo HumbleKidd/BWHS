@@ -5066,7 +5066,6 @@
       setupFloatingDockObserver();
       setupHeroCarouselControls();
       initTvAutoPrefs();
-      setupFullscreenControls();
 
       // Deep-link router decides the first view (bookmark / shared URL)
       // so we don't load the default trending catalog twice.
@@ -5104,7 +5103,6 @@
          #/favorites         → Favorites
          #/watch/movie/550   → Open movie player
          #/watch/tv/1399/1/5 → Open TV episode
-         #/related/movie/550 → Related titles for a film
          #/actor/123         → Actor filmography
     */
     const ROUTE_TYPE_MAP = {
@@ -5120,8 +5118,7 @@
       'find-similar': 'findsimilar', findsimilar: 'findsimilar',
       'next-play': 'nextplay', nextplay: 'nextplay',
       favorites: 'favorites', fav: 'favorites',
-      moods: 'moods', worlds: 'moods',
-      related: 'related'
+      moods: 'moods', worlds: 'moods', similar: 'moods'
     };
     const TYPE_ROUTE_MAP = {
       all: 'trending',
@@ -5136,14 +5133,11 @@
       findsimilar: 'find-similar',
       nextplay: 'next-play',
       favorites: 'favorites',
-      moods: 'moods',
-      related: 'related'
+      moods: 'moods'
     };
 
     let _routeSilent = false; // prevent hashchange loops
     let playerNavStack = []; // instant previous-title stack (avoids double back)
-    let lastAppliedHash = '';
-    let applyRouteToken = 0;
 
     function getHashRoute() {
       const raw = (window.location.hash || '#').replace(/^#\/?/, '').replace(/\/+$/, '');
@@ -5160,12 +5154,6 @@
         const season = parseInt(parts[3], 10) || 1;
         const episode = parseInt(parts[4], 10) || 1;
         if (id) return { view: 'player', mediaType, id, season, episode };
-      }
-
-      if (parts[0] === 'related' && parts[1] && parts[2]) {
-        const mediaType = parts[1] === 'tv' ? 'tv' : 'movie';
-        const id = parseInt(parts[2], 10);
-        if (id) return { view: 'related', mediaType, id };
       }
 
       if (parts[0] === 'actor' && parts[1]) {
@@ -5193,9 +5181,6 @@
         }
         return `#/watch/movie/${route.id}`;
       }
-      if (route.view === 'related' && route.id) {
-        return `#/related/${route.mediaType === 'tv' ? 'tv' : 'movie'}/${route.id}`;
-      }
       if (route.view === 'full_cast' && route.id) {
         return `#/cast/${route.mediaType || 'movie'}/${route.id}`;
       }
@@ -5209,45 +5194,28 @@
 
     function setRoute(route, push = true) {
       const hash = buildRouteHash(route);
-      const current = window.location.hash || '#/';
-      if (current === hash || current === hash.slice(1) || current === '#' + hash) {
-        try { window.history.replaceState(route, '', hash); } catch (_) {}
-        return;
-      }
+      if (window.location.hash === hash || window.location.hash === hash.slice(1)) return;
       _routeSilent = true;
-      try {
-        if (push) {
-          window.history.pushState(route, '', hash);
-        } else {
-          window.history.replaceState(route, '', hash);
-        }
-      } catch (_) {}
-      lastAppliedHash = hash;
-      setTimeout(() => { _routeSilent = false; }, 40);
+      if (push) {
+        window.history.pushState(route, '', hash);
+      } else {
+        window.history.replaceState(route, '', hash);
+      }
+      // microtask so hashchange (if any) is ignored
+      setTimeout(() => { _routeSilent = false; }, 0);
     }
 
     async function applyRoute(route) {
       if (!route) route = parseRoute(getHashRoute());
-      const token = ++applyRouteToken;
-      const hash = buildRouteHash(route);
-      lastAppliedHash = hash;
 
-      try {
       if (route.view === 'player' && route.id) {
+        // Always hydrate from TMDB so back/forward restores the correct title details
+        let item = null;
         const mediaType = route.mediaType || (route.item && (route.item.computedType || route.item.media_type)) || 'movie';
-        const sameOpen = activeMedia && Number(activeMedia.id) === Number(route.id)
-          && playerPageView.classList.contains('active')
-          && (activeMedia.computedType || activeMedia.media_type || mediaType) === mediaType
-          && Number(activeSeason || 1) === Number(route.season || 1)
-          && Number(activeEpisode || 1) === Number(route.episode || 1);
-        if (sameOpen) return;
-
-        let item = (route.item && route.item.id) ? route.item : null;
         try {
-          const fresh = await cachedFetch(`${TMDB_BASE}/${mediaType}/${route.id}?api_key=${apiKey}`);
-          if (fresh && fresh.id) item = { ...(item || {}), ...fresh };
+          item = await cachedFetch(`${TMDB_BASE}/${mediaType}/${route.id}?api_key=${apiKey}`);
         } catch (_) {}
-        if (token !== applyRouteToken) return;
+        if ((!item || !item.id) && route.item && route.item.id) item = route.item;
         if (item && item.id) {
           openMediaPage(item, mediaType, route.season || 1, route.episode || 1, false);
           snapToPlayerView();
@@ -5256,11 +5224,6 @@
           setRoute({ view: 'catalog', type: 'all' }, false);
           window.scrollTo({ top: 0, behavior: 'auto' });
         }
-        return;
-      }
-
-      if (route.view === 'related' && route.id) {
-        await openRelatedFromRoute(route, token);
         return;
       }
 
@@ -5292,10 +5255,6 @@
         return;
       }
 
-      if (route.type === 'related') {
-        return;
-      }
-
       if (route.type && route.type !== currentType) {
         selectType(route.type, false);
       } else if (!route.type) {
@@ -5303,9 +5262,6 @@
       }
       window.scrollTo({ top: 0, behavior: 'auto' });
       syncSocialPreview(activeMedia || getShareablePageContext().item);
-      } catch (err) {
-        try { console.warn('Route apply skipped', err); } catch (_) {}
-      }
     }
 
     function setupBrowserHistoryState() {
@@ -5316,15 +5272,12 @@
       // Browser back / forward
       window.addEventListener('popstate', (e) => {
         if (_routeSilent) return;
-        const route = (e.state && (e.state.view || e.state.type)) ? e.state : parseRoute(getHashRoute());
-        applyRoute(route);
+        applyRoute(e.state || parseRoute(getHashRoute()));
       });
 
       // Manual hash edits / external links
       window.addEventListener('hashchange', () => {
         if (_routeSilent) return;
-        const next = buildRouteHash(parseRoute(getHashRoute()));
-        if (next === lastAppliedHash) return;
         applyRoute(parseRoute(getHashRoute()));
       });
 
@@ -5344,15 +5297,6 @@
         toggleTheaterMode();
         return;
       }
-      if (isPlayerFullscreen()) {
-        exitPlayerFullscreen();
-        return;
-      }
-      // Use real history so browser / mobile back and the forward arrow stay in sync
-      if (window.history.length > 1) {
-        window.history.back();
-        return;
-      }
       if (playerNavStack.length) {
         const prev = playerNavStack.pop();
         if (prev && prev.item && prev.item.id) {
@@ -5370,9 +5314,13 @@
         }
       }
       closePlayerPage(false);
-      const catalogRoute = { view: 'catalog', type: currentType || 'all' };
-      setRoute(catalogRoute, false);
-      applyRoute(catalogRoute);
+      if (window.history.state && window.history.state.view === 'player') {
+        const catalogRoute = { view: 'catalog', type: currentType || 'all' };
+        setRoute(catalogRoute, false);
+        applyRoute(catalogRoute);
+      } else if (window.history.length > 1) {
+        window.history.back();
+      }
     }
 
 
@@ -6533,7 +6481,7 @@
       selectType('all');
     }
 
-    async function openDedicatedCategory(title, endpoint, type, opts = {}) {
+    async function openDedicatedCategory(title, endpoint, type) {
       currentPersonId = null;
       currentPersonName = '';
       currentKeywordId = null;
@@ -6541,6 +6489,7 @@
       searchQuery = '';
       searchInput.value = '';
       curatedShelvesContainer.innerHTML = '';
+      // Already closed by callers when needed; avoid push that forces Trending hash/title
       closePlayerPage(false);
       heroSpotlight.style.display = 'none';
       actorsShowcaseSection.style.display = 'none';
@@ -6548,11 +6497,11 @@
       topFilterSuite.classList.remove('active');
       searchFilterSuite.classList.remove('active');
       
+      // Keep currentType as-is so sidebar does not jump; title is set explicitly below
       feedTitle.innerHTML = `<i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> ${title}`;
       
-      if (!opts.skipRoute) {
-        setRoute({ view: 'catalog', type: currentType || 'all' }, false);
-      }
+      // Replace hash to a neutral catalog state without triggering selectType/Trending overwrite
+      setRoute({ view: 'catalog', type: currentType || 'all' }, false);
       
       mediaGrid.innerHTML = '';
       globalSeenKeys.clear();
@@ -6739,7 +6688,7 @@
     }
 
     async function fetchCatalog(page = 1, reset = false) {
-      if (currentType === 'favorites' || currentType === 'nextplay' || currentType === 'upcoming' || currentType === 'related') return;
+      if (currentType === 'favorites' || currentType === 'nextplay' || currentType === 'upcoming') return;
       if (currentType === 'moods') {
         if (reset) renderMoodsHub(true);
         else appendMoodCards(12);
@@ -7518,38 +7467,13 @@
       }
     }
 
-    async function openRelatedFromRoute(route, token = applyRouteToken) {
-      const mediaType = route.mediaType === 'tv' ? 'tv' : 'movie';
-      let item = route.item || null;
-      try {
-        const fresh = await cachedFetch(`${TMDB_BASE}/${mediaType}/${route.id}?api_key=${apiKey}`);
-        if (fresh && fresh.id) item = { ...(item || {}), ...fresh };
-      } catch (_) {}
-      if (token !== applyRouteToken) return;
-      const titleName = (item && (item.title || item.name)) || 'This title';
-      const endpoint = `${TMDB_BASE}/${mediaType}/${route.id}/recommendations?api_key=${apiKey}`;
-      if (playerPageView.classList.contains('active')) closePlayerPage(false);
-      currentType = 'related';
-      openDedicatedCategory(`Related Universe: "${titleName}"`, endpoint, mediaType, {
-        skipRoute: true
-      });
-      setRoute({ view: 'related', mediaType, id: route.id, item }, false);
-    }
-
     function expandSimilarUnlimited() {
       if (!activeMedia) return;
       const targetMedia = { ...activeMedia };
-      const mediaType = targetMedia.computedType || targetMedia.media_type || (targetMedia.title ? 'movie' : 'tv');
-      const endpoint = `${TMDB_BASE}/${mediaType}/${targetMedia.id}/recommendations?api_key=${apiKey}`;
+      const endpoint = `${TMDB_BASE}/${targetMedia.computedType}/${targetMedia.id}/recommendations?api_key=${apiKey}`;
+      // Close player without pushing a catalog/trending route so the Related title is not overwritten by hash routing
       closePlayerPage(false);
-      currentType = 'related';
-      openDedicatedCategory(`Related Universe: "${targetMedia.title || targetMedia.name}"`, endpoint, mediaType, { skipRoute: true });
-      setRoute({
-        view: 'related',
-        mediaType,
-        id: targetMedia.id,
-        item: targetMedia
-      }, true);
+      openDedicatedCategory(`Related Universe: "${targetMedia.title || targetMedia.name}"`, endpoint, targetMedia.computedType);
     }
 
     function openInfoModal() {
@@ -7922,8 +7846,7 @@
       playerPageView.classList.add('active');
 
       if (pushHistory) {
-        const st = window.history.state || {};
-        const sameTitle = st.view === 'player' && Number(st.id) === Number(item.id);
+        const alreadyInPlayer = !!(window.history.state && window.history.state.view === 'player');
         setRoute({
           view: 'player',
           item: activeMedia,
@@ -7931,7 +7854,7 @@
           id: item.id,
           season: activeSeason,
           episode: activeEpisode
-        }, !sameTitle);
+        }, !alreadyInPlayer);
       }
 
       snapToPlayerView();
@@ -8886,112 +8809,29 @@
     }
 
     function requestPlayerFullscreen() {
-      const iframe = document.getElementById('playerFrame');
       const vp = document.getElementById('videoViewport') || document.getElementById('playerPageView');
-      const tryFs = (el) => {
-        if (!el) return false;
-        const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-        if (!req) return false;
-        try {
-          const out = req.call(el);
-          if (out && typeof out.catch === 'function') out.catch(() => {});
-          return true;
-        } catch (_) {
-          return false;
-        }
-      };
-      // Prefer the iframe so the embed's own fullscreen icon can exit
-      if (!tryFs(iframe)) tryFs(vp);
+      if (!vp) return;
+      const req = vp.requestFullscreen || vp.webkitRequestFullscreen || vp.mozRequestFullScreen || vp.msRequestFullscreen;
+      if (req) {
+        try { req.call(vp); } catch (_) {}
+      }
       try {
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage({ type: 'fullscreen', action: 'enter' }, '*');
-          iframe.contentWindow.postMessage({ event: 'fullscreen', value: true }, '*');
+        if (playerFrame && playerFrame.contentWindow) {
+          playerFrame.contentWindow.postMessage({ type: 'fullscreen', action: 'enter' }, '*');
         }
       } catch (_) {}
     }
 
     function exitPlayerFullscreen() {
-      try {
-        if (playerFrame && playerFrame.contentWindow) {
-          playerFrame.contentWindow.postMessage({ type: 'fullscreen', action: 'exit' }, '*');
-          playerFrame.contentWindow.postMessage({ event: 'fullscreen', value: false }, '*');
-        }
-      } catch (_) {}
-      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
       if (exit && isPlayerFullscreen()) {
-        try {
-          const out = exit.call(document);
-          if (out && typeof out.catch === 'function') out.catch(() => {});
-        } catch (_) {}
+        try { exit.call(document); } catch (_) {}
       }
     }
 
     function togglePlayerFullscreen() {
       if (isPlayerFullscreen()) exitPlayerFullscreen();
       else requestPlayerFullscreen();
-    }
-
-    function setupFullscreenControls() {
-      if (window._bwhsFsBound) return;
-      window._bwhsFsBound = true;
-
-      const onFsChange = () => {
-        // Keep embed in sync when the document FS state changes
-        try {
-          if (playerFrame && playerFrame.contentWindow) {
-            const on = isPlayerFullscreen();
-            playerFrame.contentWindow.postMessage({ type: 'fullscreen', action: on ? 'enter' : 'exit' }, '*');
-          }
-        } catch (_) {}
-      };
-      document.addEventListener('fullscreenchange', onFsChange);
-      document.addEventListener('webkitfullscreenchange', onFsChange);
-
-      window.addEventListener('message', (ev) => {
-        const raw = ev && ev.data;
-        if (raw == null) return;
-        let msg = raw;
-        if (typeof raw === 'string') {
-          try { msg = JSON.parse(raw); } catch (_) { msg = { type: raw }; }
-        }
-        if (!msg || typeof msg !== 'object') return;
-        const kind = String(msg.type || msg.event || msg.action || msg.name || '').toLowerCase();
-        const val = msg.value != null ? msg.value : msg.fullscreen;
-        const wantsExit = kind.includes('exit') || kind === 'fullscreenchange' && val === false
-          || (kind.includes('fullscreen') && (val === false || msg.action === 'exit' || msg.state === 'off'));
-        const wantsToggle = kind === 'togglefullscreen' || kind === 'fullscreen-toggle';
-        if (wantsExit && isPlayerFullscreen()) exitPlayerFullscreen();
-        else if (wantsToggle) togglePlayerFullscreen();
-      });
-
-      // If the wrapper is fullscreen, the embed FS icon often cannot exit.
-      // Treat a tap in the bottom-right control zone as exit.
-      const cornerExit = (x, y) => {
-        if (!isPlayerFullscreen()) return false;
-        const el = document.fullscreenElement || document.webkitFullscreenElement;
-        if (!el || el === playerFrame) return false;
-        const w = window.innerWidth || 0;
-        const h = window.innerHeight || 0;
-        if (x >= w - 88 && y >= h - 88) {
-          exitPlayerFullscreen();
-          return true;
-        }
-        return false;
-      };
-      document.addEventListener('click', (e) => {
-        if (cornerExit(e.clientX, e.clientY)) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }, true);
-      document.addEventListener('touchend', (e) => {
-        const t = e.changedTouches && e.changedTouches[0];
-        if (!t) return;
-        if (cornerExit(t.clientX, t.clientY)) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }, { capture: true, passive: false });
     }
 
     function findHistoryEntry(item) {
