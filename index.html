@@ -2514,6 +2514,102 @@
       gap: 8px;
     }
 
+
+    /* Native <select> option lists must stay readable in every theme */
+    select, #seasonDropdown, .mobile-year-select, .tv-suite-top select {
+      color-scheme: dark;
+      color: #ffffff !important;
+    }
+    select option,
+    #seasonDropdown option,
+    .mobile-year-select option,
+    .tv-suite-top select option {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+    body.theme-lavender select option,
+    body.theme-mint select option {
+      background-color: #1e1b4b !important;
+      color: #ffffff !important;
+    }
+
+    .brand-hub-block {
+      margin: 6px 0 22px;
+    }
+    .brand-hub-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .brand-hub-head h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-hub-head span.hint {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .brand-rail {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 4px 2px 10px;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+    }
+    .brand-tile {
+      flex: 0 0 auto;
+      width: 148px;
+      height: 92px;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 10px 12px;
+      border: 2px solid transparent;
+      scroll-snap-align: start;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .brand-tile:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--brand-accent, var(--primary));
+    }
+    .brand-tile img {
+      max-width: 112px;
+      max-height: 42px;
+      object-fit: contain;
+      filter: none;
+    }
+    .brand-tile .brand-name {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #0f172a;
+      text-align: center;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 132px;
+    }
+    body.theme-night .brand-tile,
+    body.theme-sunset .brand-tile,
+    body.theme-emerald .brand-tile,
+    body.theme-royal .brand-tile {
+      background: #f8fafc;
+    }
+
     .tv-suite-top select,
     #seasonDropdown {
       appearance: none;
@@ -2529,21 +2625,6 @@
       box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
       cursor: pointer;
       min-width: 180px;
-      color-scheme: light;
-    }
-    #seasonDropdown option,
-    .tv-suite-top select option,
-    .mobile-year-select option {
-      background-color: #ffffff;
-      color: #0f172a;
-      font-weight: 700;
-    }
-    body.theme-night #seasonDropdown option,
-    body.theme-sunset #seasonDropdown option,
-    body.theme-emerald #seasonDropdown option,
-    body.theme-royal #seasonDropdown option {
-      background-color: #121216;
-      color: #f8fafc;
     }
     .season-pill-wrap {
       position: relative;
@@ -2559,6 +2640,88 @@
       color: #fff;
       pointer-events: none;
       font-size: 0.7rem;
+    }
+
+
+    .brand-showcase {
+      display: none;
+      position: relative;
+      width: 100%;
+      min-height: 280px;
+      border-radius: 22px;
+      overflow: hidden;
+      margin: 0 0 22px;
+      background: #050816;
+      box-shadow: var(--shadow-xl);
+    }
+    .brand-showcase.active { display: block; }
+    .brand-showcase-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.42) saturate(1.15);
+    }
+    .brand-showcase-wash {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(5,8,22,0.92) 0%, rgba(5,8,22,0.55) 48%, rgba(5,8,22,0.25) 100%),
+                  linear-gradient(180deg, rgba(5,8,22,0.1) 0%, rgba(5,8,22,0.88) 100%);
+    }
+    .brand-showcase-inner {
+      position: relative;
+      z-index: 2;
+      min-height: 280px;
+      padding: 28px 24px;
+      display: flex;
+      align-items: flex-end;
+      gap: 22px;
+    }
+    .brand-showcase-logo-card {
+      width: 168px;
+      height: 110px;
+      border-radius: 18px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      flex-shrink: 0;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+    }
+    .brand-showcase-logo-card img {
+      max-width: 140px;
+      max-height: 78px;
+      object-fit: contain;
+    }
+    .brand-showcase-copy { color: #fff; max-width: 720px; }
+    .brand-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fde68a;
+      margin-bottom: 8px;
+    }
+    .brand-showcase-copy h2 {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+    .brand-showcase-copy p {
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      max-width: 54ch;
+    }
+    @media (max-width: 700px) {
+      .brand-showcase-inner { flex-direction: column; align-items: flex-start; padding: 20px 16px; }
+      .brand-showcase-logo-card { width: 132px; height: 88px; }
     }
 
     .tv-auto-toggles {
@@ -3921,10 +4084,6 @@
                 </div>
 
                 <div class="player-dock">
-                  <div class="leftoff-banner" id="leftOffBanner">
-                    <i class="fa-solid fa-location-dot"></i>
-                    <span id="leftOffBannerText">Catch up from where you left off.</span>
-                  </div>
                   <div class="server-helper-tip">
                     <i class="fa-solid fa-circle-info"></i>
                     <span id="serverNowPlayingTip">Now playing from: VixSrc — switch below if this source stalls.</span>
@@ -3934,12 +4093,12 @@
                   <div class="server-bar-wrap">
                     <div class="server-bar" id="serverBar">
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
-                      <button class="srv-btn active" id="btn-vidcore" onclick="manualSwitchServer('vidcore')">VidCore</button>
-                      <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
+                      <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-videasy" onclick="manualSwitchServer('videasy')">Videasy</button>
-                      <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
                       <button class="srv-btn" id="btn-vidsrc" onclick="manualSwitchServer('vidsrc')">VidSrc</button>
+                      <button class="srv-btn" id="btn-vidcore" onclick="manualSwitchServer('vidcore')">VidCore</button>
                       <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')">VidLink</button>
+                      <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
                       <button class="srv-btn" id="btn-moviesapi" onclick="manualSwitchServer('moviesapi')">MoviesAPI</button>
                       <button class="srv-btn" id="btn-vidbolt" onclick="manualSwitchServer('vidbolt')">VidBolt (multi-language)</button>
                     </div>
@@ -3952,7 +4111,7 @@
                   <div class="mobile-server-selector" onclick="openServerSheet()">
                     <span>
                       <i class="fa-solid fa-server" style="color:var(--primary);"></i>
-                      <span id="mobServerLabel">Playing from: VidCore</span>
+                      <span id="mobServerLabel">Playing from: VixSrc</span>
                     </span>
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
@@ -3960,9 +4119,6 @@
                   <div class="tv-auto-toggles" id="tvAutoTogglesBar" style="justify-content:flex-start;">
                     <button class="tv-auto-btn auto-fs" id="btnAutoFs" onclick="toggleAutoFullscreen()" title="Auto fullscreen for movies and shows">
                       <i class="fa-solid fa-expand"></i> <span id="autoFsLabel">Auto Fullscreen Off</span>
-                    </button>
-                    <button class="tv-auto-btn auto-skip" id="btnAutoNext" onclick="toggleAutoNext()" title="Automatically play the next TV episode when this one ends">
-                      <i class="fa-solid fa-forward-step"></i> <span id="autoNextLabel">Auto Next Off</span>
                     </button>
                   </div>
 
@@ -4121,6 +4277,18 @@
                 </div>
               </div>
             </div>
+
+            <div class="filter-group-wrap" id="sortFilterWrap">
+              <span class="filter-label"><i class="fa-solid fa-arrow-down-wide-short" style="color:var(--accent-pink);"></i> Sort:</span>
+              <div class="filter-scroll-wrapper">
+                <div class="filter-row" id="sortsContainer">
+                  <button class="filter-chip active" data-sort="popularity.desc" onclick="setCatalogSort('popularity.desc')">Popular</button>
+                  <button class="filter-chip" data-sort="latest" onclick="setCatalogSort('latest')">Latest</button>
+                  <button class="filter-chip" data-sort="rating" onclick="setCatalogSort('rating')">Top Rated</button>
+                  <button class="filter-chip" data-sort="title" onclick="setCatalogSort('title')">A–Z</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Dynamic Multi-Select Search Filter Suite -->
@@ -4219,6 +4387,21 @@
             </div>
             <div class="upcoming-grid" id="upcomingGrid"></div>
           </div>
+
+          <section class="brand-showcase" id="brandShowcase">
+            <img class="brand-showcase-bg" id="brandShowcaseBg" alt="" />
+            <div class="brand-showcase-wash"></div>
+            <div class="brand-showcase-inner">
+              <div class="brand-showcase-logo-card">
+                <img id="brandShowcaseLogo" alt="Brand logo" />
+              </div>
+              <div class="brand-showcase-copy">
+                <div class="brand-kicker" id="brandShowcaseKicker"><i class="fa-solid fa-clapperboard"></i> Studio Collection</div>
+                <h2 id="brandShowcaseTitle">Brand</h2>
+                <p id="brandShowcaseBlurb">Browse the full catalogue, then sort by genre, year, popularity or latest.</p>
+              </div>
+            </div>
+          </section>
 
           <h2 class="section-title" id="feedTitle">
             <i class="fa-solid fa-compass" style="color: var(--primary);"></i> Discover Catalog
@@ -4377,23 +4560,23 @@
         <span>Select Video Server</span>
         <button class="btn-circle" onclick="closeServerSheet(null)"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <button class="sheet-nav-item active" id="sheet-vidcore" onclick="selectServerFromSheet('vidcore')">
-        <span>VidCore</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
+      <button class="sheet-nav-item active" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
         <span>VixSrc</span>
       </button>
       <button class="sheet-nav-item" id="sheet-videasy" onclick="selectServerFromSheet('videasy')">
         <span>Videasy</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
-        <span>VidAPI</span>
-      </button>
       <button class="sheet-nav-item" id="sheet-vidsrc" onclick="selectServerFromSheet('vidsrc')">
         <span>VidSrc</span>
       </button>
+      <button class="sheet-nav-item" id="sheet-vidcore" onclick="selectServerFromSheet('vidcore')">
+        <span>VidCore</span>
+      </button>
       <button class="sheet-nav-item" id="sheet-vidlink" onclick="selectServerFromSheet('vidlink')">
         <span>VidLink</span>
+      </button>
+      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
+        <span>VidAPI</span>
       </button>
       <button class="sheet-nav-item" id="sheet-moviesapi" onclick="selectServerFromSheet('moviesapi')">
         <span>MoviesAPI</span>
@@ -4545,16 +4728,16 @@
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vidcore', 'vixsrc', 'videasy', 'vidsrc', 'vidlink', 'vidapi', 'moviesapi', 'vidbolt'];
+    const PROVIDERS = ['vixsrc', 'videasy', 'vidsrc', 'vidcore', 'vidlink', 'vidapi', 'moviesapi', 'vidbolt'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
-      vidcore: 'VidCore',
       videasy: 'Videasy',
       vixsrc: 'VixSrc',
       vidbolt: 'VidBolt (multi-language)',
       vidapi: 'VidAPI',
       vidsrc: 'VidSrc',
       vidlink: 'VidLink',
+      vidcore: 'VidCore',
       moviesapi: 'MoviesAPI'
     };
     let currentProviderIndex = 0;
@@ -4618,6 +4801,8 @@
     let currentType = 'all'; 
     let currentGenre = null;
     let currentYearFilter = null;
+    let currentSort = 'popularity.desc';
+    let currentBrand = null;
     let currentPersonId = null;
     let currentPersonName = '';
     let currentKeywordId = null;
@@ -4653,10 +4838,6 @@
     let currentSeasonEpisodes = [];
     let autoFullscreenOn = localStorage.getItem('humble_auto_fs') === '1';
     let autoFsTimer = null;
-    let autoNextOn = localStorage.getItem('humble_auto_next') !== '0';
-    let autoNextArmed = false;
-    let runtimeFallbackTimer = null;
-    let lastAutoNextAt = 0;
     const EP_STROKES = [
       'linear-gradient(135deg, #4f46e5, #06b6d4)',
       'linear-gradient(135deg, #ec4899, #f59e0b)',
@@ -5712,6 +5893,9 @@
       currentKeywordName = '';
       currentGenre = null;
       currentYearFilter = null;
+      currentSort = 'popularity.desc';
+      currentBrand = null;
+      if (typeof hideBrandShowcase === 'function') hideBrandShowcase();
       searchQuery = '';
       searchInput.value = '';
       
@@ -6103,6 +6287,9 @@
       } else {
         topFilterSuite.classList.add('active');
       }
+      document.querySelectorAll('#sortsContainer .filter-chip').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-sort') === (currentSort || 'popularity.desc'));
+      });
 
       // Fix sidebar active for findsimilar
       document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
@@ -6417,6 +6604,192 @@
       return Array.from(unique.values()).sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0) || (b.popularity || 0) - (a.popularity || 0));
     }
 
+
+    const STREAM_NETWORKS = [
+      { id: 213, name: 'Netflix', accent: '#e50914', prefer: 'tv' },
+      { id: 1024, name: 'Amazon Prime Video', accent: '#00A8E1', prefer: 'tv' },
+      { id: 2739, name: 'Disney+', accent: '#113CCF', prefer: 'tv' },
+      { id: 3186, name: 'Max', accent: '#002BE7', prefer: 'tv' },
+      { id: 453, name: 'Hulu', accent: '#1CE783', prefer: 'tv' },
+      { id: 4330, name: 'Paramount+', accent: '#0064FF', prefer: 'tv' },
+      { id: 3353, name: 'Peacock', accent: '#000000', prefer: 'tv' },
+      { id: 2552, name: 'Apple TV+', accent: '#111111', prefer: 'tv' },
+      { id: 1112, name: 'Crunchyroll', accent: '#F47521', prefer: 'tv' },
+      { id: 49, name: 'HBO', accent: '#7b2ff7', prefer: 'tv' },
+      { id: 88, name: 'FX', accent: '#ff3c00', prefer: 'tv' },
+      { id: 174, name: 'AMC', accent: '#c8102e', prefer: 'tv' }
+    ];
+    const MOVIE_STUDIOS = [
+      { id: 33, name: 'Universal Pictures', accent: '#138acb', prefer: 'movie' },
+      { id: 174, name: 'Warner Bros. Pictures', accent: '#1d4ed8', prefer: 'movie' },
+      { id: 5, name: 'Columbia Pictures', accent: '#2563eb', prefer: 'movie' },
+      { id: 34, name: 'Sony Pictures', accent: '#7c3aed', prefer: 'movie' },
+      { id: 4, name: 'Paramount Pictures', accent: '#0284c7', prefer: 'movie' },
+      { id: 2, name: 'Walt Disney Studios', accent: '#2563eb', prefer: 'movie' },
+      { id: 41077, name: 'A24', accent: '#111111', prefer: 'movie' },
+      { id: 1632, name: 'Lionsgate', accent: '#0f766e', prefer: 'movie' },
+      { id: 420, name: 'Marvel Studios', accent: '#e11d48', prefer: 'movie' },
+      { id: 3, name: 'Pixar', accent: '#0284c7', prefer: 'movie' },
+      { id: 521, name: 'DreamWorks', accent: '#059669', prefer: 'movie' },
+      { id: 25, name: '20th Century Studios', accent: '#b45309', prefer: 'movie' }
+    ];
+
+    function getSortParam(mediaIsTv) {
+      const s = currentSort || 'popularity.desc';
+      if (s === 'latest') return mediaIsTv ? 'first_air_date.desc' : 'primary_release_date.desc';
+      if (s === 'rating') return 'vote_average.desc';
+      if (s === 'title') return mediaIsTv ? 'name.asc' : 'title.asc';
+      return 'popularity.desc';
+    }
+
+    function ratingGate(sortVal) {
+      return sortVal === 'rating' ? '&vote_count.gte=80' : '';
+    }
+
+    function setCatalogSort(sortKey) {
+      currentSort = sortKey || 'popularity.desc';
+      document.querySelectorAll('#sortsContainer .filter-chip').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-sort') === currentSort);
+      });
+      closePlayerPage();
+      fetchCatalog(1, true);
+    }
+
+    function renderBrandHubs(anchorEl) {
+      const existing = document.getElementById('brandHubWrap');
+      if (existing) existing.remove();
+      if (currentType !== 'all' || searchQuery) return;
+      const wrap = document.createElement('div');
+      wrap.id = 'brandHubWrap';
+      wrap.innerHTML = `
+        <div class="brand-hub-block">
+          <div class="brand-hub-head">
+            <h3><i class="fa-solid fa-satellite-dish" style="color:var(--primary);"></i> Movie Networks</h3>
+            <span class="hint">Tap a house to binge their catalogue</span>
+          </div>
+          <div class="brand-rail" id="networkBrandRail"></div>
+        </div>
+        <div class="brand-hub-block">
+          <div class="brand-hub-head">
+            <h3><i class="fa-solid fa-industry" style="color:var(--accent);"></i> Studios</h3>
+            <span class="hint">The labels behind the blockbusters</span>
+          </div>
+          <div class="brand-rail" id="studioBrandRail"></div>
+        </div>
+      `;
+      if (anchorEl && anchorEl.parentNode) {
+        anchorEl.parentNode.insertBefore(wrap, anchorEl.nextSibling);
+      } else if (curatedShelvesContainer) {
+        curatedShelvesContainer.appendChild(wrap);
+      }
+      fillBrandRail('networkBrandRail', STREAM_NETWORKS, 'network');
+      fillBrandRail('studioBrandRail', MOVIE_STUDIOS, 'studio');
+    }
+
+    function fillBrandRail(railId, list, kind) {
+      const rail = document.getElementById(railId);
+      if (!rail) return;
+      rail.innerHTML = '';
+      list.forEach(brand => {
+        const tile = document.createElement('button');
+        tile.type = 'button';
+        tile.className = 'brand-tile';
+        tile.style.setProperty('--brand-accent', brand.accent);
+        tile.title = brand.name;
+        tile.innerHTML = `
+          <img alt="${brand.name}" data-brand-logo="1" />
+          <span class="brand-name">${brand.name}</span>
+        `;
+        tile.addEventListener('click', () => openBrandHub(kind, brand));
+        rail.appendChild(tile);
+        hydrateBrandLogo(tile.querySelector('img'), kind, brand);
+      });
+    }
+
+    async function hydrateBrandLogo(img, kind, brand) {
+      if (!img) return;
+      try {
+        const pathType = kind === 'network' ? 'network' : 'company';
+        const data = await cachedFetch(`${TMDB_BASE}/${pathType}/${brand.id}?api_key=${apiKey}`);
+        if (data && data.logo_path) {
+          img.src = `https://image.tmdb.org/t/p/w300${data.logo_path}`;
+        } else {
+          img.remove();
+        }
+      } catch (_) {
+        img.remove();
+      }
+    }
+
+    function hideBrandShowcase() {
+      const el = document.getElementById('brandShowcase');
+      if (el) el.classList.remove('active');
+    }
+
+    async function paintBrandShowcase(brand) {
+      const box = document.getElementById('brandShowcase');
+      if (!box || !brand) return;
+      const kind = brand.kind === 'network' ? 'network' : 'company';
+      const kicker = document.getElementById('brandShowcaseKicker');
+      const title = document.getElementById('brandShowcaseTitle');
+      const blurb = document.getElementById('brandShowcaseBlurb');
+      const logo = document.getElementById('brandShowcaseLogo');
+      const bg = document.getElementById('brandShowcaseBg');
+      title.textContent = brand.name;
+      kicker.innerHTML = brand.kind === 'network'
+        ? '<i class="fa-solid fa-satellite-dish"></i> Streaming Network'
+        : '<i class="fa-solid fa-industry"></i> Film Studio';
+      blurb.textContent = brand.kind === 'network'
+        ? `You are browsing ${brand.name} originals and exclusives. Sort by genre, year, popularity or latest.`
+        : `You are inside the ${brand.name} vault — every title this studio put on screens.`;
+      box.classList.add('active');
+      try {
+        const info = await cachedFetch(`${TMDB_BASE}/${kind}/${brand.id}?api_key=${apiKey}`);
+        if (info && info.logo_path && logo) logo.src = `https://image.tmdb.org/t/p/w300${info.logo_path}`;
+        if (info && info.origin_country && Array.isArray(info.origin_country) && info.origin_country.length) {
+          blurb.textContent += ` Headquarters vibe: ${info.origin_country.slice(0,2).join(', ')}.`;
+        }
+      } catch (_) {}
+      try {
+        const url = brand.kind === 'network'
+          ? `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${brand.id}&sort_by=popularity.desc`
+          : `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${brand.id}&sort_by=popularity.desc`;
+        const data = await cachedFetch(url);
+        const hit = (data.results || []).find(i => i.backdrop_path);
+        if (hit && bg) bg.src = `${IMAGE_ORIGINAL}${hit.backdrop_path}`;
+      } catch (_) {}
+    }
+
+    function openBrandHub(kind, brand) {
+      currentBrand = { kind, id: brand.id, name: brand.name, prefer: brand.prefer || (kind === 'network' ? 'tv' : 'movie'), accent: brand.accent };
+      currentType = 'brand';
+      currentGenre = null;
+      currentYearFilter = null;
+      currentSort = 'popularity.desc';
+      currentPersonId = null;
+      currentKeywordId = null;
+      searchQuery = '';
+      if (searchInput) searchInput.value = '';
+      closePlayerPage(false);
+      heroSpotlight.style.display = 'none';
+      if (actorsShowcaseSection) actorsShowcaseSection.style.display = 'none';
+      upcomingViewContainer.style.display = 'none';
+      topFilterSuite.classList.add('active');
+      searchFilterSuite.classList.remove('active');
+      document.querySelectorAll('#sortsContainer .filter-chip').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-sort') === currentSort);
+      });
+      buildGenreChips();
+      buildYearChips();
+      curatedShelvesContainer.innerHTML = '';
+      paintBrandShowcase(currentBrand);
+      const icon = kind === 'network' ? 'fa-satellite-dish' : 'fa-industry';
+      feedTitle.innerHTML = `<i class="fa-solid ${icon}" style="color:var(--primary);"></i> ${brand.name}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setRoute({ view: 'catalog', type: 'brand' }, true);
+      fetchCatalog(1, true);
+    }
+
     function buildHomeShelves() {
       const pinned = [
         { id: 'nowmovies', title: 'Most Popular Movies Right Now', icon: 'fa-film', color: '#ec4899', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/movie/now_playing?api_key=${apiKey}` },
@@ -6545,6 +6918,7 @@
 
     async function loadCuratedShelves() {
       curatedShelvesContainer.innerHTML = '';
+      hideBrandShowcase();
       const shelves = currentType === 'all' ? buildHomeShelves() : null;
       if (!shelves || searchQuery || currentGenre || currentYearFilter) return;
 
@@ -6578,6 +6952,9 @@
           </div>
         `;
         curatedShelvesContainer.appendChild(shelfElem);
+        if (currentType === 'all' && shelf.id === 'nowtv') {
+          renderBrandHubs(shelfElem);
+        }
         const titleEl = shelfElem.querySelector('.shelf-title');
         if (titleEl) {
           titleEl.style.cursor = 'pointer';
@@ -6655,7 +7032,7 @@
         return `${TMDB_BASE}/search/multi?api_key=${apiKey}&query=${encodeURIComponent(searchQuery)}&page=${page}`;
       }
 
-      const isTv = currentType === 'tv' || currentType === 'anime' || currentType === 'cartoon';
+      const isTv = currentType === 'tv' || currentType === 'anime' || currentType === 'cartoon' || (currentBrand && currentBrand.prefer === 'tv');
       let yearQuery = '';
       
       if (currentYearFilter) {
@@ -6671,39 +7048,48 @@
 
       const genreQuery = currentGenre ? `&with_genres=${currentGenre}` : '';
       const excludeBadTvGenres = `&without_genres=10763,10764,10767,10766`;
+      const sortBy = getSortParam(isTv);
+      const sortGate = ratingGate(currentSort);
+
+      if (currentBrand) {
+        if (currentBrand.kind === 'network') {
+          return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${currentBrand.id}&sort_by=${sortBy}${sortGate}&page=${page}${genreQuery}${yearQuery}${excludeBadTvGenres}`;
+        }
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${currentBrand.id}&sort_by=${sortBy}${sortGate}&page=${page}${genreQuery}${yearQuery}`;
+      }
 
       if (currentType === 'latest') {
         if (currentGenre || currentYearFilter) {
-          return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=popularity.desc&vote_count.gte=250&page=${page}${genreQuery}${yearQuery}`;
+          return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=${sortBy}${sortGate}&vote_count.gte=250&page=${page}${genreQuery}${yearQuery}`;
         }
         return `${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=${page}`;
       }
 
       if (currentType === 'cartoon') {
         const combinedGenres = currentGenre ? `16,${currentGenre}` : '16';
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=${combinedGenres}&with_original_language=en&sort_by=popularity.desc&page=${page}${yearQuery}${excludeBadTvGenres}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=${combinedGenres}&with_original_language=en&sort_by=${sortBy}${sortGate}&page=${page}${yearQuery}${excludeBadTvGenres}`;
       }
 
       if (currentType === 'animation') {
         const combinedGenres = currentGenre ? `16,${currentGenre}` : '16';
-        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=${combinedGenres}&sort_by=popularity.desc&page=${page}${yearQuery}`;
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_genres=${combinedGenres}&sort_by=${sortBy}${sortGate}&page=${page}${yearQuery}`;
       }
 
       if (currentType === 'anime') {
         const combinedGenres = currentGenre ? `16,${currentGenre}` : '16';
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=${combinedGenres}&with_original_language=ja&sort_by=popularity.desc&page=${page}${yearQuery}${excludeBadTvGenres}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_genres=${combinedGenres}&with_original_language=ja&sort_by=${sortBy}${sortGate}&page=${page}${yearQuery}${excludeBadTvGenres}`;
       }
 
       if (currentType === 'movie') {
-        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=popularity.desc&page=${page}${genreQuery}${yearQuery}`;
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=${sortBy}${sortGate}&page=${page}${genreQuery}${yearQuery}`;
       }
 
       if (currentType === 'tv') {
-        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=popularity.desc&page=${page}${genreQuery}${yearQuery}${excludeBadTvGenres}`;
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=${sortBy}${sortGate}&page=${page}${genreQuery}${yearQuery}${excludeBadTvGenres}`;
       }
 
       if (currentGenre || currentYearFilter) {
-        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=popularity.desc&page=${page}${genreQuery}${yearQuery}`;
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=${sortBy}${sortGate}&page=${page}${genreQuery}${yearQuery}`;
       }
 
       return `${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=${page}`;
@@ -6853,6 +7239,9 @@
         feedTitle.innerHTML = `<i class="fa-solid fa-film" style="color: var(--primary);"></i> Movies Catalog${genreLabel}${yearLabel}`;
       } else if (currentType === 'tv') {
         feedTitle.innerHTML = `<i class="fa-solid fa-tv" style="color: var(--primary);"></i> TV Shows Catalog${genreLabel}${yearLabel}`;
+      } else if (currentType === 'brand' && currentBrand) {
+        const extra = [currentBrand.name, currentSort === 'latest' ? 'Latest' : currentSort === 'rating' ? 'Top Rated' : currentSort === 'title' ? 'A–Z' : 'Popular'].filter(Boolean).join(' · ');
+        feedTitle.innerHTML = `<i class="fa-solid fa-clapperboard" style="color: var(--primary);"></i> ${extra}${genreLabel}${yearLabel}`;
       } else if (currentType === 'nextplay') {
         feedTitle.innerHTML = `<i class="fa-solid fa-list-check" style="color: var(--primary);"></i> Must Watch & Next Play List`;
       } else if (currentType === 'favorites') {
@@ -7944,8 +8333,6 @@
       playerFrame.src = '';
       playerNavStack = [];
       clearAutoFsTimer();
-      clearRuntimeFallback();
-      autoNextArmed = false;
       closeContextMenu();
 
       if (desktopRightPanel) {
@@ -8509,6 +8896,7 @@
       });
     }
 
+
     function getProviderUrl(providerName) {
       if (!activeMedia) return '';
       const id = activeMedia.id;
@@ -8539,8 +8927,8 @@
 
         case 'videasy':
           return isTv
-            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=true`
-            : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=true`;
+            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=false`
+            : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=false`;
 
         case 'vidbolt':
           return isTv
@@ -8557,15 +8945,10 @@
             ? `https://vixsrc.to/tv/${id}/${s}/${e}?autoplay=1`
             : `https://vixsrc.to/movie/${id}?autoplay=1`;
 
-        case 'vidcore': {
-          const title = encodeURIComponent(activeMedia.title || activeMedia.name || 'BWHS');
-          const posterPath = activeMedia.poster_path || activeMedia.backdrop_path || '';
-          const poster = posterPath ? encodeURIComponent(`${IMAGE_ORIGINAL}${posterPath}`) : '';
-          const extras = `autoplay=true&theme=4f46e5&color=4f46e5&lang=en&title=${title}${poster ? `&poster=${poster}` : ''}`;
+        case 'vidcore':
           return isTv
-            ? `https://vidcore.org/embed/tv/${id}/${s}/${e}?${extras}`
-            : `https://vidcore.org/embed/movie/${id}?${extras}`;
-        }
+            ? `https://vidcore.org/embed/tv/${id}/${s}/${e}?autoplay=true&theme=4f46e5`
+            : `https://vidcore.org/embed/movie/${id}?autoplay=true&theme=4f46e5`;
 
         case 'twoembed':
           return isTv
@@ -8579,8 +8962,8 @@
 
         default:
           return isTv
-            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=true`
-            : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=true`;
+            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=false`
+            : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=false`;
       }
     }
 
@@ -8794,12 +9177,10 @@
       executeStreamLoad();
       scheduleAutoFullscreen();
       updateLeftOffBanner();
-      armAutoNext();
     }
 
     function initTvAutoPrefs() {
       syncAutoFsButton();
-      syncAutoNextButton();
     }
 
     function syncAutoFsButton() {
@@ -8817,124 +9198,6 @@
       if (autoFullscreenOn) scheduleAutoFullscreen();
       else clearAutoFsTimer();
     }
-
-    function syncAutoNextButton() {
-      const btn = document.getElementById('btnAutoNext');
-      const lab = document.getElementById('autoNextLabel');
-      if (btn) btn.classList.toggle('active', autoNextOn);
-      if (lab) lab.textContent = autoNextOn ? 'Auto Next On' : 'Auto Next Off';
-    }
-
-    function toggleAutoNext() {
-      autoNextOn = !autoNextOn;
-      localStorage.setItem('humble_auto_next', autoNextOn ? '1' : '0');
-      syncAutoNextButton();
-      showToast(autoNextOn ? 'Auto next episode on' : 'Auto next episode off');
-      if (autoNextOn) armAutoNext();
-      else clearRuntimeFallback();
-    }
-
-    function clearRuntimeFallback() {
-      if (runtimeFallbackTimer) {
-        clearTimeout(runtimeFallbackTimer);
-        runtimeFallbackTimer = null;
-      }
-    }
-
-    function isTvLikeMedia(item) {
-      if (!item) return false;
-      const type = item.computedType || item.media_type || (item.title ? 'movie' : 'tv');
-      return type === 'tv' || type === 'anime' || type === 'cartoon' || (!item.title && !!item.name);
-    }
-
-    function playNextEpisode() {
-      if (!activeMedia || !isTvLikeMedia(activeMedia)) return;
-      if (!playerPageView || !playerPageView.classList.contains('active')) return;
-
-      const now = Date.now();
-      if (now - lastAutoNextAt < 8000) return;
-      lastAutoNextAt = now;
-
-      const eps = currentSeasonEpisodes || [];
-      const lastEp = eps.length
-        ? Math.max(...eps.map(e => Number(e.episode_number)))
-        : Number(activeEpisode || 1);
-
-      if (Number(activeEpisode) < lastEp) {
-        playEpisode(Number(activeEpisode) + 1);
-        showToast('Auto next: Episode ' + (Number(activeEpisode)));
-        return;
-      }
-
-      const sel = document.getElementById('seasonDropdown');
-      if (!sel || !sel.options.length) {
-        showToast('Series finished');
-        return;
-      }
-      const seasons = [...sel.options].map(o => Number(o.value)).filter(Boolean);
-      const nextSeason = seasons.find(s => s > Number(activeSeason));
-      if (!nextSeason) {
-        showToast('Series finished — no next season');
-        return;
-      }
-      activeSeason = nextSeason;
-      sel.value = String(nextSeason);
-      renderNamedEpisodeList(activeMedia.id, activeSeason).then(() => {
-        playEpisode(1);
-        showToast('Auto next: Season ' + nextSeason + ' Episode 1');
-      });
-    }
-
-    function armAutoNext() {
-      autoNextArmed = true;
-      clearRuntimeFallback();
-      if (!autoNextOn || !activeMedia || !isTvLikeMedia(activeMedia)) return;
-      if (!playerPageView || !playerPageView.classList.contains('active')) return;
-
-      const ep = (currentSeasonEpisodes || []).find(
-        e => Number(e.episode_number) === Number(activeEpisode)
-      );
-      const minutes = (ep && Number(ep.runtime)) || 44;
-      const waitMs = Math.max(8, minutes + 2) * 60 * 1000;
-      runtimeFallbackTimer = setTimeout(() => {
-        if (autoNextOn && autoNextArmed && playerPageView.classList.contains('active')) {
-          autoNextArmed = false;
-          playNextEpisode();
-        }
-      }, waitMs);
-    }
-
-    function isEndedMessage(data) {
-      if (data == null) return false;
-      if (typeof data === 'string') {
-        const raw = data.toLowerCase();
-        return raw.includes('ended') || raw.includes('complete') || raw === 'end' || raw.includes('vidcore:ended');
-      }
-      if (typeof data !== 'object') return false;
-      const bits = [
-        data.event, data.type, data.action, data.state,
-        data.name, data.status, data.message,
-        data.data && data.data.event,
-        data.data && data.data.type,
-        data.data && data.data.state
-      ].filter(Boolean).map(v => String(v).toLowerCase());
-      return bits.some(ev =>
-        ev === 'ended' || ev === 'complete' || ev === 'endedevent' ||
-        ev === 'player_ended' || ev === 'videoended' || ev === 'end' ||
-        ev === 'vidcore:ended' || ev.includes('vidcore:ended')
-      );
-    }
-
-    window.addEventListener('message', (e) => {
-      if (!autoNextOn || !autoNextArmed) return;
-      if (!playerPageView || !playerPageView.classList.contains('active')) return;
-      if (!isTvLikeMedia(activeMedia)) return;
-      if (isEndedMessage(e.data)) {
-        autoNextArmed = false;
-        clearRuntimeFallback();
-        playNextEpisode();
-      }
-    });
 
     function clearAutoFsTimer() {
       if (autoFsTimer) {
@@ -8990,33 +9253,7 @@
 
     function updateLeftOffBanner() {
       const banner = document.getElementById('leftOffBanner');
-      const text = document.getElementById('leftOffBannerText');
-      if (!banner || !text) return;
-      if (!activeMedia) {
-        banner.classList.remove('active');
-        return;
-      }
-      const prev = findHistoryEntry(activeMedia);
-      const type = activeMedia.computedType || activeMedia.media_type || (activeMedia.title ? 'movie' : 'tv');
-      const title = activeMedia.title || activeMedia.name || 'this title';
-      const savedTime = (watchTimestamps && watchTimestamps[activeMedia.id]) || '';
-      let epName = '';
-      if (currentSeasonEpisodes && currentSeasonEpisodes.length) {
-        const ep = currentSeasonEpisodes.find(e => Number(e.episode_number) === Number(activeEpisode));
-        if (ep && ep.name) epName = ep.name;
-      }
-      if (type === 'tv' || type === 'anime' || type === 'cartoon' || (!activeMedia.title && activeMedia.name)) {
-        const label = epName
-          ? `You left off at Season ${activeSeason}, Episode ${activeEpisode} — ${epName}`
-          : `You left off at Season ${activeSeason}, Episode ${activeEpisode}`;
-        text.innerHTML = `<strong>${title}</strong><br>${label}${savedTime ? ` · last seen ${savedTime}` : ''}. The glowing pill is the current episode.`;
-        banner.classList.add('active');
-      } else if (prev || savedTime) {
-        text.innerHTML = `<strong>${title}</strong><br>You left off this film${savedTime ? ` around ${savedTime}` : ''}. Resume here to catch up.`;
-        banner.classList.add('active');
-      } else {
-        banner.classList.remove('active');
-      }
+      if (banner) banner.classList.remove('active');
     }
 
     function playEpisode(epNum) {
@@ -9041,7 +9278,6 @@
         episode: activeEpisode
       }, false);
       updateLeftOffBanner();
-      armAutoNext();
     }
 
     function executeStreamLoad() {
@@ -9084,7 +9320,6 @@
       };
 
       playerFrame.src = url;
-      armAutoNext();
 
       // If a source hangs / black-screens, hop to the next embed automatically.
       playerFailoverTimer = setTimeout(() => {
