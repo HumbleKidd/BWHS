@@ -32,7 +32,7 @@
   <link rel="dns-prefetch" href="https://vidapi.ru" />
   <link rel="dns-prefetch" href="https://vidsrc.xyz" />
   <link rel="dns-prefetch" href="https://moviesapi.club" />
-  <link rel="dns-prefetch" href="https://multiembed.mov" />
+  <link rel="dns-prefetch" href="https://vidcore.org" />
   <link rel="dns-prefetch" href="https://vidlink.pro" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -2529,6 +2529,21 @@
       box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
       cursor: pointer;
       min-width: 180px;
+      color-scheme: light;
+    }
+    #seasonDropdown option,
+    .tv-suite-top select option,
+    .mobile-year-select option {
+      background-color: #ffffff;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    body.theme-night #seasonDropdown option,
+    body.theme-sunset #seasonDropdown option,
+    body.theme-emerald #seasonDropdown option,
+    body.theme-royal #seasonDropdown option {
+      background-color: #121216;
+      color: #f8fafc;
     }
     .season-pill-wrap {
       position: relative;
@@ -3919,12 +3934,12 @@
                   <div class="server-bar-wrap">
                     <div class="server-bar" id="serverBar">
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
-                      <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
+                      <button class="srv-btn active" id="btn-vidcore" onclick="manualSwitchServer('vidcore')">VidCore</button>
+                      <button class="srv-btn" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-videasy" onclick="manualSwitchServer('videasy')">Videasy</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
                       <button class="srv-btn" id="btn-vidsrc" onclick="manualSwitchServer('vidsrc')">VidSrc</button>
                       <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')">VidLink</button>
-                      <button class="srv-btn" id="btn-superembed" onclick="manualSwitchServer('superembed')">SuperEmbed</button>
                       <button class="srv-btn" id="btn-moviesapi" onclick="manualSwitchServer('moviesapi')">MoviesAPI</button>
                       <button class="srv-btn" id="btn-vidbolt" onclick="manualSwitchServer('vidbolt')">VidBolt (multi-language)</button>
                     </div>
@@ -3937,7 +3952,7 @@
                   <div class="mobile-server-selector" onclick="openServerSheet()">
                     <span>
                       <i class="fa-solid fa-server" style="color:var(--primary);"></i>
-                      <span id="mobServerLabel">Playing from: VixSrc</span>
+                      <span id="mobServerLabel">Playing from: VidCore</span>
                     </span>
                     <i class="fa-solid fa-chevron-down"></i>
                   </div>
@@ -4362,7 +4377,10 @@
         <span>Select Video Server</span>
         <button class="btn-circle" onclick="closeServerSheet(null)"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <button class="sheet-nav-item active" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
+      <button class="sheet-nav-item active" id="sheet-vidcore" onclick="selectServerFromSheet('vidcore')">
+        <span>VidCore</span>
+      </button>
+      <button class="sheet-nav-item" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
         <span>VixSrc</span>
       </button>
       <button class="sheet-nav-item" id="sheet-videasy" onclick="selectServerFromSheet('videasy')">
@@ -4376,9 +4394,6 @@
       </button>
       <button class="sheet-nav-item" id="sheet-vidlink" onclick="selectServerFromSheet('vidlink')">
         <span>VidLink</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-superembed" onclick="selectServerFromSheet('superembed')">
-        <span>SuperEmbed</span>
       </button>
       <button class="sheet-nav-item" id="sheet-moviesapi" onclick="selectServerFromSheet('moviesapi')">
         <span>MoviesAPI</span>
@@ -4530,16 +4545,16 @@
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'videasy', 'vidsrc', 'vidlink', 'vidapi', 'superembed', 'moviesapi', 'vidbolt'];
+    const PROVIDERS = ['vidcore', 'vixsrc', 'videasy', 'vidsrc', 'vidlink', 'vidapi', 'moviesapi', 'vidbolt'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
+      vidcore: 'VidCore',
       videasy: 'Videasy',
       vixsrc: 'VixSrc',
       vidbolt: 'VidBolt (multi-language)',
       vidapi: 'VidAPI',
       vidsrc: 'VidSrc',
       vidlink: 'VidLink',
-      superembed: 'SuperEmbed',
       moviesapi: 'MoviesAPI'
     };
     let currentProviderIndex = 0;
@@ -8542,10 +8557,15 @@
             ? `https://vixsrc.to/tv/${id}/${s}/${e}?autoplay=1`
             : `https://vixsrc.to/movie/${id}?autoplay=1`;
 
-        case 'superembed':
+        case 'vidcore': {
+          const title = encodeURIComponent(activeMedia.title || activeMedia.name || 'BWHS');
+          const posterPath = activeMedia.poster_path || activeMedia.backdrop_path || '';
+          const poster = posterPath ? encodeURIComponent(`${IMAGE_ORIGINAL}${posterPath}`) : '';
+          const extras = `autoplay=true&theme=4f46e5&color=4f46e5&lang=en&title=${title}${poster ? `&poster=${poster}` : ''}`;
           return isTv
-            ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`
-            : `https://multiembed.mov/?video_id=${id}&tmdb=1`;
+            ? `https://vidcore.org/embed/tv/${id}/${s}/${e}?${extras}`
+            : `https://vidcore.org/embed/movie/${id}?${extras}`;
+        }
 
         case 'twoembed':
           return isTv
@@ -8888,7 +8908,7 @@
       if (data == null) return false;
       if (typeof data === 'string') {
         const raw = data.toLowerCase();
-        return raw.includes('ended') || raw.includes('complete') || raw === 'end';
+        return raw.includes('ended') || raw.includes('complete') || raw === 'end' || raw.includes('vidcore:ended');
       }
       if (typeof data !== 'object') return false;
       const bits = [
@@ -8900,7 +8920,8 @@
       ].filter(Boolean).map(v => String(v).toLowerCase());
       return bits.some(ev =>
         ev === 'ended' || ev === 'complete' || ev === 'endedevent' ||
-        ev === 'player_ended' || ev === 'videoended' || ev === 'end'
+        ev === 'player_ended' || ev === 'videoended' || ev === 'end' ||
+        ev === 'vidcore:ended' || ev.includes('vidcore:ended')
       );
     }
 
