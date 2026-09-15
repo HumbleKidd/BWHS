@@ -2588,6 +2588,15 @@
       color-scheme: dark;
       color: #ffffff !important;
     }
+    select.trend-dd, .trend-dd {
+      color-scheme: light !important;
+      color: #0f172a !important;
+      background: #eef2ff !important;
+    }
+    select.trend-dd option, .trend-dd option {
+      background: #ffffff !important;
+      color: #0f172a !important;
+    }
     select option,
     #seasonDropdown option,
     .mobile-year-select option,
@@ -3924,13 +3933,37 @@
       border: 1px solid var(--border);
       margin-top: 4px;
     }
+    .trend-filter-bar {
+      background: #ffffff;
+    }
+    body.theme-night .trend-filter-bar,
+    body.theme-sunset .trend-filter-bar,
+    body.theme-emerald .trend-filter-bar,
+    body.theme-royal .trend-filter-bar {
+      background: var(--surface);
+    }
     .trend-dd {
       appearance: none; -webkit-appearance: none;
-      background: var(--primary-light); color: var(--text-main);
-      border: 1.5px solid var(--primary); border-radius: 9999px;
+      background: #eef2ff !important;
+      color: #0f172a !important;
+      border: 1.5px solid #4f46e5 !important;
+      border-radius: 9999px;
       padding: 9px 30px 9px 14px;
       font-size: 0.78rem; font-weight: 800; cursor: pointer;
       box-shadow: var(--shadow-sm);
+      color-scheme: light;
+    }
+    .trend-dd option {
+      background: #ffffff !important;
+      color: #0f172a !important;
+    }
+    body.theme-night .trend-dd,
+    body.theme-sunset .trend-dd,
+    body.theme-emerald .trend-dd,
+    body.theme-royal .trend-dd {
+      background: var(--primary-light) !important;
+      color: var(--text-main) !important;
+      border-color: var(--primary) !important;
     }
     .trend-lane {
       display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 16px;
@@ -3993,7 +4026,15 @@
       background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.45));
       color: #fff; font-size: 2.2rem; z-index: 2;
     }
-    .trend-title { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+    .trend-title { font-size: 1.05rem; font-weight: 800; color: var(--text-main); cursor: pointer; }
+    .trend-title:hover .trend-title-text { color: var(--primary); }
+    .trend-all-eps {
+      display: inline-flex; align-items: center; margin-left: 6px;
+      border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--primary), var(--accent-pink));
+      color: #ffffff !important; font-size: 0.68rem; font-weight: 800;
+      padding: 3px 9px; border-radius: 9999px; letter-spacing: 0.3px;
+    }
     .trend-parts { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
     .trend-part-card { width: 72px; flex-shrink: 0; cursor: pointer; }
     .trend-part-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 8px; }
@@ -6592,13 +6633,17 @@
       const back = item.backdrop_path ? `${IMAGE_MID}${item.backdrop_path}` : poster;
       const wrap = document.createElement('article');
       wrap.className = 'trend-lane' + ((idx % 2) ? ' flip' : '');
+      wrap.dataset.mediaId = String(item.id);
+      wrap.dataset.mediaType = type;
       wrap.innerHTML = `
         <div class="trend-player-col">
           <div class="trend-viewport" id="trendVp_${item.id}">
             <img class="trend-poster-bg" src="${back}" alt="" loading="lazy" decoding="async" />
             <div class="trend-play-fab" onclick="playTrendSlot(${item.id}, '${type}')"><i class="fa-solid fa-circle-play"></i></div>
           </div>
-          <div class="trend-title">${title}</div>
+          <div class="trend-title" data-trend-open="${item.id}" style="cursor:pointer;">
+            <span class="trend-title-text">${title}</span>${type === 'tv' ? ' <button type="button" class="trend-all-eps" data-trend-open="'+item.id+'">(ALL EPISODES)</button>' : ''}
+          </div>
           <div class="server-bar trend-servers" id="trendSrv_${item.id}">${(PROVIDERS||[]).slice(0,8).map((p,i)=>`<button type="button" class="srv-btn${i===currentProviderIndex?' active':''}" data-prv="${p}" onclick="playTrendSlot(${item.id}, '${type}', '${p}')">${(PROVIDER_NAMES&&PROVIDER_NAMES[p])||p}</button>`).join('')}</div>
           <div class="trend-parts" id="trendParts_${item.id}"></div>
         </div>
@@ -6617,6 +6662,18 @@
           </div>
           <div class="trend-shots" id="trendShots_${item.id}"><span style="font-size:0.72rem;color:var(--text-muted);">Loading stills…</span></div>
         </div>`;
+      wrap.querySelectorAll('[data-trend-open]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openTrendFull(el.getAttribute('data-trend-open') || item.id);
+        });
+      });
+      const portrait = wrap.querySelector('.trend-portrait');
+      if (portrait) {
+        portrait.style.cursor = 'pointer';
+        portrait.addEventListener('click', () => openTrendFull(item.id));
+      }
       return wrap;
     }
 
@@ -6661,6 +6718,13 @@
         row.appendChild(card);
       });
       if (typeof setupRowSliderListener === 'function') setupRowSliderListener(sid, sid + '_thumb', sid + '_track');
+    }
+
+    function openTrendFull(id) {
+      const item = (trendingPool || []).find(i => Number(i.id) === Number(id));
+      if (!item) return;
+      const type = item.media_type || (item.title ? 'movie' : 'tv');
+      openMediaPage(item, type);
     }
 
     async function hydrateTrendLane(item) {
