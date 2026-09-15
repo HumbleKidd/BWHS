@@ -5092,6 +5092,42 @@
       return false;
     }
 
+    function mediaYearOf(item) {
+      const d = (item && (item.release_date || item.first_air_date)) || '';
+      const y = parseInt(String(d).slice(0, 4), 10);
+      return Number.isFinite(y) ? y : 0;
+    }
+
+    function isModernKnownCinema(item) {
+      if (!item || !item.id) return false;
+      if (!item.poster_path && !item.backdrop_path) return false;
+      if (!isCleanCinemaContent(item)) return false;
+      const y = mediaYearOf(item);
+      if (y && y < 2000) return false;
+      const votes = Number(item.vote_count || 0);
+      const pop = Number(item.popularity || 0);
+      const rating = Number(item.vote_average || 0);
+      if (votes >= 450 && rating >= 5.5) return true;
+      if (pop >= 30 && votes >= 140 && rating >= 5.4) return true;
+      if (votes >= 900) return true;
+      if (pop >= 55 && votes >= 80) return true;
+      return false;
+    }
+
+    function shuffleInPlace(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = arr[i];
+        arr[i] = arr[j];
+        arr[j] = t;
+      }
+      return arr;
+    }
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
     let currentType = 'all'; 
     let currentGenre = null;
     let currentYearFilter = null;
@@ -5144,6 +5180,8 @@
     let trendingLoading = false;
     let midRailPool = [];
     let midRailCursor = 0;
+    let midRailUsedIds = new Set();
+    let midRailReserve = [];
     let autoFsTimer = null;
     const EP_STROKES = [
       'linear-gradient(135deg, #4f46e5, #06b6d4)',
@@ -6397,22 +6435,22 @@
 
     async function loadHeroFeatured() {
       try {
+        const thisYear = new Date().getFullYear();
         const pages = currentType === 'trending'
           ? [
-              cachedFetch(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=1`),
-              cachedFetch(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=2`),
-              cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`)
+              cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`),
+              cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=800&primary_release_date.gte=2000-01-01&primary_release_date.lte=${thisYear}-12-31&page=${randInt(1, 12)}`),
+              cachedFetch(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=500&first_air_date.gte=2000-01-01&first_air_date.lte=${thisYear}-12-31&without_genres=10763,10764,10767&page=${randInt(1, 10)}`),
+              cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=popularity.desc&vote_count.gte=400&primary_release_date.gte=2010-01-01&page=${randInt(1, 15)}`)
             ]
           : [
               cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`),
               cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=1`)
             ];
         const packs = await Promise.all(pages);
-        const resWeek = packs[0] || {};
-        const resDay = packs[1] || {};
 
         const combined = packs.flatMap(p => p.results || [])
-          .filter(i => i.backdrop_path && i.poster_path && i.overview && isCleanCinemaContent(i));
+          .filter(i => i.backdrop_path && i.poster_path && i.overview && (currentType === 'trending' ? isModernKnownCinema(i) : isCleanCinemaContent(i)));
 
         const unique = [];
         const seen = new Set();
@@ -6422,7 +6460,7 @@
           unique.push(item);
         });
 
-                unique.sort(() => Math.random() - 0.5);
+        shuffleInPlace(unique);
         heroItems = unique.slice(0, currentType === 'trending' ? 18 : 8);
         
         if (heroItems.length > 0) {
@@ -6537,6 +6575,10 @@
         box.innerHTML = '';
         trendingPage = 1;
         trendingPool = [];
+        midRailPool = [];
+        midRailReserve = [];
+        midRailUsedIds = new Set();
+        midRailCursor = 0;
       }
       if (trendingLoading) return;
       trendingLoading = true;
@@ -6553,6 +6595,7 @@
       if (typeSel === 'tv' || typeSel === 'cartoon') mediaKind = 'tv';
 
       const isTv = mediaKind === 'tv';
+      const thisYear = new Date().getFullYear();
       const sortBy = sortKey === 'rating' ? 'vote_average.desc' : sortKey === 'latest' ? (isTv ? 'first_air_date.desc' : 'primary_release_date.desc') : 'popularity.desc';
       let yearQuery = '';
       if (yearId) {
@@ -6563,12 +6606,28 @@
           if (yObj.gte) yearQuery += `&${gteKey}=${yObj.gte}`;
           if (yObj.lte) yearQuery += `&${lteKey}=${yObj.lte}`;
         }
+      } else {
+        yearQuery += isTv
+          ? `&first_air_date.gte=2000-01-01&first_air_date.lte=${thisYear}-12-31`
+          : `&primary_release_date.gte=2000-01-01&primary_release_date.lte=${thisYear}-12-31`;
       }
       let genreQuery = genre ? `&with_genres=${genre}` : '';
       if (typeSel === 'animation' || typeSel === 'cartoon') {
         genreQuery = `&with_genres=${genre ? '16,'+genre : '16'}`;
       }
       const lang = typeSel === 'cartoon' ? '&with_original_language=en' : '';
+      const knownGate = sortKey === 'latest' ? '&vote_count.gte=80' : '&vote_count.gte=350';
+
+      const decadeWindows = [
+        { gte: '2000-01-01', lte: '2009-12-31' },
+        { gte: '2010-01-01', lte: '2016-12-31' },
+        { gte: '2017-01-01', lte: '2022-12-31' },
+        { gte: `${Math.max(2020, thisYear - 4)}-01-01`, lte: `${thisYear}-12-31` }
+      ];
+      const pickWindow = decadeWindows[randInt(0, decadeWindows.length - 1)];
+      const randPageA = randInt(1, 18);
+      const randPageB = randInt(1, 14);
+      const randPageC = randInt(1, 10);
 
       const urls = [];
       if (studioOpt && studioOpt.value) {
@@ -6576,42 +6635,49 @@
         const provider = studioOpt.dataset.provider;
         const nid = studioOpt.dataset.id;
         if (mediaKind !== 'tv' && company) {
-          urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${company}&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}`);
+          urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${company}&sort_by=${sortBy}${knownGate}&page=${randPageA}${genreQuery}${yearQuery}`);
         }
         if (mediaKind !== 'movie' && (provider || nid)) {
-          if (provider) urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_watch_providers=${provider}&watch_region=US&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}${lang}`);
-          else urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${nid}&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}${lang}`);
+          if (provider) urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_watch_providers=${provider}&watch_region=US&sort_by=${sortBy}${knownGate}&page=${randPageA}${genreQuery}${yearQuery}${lang}`);
+          else urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${nid}&sort_by=${sortBy}${knownGate}&page=${randPageA}${genreQuery}${yearQuery}${lang}`);
         }
       } else if (mediaKind === 'movie') {
-        urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}`);
-        urls.push(`${TMDB_BASE}/trending/movie/day?api_key=${apiKey}&page=${pg}`);
+        urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=${sortBy}${knownGate}&page=${randPageA}${genreQuery}${yearQuery}`);
+        urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=600&primary_release_date.gte=${pickWindow.gte}&primary_release_date.lte=${pickWindow.lte}&page=${randPageB}${genreQuery}`);
+        urls.push(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=${(pg % 3) + 1}`);
       } else if (mediaKind === 'tv') {
-        urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}${lang}&without_genres=10763,10764,10767`);
-        urls.push(`${TMDB_BASE}/trending/tv/day?api_key=${apiKey}&page=${pg}`);
+        urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=${sortBy}${knownGate}&page=${randPageA}${genreQuery}${yearQuery}${lang}&without_genres=10763,10764,10767`);
+        urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=400&first_air_date.gte=${pickWindow.gte}&first_air_date.lte=${pickWindow.lte}&without_genres=10763,10764,10767&page=${randPageB}${genreQuery}${lang}`);
+        urls.push(`${TMDB_BASE}/trending/tv/week?api_key=${apiKey}&page=${(pg % 3) + 1}`);
       } else {
-        urls.push(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=${pg}`);
-        urls.push(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=${pg}`);
+        urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=popularity.desc&vote_count.gte=400&primary_release_date.gte=2000-01-01&primary_release_date.lte=${thisYear}-12-31&page=${randPageA}${genreQuery}`);
+        urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=popularity.desc&vote_count.gte=300&first_air_date.gte=2000-01-01&first_air_date.lte=${thisYear}-12-31&without_genres=10763,10764,10767&page=${randPageB}${genreQuery}`);
+        urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=800&primary_release_date.gte=${pickWindow.gte}&primary_release_date.lte=${pickWindow.lte}&page=${randPageC}${genreQuery}`);
+        urls.push(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=${(pg % 3) + 1}`);
       }
 
       const packs = await Promise.all(urls.map(u => cachedFetch(u)));
-      const seen = new Set();
+      const seen = new Set(trendingPool.map(p => p.id));
       const items = [];
       packs.forEach(d => {
         (d.results || []).forEach(item => {
           if (!item || !item.id || seen.has(item.id)) return;
           if (!item.poster_path && !item.backdrop_path) return;
+          const stamped = { ...item, media_type: item.media_type || (item.title ? 'movie' : 'tv') };
+          if (!isModernKnownCinema(stamped) && sortKey !== 'latest') return;
           seen.add(item.id);
-          items.push({ ...item, media_type: item.media_type || (item.title ? 'movie' : 'tv') });
+          items.push(stamped);
         });
       });
-      items.sort((a,b) => (b.popularity||0)-(a.popularity||0));
+      shuffleInPlace(items);
       if (!items.length) { hasMorePages = false; trendingLoading = false; return; }
       const startIdx = trendingPool.length;
       items.forEach(it => {
         if (trendingPool.some(p => p.id === it.id)) return;
         trendingPool.push(it);
       });
-      midRailPool = midRailPool.concat(items);
+      midRailReserve = midRailReserve.concat(items.filter(i => i.poster_path));
+      shuffleInPlace(midRailReserve);
       const frag = document.createDocumentFragment();
       const fresh = trendingPool.slice(startIdx);
       fresh.forEach((item, i) => {
@@ -6699,13 +6765,45 @@
     async function fillTrendMidRail(sid, idx) {
       const row = document.getElementById(sid);
       if (!row) return;
-      if (!midRailPool.length) {
-        const extra = await cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=${(idx % 5) + 2}`);
-        midRailPool = (extra.results || []).filter(i => i.poster_path);
+      const thisYear = new Date().getFullYear();
+      if (midRailReserve.length < 24) {
+        try {
+          const extraPages = await Promise.all([
+            cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=700&primary_release_date.gte=2000-01-01&primary_release_date.lte=${thisYear}-12-31&page=${randInt(1, 20)}`),
+            cachedFetch(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=400&first_air_date.gte=2000-01-01&first_air_date.lte=${thisYear}-12-31&without_genres=10763,10764,10767&page=${randInt(1, 16)}`),
+            cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=${randInt(1, 5)}`)
+          ]);
+          extraPages.forEach(d => {
+            (d.results || []).forEach(item => {
+              if (!item || !item.id || !item.poster_path) return;
+              const stamped = { ...item, media_type: item.media_type || (item.title ? 'movie' : 'tv') };
+              if (!isModernKnownCinema(stamped)) return;
+              if (midRailReserve.some(p => p.id === item.id)) return;
+              midRailReserve.push(stamped);
+            });
+          });
+          shuffleInPlace(midRailReserve);
+        } catch (_) {}
       }
-      const start = (idx * 7) % Math.max(midRailPool.length, 1);
       const slice = [];
-      for (let i = 0; i < 14 && midRailPool.length; i++) slice.push(midRailPool[(start + i) % midRailPool.length]);
+      const usedHere = new Set();
+      for (let i = 0; i < midRailReserve.length && slice.length < 12; i++) {
+        const item = midRailReserve[i];
+        if (!item || !item.poster_path) continue;
+        if (midRailUsedIds.has(item.id) || usedHere.has(item.id)) continue;
+        usedHere.add(item.id);
+        midRailUsedIds.add(item.id);
+        slice.push(item);
+      }
+      if (slice.length < 8) {
+        shuffleInPlace(midRailReserve);
+        for (let i = 0; i < midRailReserve.length && slice.length < 12; i++) {
+          const item = midRailReserve[i];
+          if (!item || !item.poster_path || usedHere.has(item.id)) continue;
+          usedHere.add(item.id);
+          slice.push(item);
+        }
+      }
       row.innerHTML = '';
       slice.forEach(item => {
         const type = item.media_type || (item.title ? 'movie' : 'tv');
