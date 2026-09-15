@@ -1119,14 +1119,14 @@
     .hero-spotlight {
       position: relative;
       width: 100%;
-      min-height: 380px;
-      border-radius: 20px;
+      min-height: 62vh;
+      border-radius: 24px 24px 0 0;
       overflow: hidden;
-      margin-bottom: 24px;
+      margin-bottom: 0;
       background: #000000;
       display: flex;
       align-items: flex-end;
-      box-shadow: var(--shadow-md);
+      box-shadow: none;
       transform: translate3d(0, 0, 0);
       contain: paint;
       transition: opacity 0.2s ease;
@@ -1135,7 +1135,12 @@
 
     @media (min-width: 768px) {
       .hero-spotlight {
-        min-height: 420px;
+        min-height: 78vh;
+      }
+    }
+    @media (min-width: 1200px) {
+      .hero-spotlight {
+        min-height: 86vh;
       }
     }
 
@@ -1153,8 +1158,34 @@
     .hero-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.88) 90%);
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.08) 42%, transparent 70%);
       z-index: 3;
+      pointer-events: none;
+    }
+    .hero-spotlight::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 28%;
+      z-index: 4;
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg) 35%, transparent) 55%, var(--bg) 100%);
+    }
+    .hero-text-block {
+      background: linear-gradient(180deg, rgba(8,10,22,0.18), rgba(8,10,22,0.72));
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 12px 14px 14px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+    }
+    .hero-title, .hero-overview, .hero-meta {
+      text-shadow: 0 2px 10px rgba(0,0,0,0.65);
+    }
+    .hero-overview {
+      color: #f8fafc !important;
+      -webkit-line-clamp: 3 !important;
     }
 
     .hero-content {
@@ -2317,7 +2348,9 @@
       font-size: 0.78rem;
       font-weight: 800;
       cursor: pointer;
-      pointer-events: auto;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.35s ease;
       box-shadow: 0 8px 20px rgba(0,0,0,0.45);
       backdrop-filter: blur(8px);
     }
@@ -2329,6 +2362,11 @@
     .video-viewport:-webkit-full-screen .fs-exit-overlay,
     body.player-fs-active .fs-exit-overlay {
       display: inline-flex !important;
+    }
+    .video-viewport.fs-chrome-on .fs-exit-overlay,
+    body.player-fs-active.fs-chrome-on .fs-exit-overlay {
+      opacity: 1 !important;
+      pointer-events: auto !important;
     }
 
     /* Desktop Floating Mini Player — lower-left, small, menu-safe */
@@ -3853,6 +3891,84 @@
       color: var(--text-main);
     }
 
+
+    .trending-experience { display: none; flex-direction: column; gap: 16px; margin: 10px 0 28px; position: relative; z-index: 8; }
+    .trending-experience.active { display: flex; }
+    .trend-hero {
+      display: none; position: relative; width: 100%; min-height: 210px; max-height: 280px;
+      border-radius: 18px; overflow: hidden; background: #111827;
+      box-shadow: var(--shadow-md);
+    }
+    .trending-experience.active .trend-hero { display: block; }
+    .trend-hero-track {
+      display: flex; gap: 8px; overflow: hidden; height: 280px;
+    }
+    .trend-hero-card {
+      position: relative; flex: 0 0 38%; min-width: 180px; height: 100%;
+      border-radius: 0; overflow: hidden; cursor: pointer;
+    }
+    .trend-hero-card img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.78); }
+    .trend-hero-card span {
+      position: absolute; left: 10px; right: 10px; bottom: 10px;
+      color: #fff; font-weight: 800; font-size: 0.86rem;
+      text-shadow: 0 2px 8px #000;
+    }
+    @media (max-width: 700px) {
+      .trend-hero, .trend-hero-track { min-height: 168px; height: 168px; max-height: 168px; }
+      .trend-hero-card { flex-basis: 62%; }
+    }
+    .trend-filter-bar {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      background: var(--surface); padding: 12px 12px; border-radius: 16px;
+      box-shadow: var(--shadow-md); position: relative; z-index: 12;
+      border: 1px solid var(--border);
+      margin-top: 4px;
+    }
+    .trend-dd {
+      appearance: none; -webkit-appearance: none;
+      background: var(--primary-light); color: var(--text-main);
+      border: 1.5px solid var(--primary); border-radius: 9999px;
+      padding: 9px 30px 9px 14px;
+      font-size: 0.78rem; font-weight: 800; cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+    .trend-lane {
+      display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 16px;
+      background: var(--surface); border-radius: 20px; padding: 14px;
+      box-shadow: var(--shadow-sm); content-visibility: auto; contain-intrinsic-size: 0 420px;
+    }
+    @media (max-width: 900px) {
+      .trend-lane { grid-template-columns: 1fr; padding: 12px; }
+    }
+    .trend-player-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .trend-viewport {
+      position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px;
+      overflow: hidden; background: #000; cursor: pointer;
+    }
+    .trend-viewport iframe, .trend-viewport img.trend-poster-bg {
+      position: absolute; inset: 0; width: 100%; height: 100%; border: none; object-fit: cover;
+    }
+    .trend-play-fab {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.45));
+      color: #fff; font-size: 2.2rem; z-index: 2;
+    }
+    .trend-title { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+    .trend-parts { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .trend-part-card { width: 72px; flex-shrink: 0; cursor: pointer; }
+    .trend-part-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 8px; }
+    .trend-art-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .trend-poster-syn { display: flex; gap: 12px; align-items: flex-start; }
+    .trend-portrait { width: 110px; aspect-ratio: 2/3; object-fit: cover; border-radius: 12px; flex-shrink: 0; background: #000; }
+    .trend-syn { font-size: 0.82rem; line-height: 1.45; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden; }
+    .trend-grad-line { height: 3px; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--accent-pink), var(--accent)); }
+    .trend-shots { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .trend-shot { position: relative; flex-shrink: 0; border-radius: 10px; overflow: hidden; cursor: pointer; background: var(--surface-subtle); }
+    .trend-shot.landscape { width: 168px; aspect-ratio: 16/9; }
+    .trend-shot.portrait { width: 92px; aspect-ratio: 2/3; }
+    .trend-shot img { width: 100%; height: 100%; object-fit: cover; }
+    .trend-shot .art-download-badge { position: absolute; right: 6px; bottom: 6px; }
+
   </style>
 </head>
 <body>
@@ -3904,8 +4020,12 @@
     </div>
 
     <nav class="sidebar-menu">
-      <button class="sidebar-btn active" id="sideAll" onclick="selectType('all')">
-        <i class="fa-solid fa-fire" style="color: #f59e0b;"></i>
+      <button class="sidebar-btn active" id="sideHome" onclick="selectType('all')">
+        <i class="fa-solid fa-house" style="color: #f59e0b;"></i>
+        <span>Home</span>
+      </button>
+      <button class="sidebar-btn" id="sideTrending" onclick="selectType('trending')">
+        <i class="fa-solid fa-fire" style="color: #f97316;"></i>
         <span>Trending</span>
       </button>
       <button class="sidebar-btn" id="sideMovie" onclick="selectType('movie')">
@@ -4153,6 +4273,12 @@
                   <div class="tv-auto-toggles" id="tvAutoTogglesBar" style="justify-content:flex-start;">
                     <button class="tv-auto-btn auto-fs" id="btnAutoFs" onclick="toggleAutoFullscreen()" title="Auto fullscreen for movies and shows">
                       <i class="fa-solid fa-expand"></i> <span id="autoFsLabel">Auto Fullscreen Off</span>
+                    </button>
+                    <button class="tv-auto-btn auto-skip" id="btnAutoNext" onclick="toggleAutoNext()" title="Play the next episode automatically">
+                      <i class="fa-solid fa-forward-step"></i> <span id="autoNextLabel">Auto Next Off</span>
+                    </button>
+                    <button class="tv-auto-btn" id="btnAutoPlay" onclick="toggleAutoPlayPref()" title="Auto play when a title opens">
+                      <i class="fa-solid fa-circle-play"></i> <span id="autoPlayLabel">Auto Play Off</span>
                     </button>
                   </div>
 
@@ -4405,7 +4531,33 @@
           </section>
 
           <!-- Top Actors Showcase -->
-          <div class="actors-section" id="actorsShowcaseSection">
+          
+          <section class="trending-experience" id="trendingExperience">
+            <div class="trend-hero" id="trendHero">
+              <div class="trend-hero-track" id="trendHeroTrack"></div>
+            </div>
+            <div class="trend-filter-bar" id="trendFilterBar">
+              <select class="trend-dd" id="trendGenre" onchange="applyTrendingFilters()"></select>
+              <select class="trend-dd" id="trendType" onchange="applyTrendingFilters()">
+                <option value="all">All Types</option>
+                <option value="movie">Movies</option>
+                <option value="tv">TV Shows</option>
+                <option value="animation">Animation</option>
+                <option value="cartoon">Cartoons</option>
+              </select>
+              <select class="trend-dd" id="trendYear" onchange="applyTrendingFilters()"></select>
+              <select class="trend-dd" id="trendSort" onchange="applyTrendingFilters()">
+                <option value="popularity.desc">Popularity</option>
+                <option value="rating">Top Stars / Rating</option>
+                <option value="latest">Latest</option>
+              </select>
+              <select class="trend-dd" id="trendStudio" onchange="applyTrendingFilters()">
+                <option value="">All Studios / Networks</option>
+              </select>
+            </div>
+            <div id="trendingLanes"></div>
+          </section>
+<div class="actors-section" id="actorsShowcaseSection">
             <div class="shelf-header">
               <h3 class="shelf-title" onclick="selectType('actors_page')">
                 <i class="fa-solid fa-star" style="color: var(--accent);"></i>
@@ -4486,8 +4638,8 @@
   <!-- Mobile Bottom Navigation -->
   <nav class="mobile-nav">
     <button class="m-nav-item active" id="mTabAll" onclick="selectType('all')">
-      <i class="fa-solid fa-fire" style="color: #f59e0b;"></i>
-      <span>Trending</span>
+      <i class="fa-solid fa-house" style="color: #f59e0b;"></i>
+      <span>Home</span>
     </button>
     <button class="m-nav-item" id="mTabMovie" onclick="selectType('movie')">
       <i class="fa-solid fa-film" style="color: #3b82f6;"></i>
@@ -4544,6 +4696,14 @@
         <div class="mobile-cw-scroll" id="mobileCwContainer" style="display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:6px;"></div>
       </div>
 
+      <button class="sheet-nav-item" onclick="selectType('all'); closeMoreSheet(null);">
+        <i class="fa-solid fa-house" style="color:#f59e0b;"></i>
+        <span>Home</span>
+      </button>
+      <button class="sheet-nav-item" onclick="selectType('trending'); closeMoreSheet(null);">
+        <i class="fa-solid fa-fire" style="color:#f97316;"></i>
+        <span>Trending Now</span>
+      </button>
       <button class="sheet-nav-item" onclick="selectType('upcoming'); closeMoreSheet(null);">
         <i class="fa-solid fa-calendar-days" style="color:#10b981;"></i>
         <span>Upcoming (Popular Future Films)</span>
@@ -4886,7 +5046,14 @@
     let seasonDataCache = {};
     let currentSeasonEpisodes = [];
     let autoFullscreenOn = localStorage.getItem('humble_auto_fs') === '1';
+    let autoNextOn = localStorage.getItem('humble_auto_next') !== '0';
+    let autoPlayOn = localStorage.getItem('humble_auto_play') !== '0';
     let userExitedFullscreen = false;
+    let episodeWatchTimer = null;
+    let lastAutoNextAt = 0;
+    let activeTrendPlayer = null;
+    let trendingPool = [];
+    let trendingShotMode = {};
     let autoFsTimer = null;
     const EP_STROKES = [
       'linear-gradient(135deg, #4f46e5, #06b6d4)',
@@ -5359,7 +5526,7 @@
          #/actor/123         → Actor filmography
     */
     const ROUTE_TYPE_MAP = {
-      '': 'all', trending: 'all', all: 'all',
+      '': 'all', home: 'all', all: 'all', trending: 'trending',
       movies: 'movie', movie: 'movie',
       tv: 'tv', shows: 'tv',
       anime: 'anime',
@@ -5374,7 +5541,8 @@
       moods: 'moods', worlds: 'moods', similar: 'moods'
     };
     const TYPE_ROUTE_MAP = {
-      all: 'trending',
+      all: '',
+      trending: 'trending',
       movie: 'movies',
       tv: 'tv',
       anime: 'anime',
@@ -5441,18 +5609,29 @@
         const name = route.personName ? '/' + encodeURIComponent(route.personName) : '';
         return `#/actor/${route.personId}${name}`;
       }
-      const slug = TYPE_ROUTE_MAP[route.type] || 'trending';
-      return `#/${slug}`;
+      if (!route.type || route.type === 'all') return '';
+      const slug = TYPE_ROUTE_MAP[route.type] || '';
+      return slug ? `#/${slug}` : '';
+    }
+
+    function locationForRoute(route) {
+      const hash = buildRouteHash(route);
+      const base = window.location.pathname + (window.location.search || '');
+      if (!hash) return base || '/';
+      return base + hash;
     }
 
     function setRoute(route, push = true) {
-      const hash = buildRouteHash(route);
-      if (window.location.hash === hash || window.location.hash === hash.slice(1)) return;
+      const dest = locationForRoute(route);
+      const here = window.location.pathname + (window.location.search || '') + (window.location.hash || '');
+      const hereNorm = here.replace(/#$/, '').replace(/#\/$/, '');
+      const destNorm = dest.replace(/#$/, '').replace(/#\/$/, '');
+      if (hereNorm === destNorm) return;
       _routeSilent = true;
       if (push) {
-        window.history.pushState(route, '', hash);
+        window.history.pushState(route, '', dest);
       } else {
-        window.history.replaceState(route, '', hash);
+        window.history.replaceState(route, '', dest);
       }
       // microtask so hashchange (if any) is ignored
       setTimeout(() => { _routeSilent = false; }, 0);
@@ -5520,7 +5699,7 @@
     function setupBrowserHistoryState() {
       // Initial route from current hash (or default)
       const initial = parseRoute(getHashRoute());
-      window.history.replaceState(initial, '', buildRouteHash(initial));
+      window.history.replaceState(initial, '', locationForRoute(initial));
 
       // Browser back / forward
       window.addEventListener('popstate', (e) => {
@@ -5772,7 +5951,7 @@
       setTimeout(() => {
         if (desktopRightPanel) desktopRightPanel.classList.remove('glowing-reminder');
         if (mobileCwWrapper) mobileCwWrapper.classList.remove('glowing-reminder');
-      }, 7000);
+      }, currentType === 'trending' ? 2800 : 7000);
     }
 
     function handleContinueWatchingPanelClick() {
@@ -5963,6 +6142,16 @@
       if (pushHistory) {
         setRoute({ view: 'catalog', type: 'actor_filmography', personId, personName }, true);
       }
+      cachedFetch(`${TMDB_BASE}/person/${personId}?api_key=${apiKey}`).then(p => {
+        if (p && p.profile_path) window._actorSharePoster = p.profile_path;
+        syncSocialPreview({
+          name: personName || (p && p.name),
+          title: personName || (p && p.name),
+          profile_path: p && p.profile_path,
+          _shareKind: 'actor'
+        });
+        document.title = `${personName || p.name} · BWHS`;
+      }).catch(() => {});
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
       fetchCatalog(1, true);
@@ -6118,12 +6307,21 @@
 
     async function loadHeroFeatured() {
       try {
-        const [resWeek, resDay] = await Promise.all([
-          cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`),
-          cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=1`)
-        ]);
+        const pages = currentType === 'trending'
+          ? [
+              cachedFetch(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=1`),
+              cachedFetch(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=2`),
+              cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`)
+            ]
+          : [
+              cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`),
+              cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=1`)
+            ];
+        const packs = await Promise.all(pages);
+        const resWeek = packs[0] || {};
+        const resDay = packs[1] || {};
 
-        const combined = [...(resWeek.results || []), ...(resDay.results || [])]
+        const combined = packs.flatMap(p => p.results || [])
           .filter(i => i.backdrop_path && i.poster_path && i.overview && isCleanCinemaContent(i));
 
         const unique = [];
@@ -6134,7 +6332,7 @@
           unique.push(item);
         });
 
-        heroItems = unique.slice(0, 8);
+        heroItems = unique.slice(0, currentType === 'trending' ? 16 : 8);
         
         if (heroItems.length > 0) {
           heroIndicators.innerHTML = '';
@@ -6150,6 +6348,301 @@
         }
       } catch (err) {
         heroItems = [];
+      }
+    }
+
+
+
+    let trendHeroTimer = null;
+    let trendHeroOffset = 0;
+    async function loadTrendHeroRail() {
+      const track = document.getElementById('trendHeroTrack');
+      const wrap = document.getElementById('trendHero');
+      if (!track || !wrap) return;
+      const [d1, d2] = await Promise.all([
+        cachedFetch(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=1`),
+        cachedFetch(`${TMDB_BASE}/trending/tv/day?api_key=${apiKey}&page=1`)
+      ]);
+      const seen = new Set();
+      const items = [];
+      [...(d1.results||[]), ...(d2.results||[])].forEach(it => {
+        if (!it || !it.id || seen.has(it.id) || !it.poster_path) return;
+        seen.add(it.id);
+        items.push(it);
+      });
+      track.innerHTML = '';
+      items.slice(0, 14).forEach(item => {
+        const type = item.media_type || (item.title ? 'movie' : 'tv');
+        const card = document.createElement('div');
+        card.className = 'trend-hero-card';
+        card.innerHTML = `<img src="${IMAGE_BASE}${item.poster_path}" alt="" loading="lazy" decoding="async" /><span>${item.title || item.name}</span>`;
+        card.onclick = () => openMediaPage(item, type);
+        track.appendChild(card);
+      });
+      if (trendHeroTimer) clearInterval(trendHeroTimer);
+      trendHeroOffset = 0;
+      trendHeroTimer = setInterval(() => {
+        if (currentType !== 'trending') return;
+        trendHeroOffset += 1;
+        const w = track.firstElementChild ? track.firstElementChild.offsetWidth + 8 : 160;
+        track.scrollTo({ left: (trendHeroOffset * w) % Math.max(track.scrollWidth - track.clientWidth, 1), behavior: 'smooth' });
+      }, 2200);
+    }
+
+    async function bootstrapTrendingView() {
+      initTrendingFilters();
+      if (heroSpotlight) heroSpotlight.style.display = 'none';
+      loadTrendHeroRail();
+      loadTrendingLanes(true);
+    }
+
+    function initTrendingFilters() {
+      const gSel = document.getElementById('trendGenre');
+      const ySel = document.getElementById('trendYear');
+      const sSel = document.getElementById('trendStudio');
+      if (gSel && gSel.options.length === 0) {
+        GENRES.forEach(g => {
+          const o = document.createElement('option');
+          o.value = g.id == null ? '' : String(g.id);
+          o.textContent = g.name;
+          gSel.appendChild(o);
+        });
+      }
+      if (ySel && ySel.options.length === 0) {
+        YEAR_FILTERS.forEach(y => {
+          const o = document.createElement('option');
+          o.value = y.id == null ? '' : String(y.id);
+          o.textContent = y.name;
+          ySel.appendChild(o);
+        });
+      }
+      if (sSel && sSel.options.length < 3) {
+        [...STREAM_NETWORKS, ...MOVIE_STUDIOS].forEach(b => {
+          const o = document.createElement('option');
+          o.value = String(b.id) + ':' + (b.name || '');
+          o.textContent = b.name;
+          o.dataset.kind = b.prefer || '';
+          o.dataset.id = String(b.id);
+          o.dataset.company = String((b.companyIds && b.companyIds[0]) || b.id);
+          o.dataset.provider = String(b.providerId || '');
+          sSel.appendChild(o);
+        });
+      }
+    }
+
+    function applyTrendingFilters() {
+      loadTrendingLanes(true);
+    }
+
+    async function loadTrendingLanes(reset) {
+      const box = document.getElementById('trendingLanes');
+      if (!box) return;
+      if (reset) box.innerHTML = '';
+      const typeSel = (document.getElementById('trendType') || {}).value || 'all';
+      const genre = (document.getElementById('trendGenre') || {}).value || '';
+      const yearId = (document.getElementById('trendYear') || {}).value || '';
+      const sortKey = (document.getElementById('trendSort') || {}).value || 'popularity.desc';
+      const studioSel = document.getElementById('trendStudio');
+      const studioOpt = studioSel && studioSel.selectedOptions && studioSel.selectedOptions[0];
+
+      let mediaKind = 'all';
+      if (typeSel === 'movie' || typeSel === 'animation') mediaKind = 'movie';
+      if (typeSel === 'tv' || typeSel === 'cartoon') mediaKind = 'tv';
+
+      const isTv = mediaKind === 'tv';
+      const sortBy = sortKey === 'rating' ? 'vote_average.desc' : sortKey === 'latest' ? (isTv ? 'first_air_date.desc' : 'primary_release_date.desc') : 'popularity.desc';
+      let yearQuery = '';
+      if (yearId) {
+        const yObj = YEAR_FILTERS.find(y => String(y.id) === String(yearId));
+        if (yObj) {
+          const gteKey = isTv ? 'first_air_date.gte' : 'primary_release_date.gte';
+          const lteKey = isTv ? 'first_air_date.lte' : 'primary_release_date.lte';
+          if (yObj.gte) yearQuery += `&${gteKey}=${yObj.gte}`;
+          if (yObj.lte) yearQuery += `&${lteKey}=${yObj.lte}`;
+        }
+      }
+      let genreQuery = genre ? `&with_genres=${genre}` : '';
+      if (typeSel === 'animation' || typeSel === 'cartoon') {
+        genreQuery = `&with_genres=${genre ? '16,'+genre : '16'}`;
+      }
+      const lang = typeSel === 'cartoon' ? '&with_original_language=en' : '';
+
+      const urls = [];
+      if (studioOpt && studioOpt.value) {
+        const company = studioOpt.dataset.company;
+        const provider = studioOpt.dataset.provider;
+        const nid = studioOpt.dataset.id;
+        if (mediaKind !== 'tv' && company) {
+          urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${company}&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}`);
+        }
+        if (mediaKind !== 'movie' && (provider || nid)) {
+          if (provider) urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_watch_providers=${provider}&watch_region=US&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}${lang}`);
+          else urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${nid}&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}${lang}`);
+        }
+      } else if (mediaKind === 'movie') {
+        urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}`);
+        urls.push(`${TMDB_BASE}/trending/movie/day?api_key=${apiKey}&page=1`);
+      } else if (mediaKind === 'tv') {
+        urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}${lang}&without_genres=10763,10764,10767`);
+        urls.push(`${TMDB_BASE}/trending/tv/day?api_key=${apiKey}&page=1`);
+      } else {
+        urls.push(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=1`);
+        urls.push(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`);
+      }
+
+      const packs = await Promise.all(urls.map(u => cachedFetch(u)));
+      const seen = new Set();
+      const items = [];
+      packs.forEach(d => {
+        (d.results || []).forEach(item => {
+          if (!item || !item.id || seen.has(item.id)) return;
+          if (!item.poster_path && !item.backdrop_path) return;
+          seen.add(item.id);
+          items.push({ ...item, media_type: item.media_type || (item.title ? 'movie' : 'tv') });
+        });
+      });
+      items.sort((a,b) => (b.popularity||0)-(a.popularity||0));
+      trendingPool = items.slice(0, 24);
+      const frag = document.createDocumentFragment();
+      trendingPool.slice(0, 10).forEach(item => frag.appendChild(buildTrendLane(item)));
+      box.appendChild(frag);
+      trendingPool.slice(0, 10).forEach(item => hydrateTrendLane(item));
+    }
+
+    function buildTrendLane(item) {
+      const type = item.media_type || (item.title ? 'movie' : 'tv');
+      const title = item.title || item.name || 'Untitled';
+      const poster = item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '';
+      const back = item.backdrop_path ? `${IMAGE_MID}${item.backdrop_path}` : poster;
+      const wrap = document.createElement('article');
+      wrap.className = 'trend-lane';
+      wrap.innerHTML = `
+        <div class="trend-player-col">
+          <div class="trend-viewport" id="trendVp_${item.id}">
+            <img class="trend-poster-bg" src="${back}" alt="" loading="lazy" decoding="async" />
+            <div class="trend-play-fab" onclick="playTrendSlot(${item.id}, '${type}')"><i class="fa-solid fa-circle-play"></i></div>
+          </div>
+          <div class="trend-title">${title}</div>
+          <div class="server-bar trend-servers" id="trendSrv_${item.id}">${(PROVIDERS||[]).slice(0,8).map((p,i)=>`<button type="button" class="srv-btn${i===currentProviderIndex?' active':''}" data-prv="${p}" onclick="playTrendSlot(${item.id}, '${type}', '${p}')">${(PROVIDER_NAMES&&PROVIDER_NAMES[p])||p}</button>`).join('')}</div>
+          <div class="trend-parts" id="trendParts_${item.id}"></div>
+        </div>
+        <div class="trend-art-col">
+          <div class="trend-poster-syn">
+            <img class="trend-portrait" src="${poster}" alt="${title}" loading="lazy" decoding="async" />
+            <p class="trend-syn">${(item.overview || 'Synopsis loading…').replace(/</g,'')}</p>
+          </div>
+          <div class="trend-grad-line"></div>
+          <div class="art-toggle-group" style="align-self:flex-start;">
+            <button class="art-toggle-btn active" onclick="setTrendShotMode(${item.id}, 'backdrops', this)">Landscape</button>
+            <button class="art-toggle-btn" onclick="setTrendShotMode(${item.id}, 'posters', this)">Portrait</button>
+          </div>
+          <div class="trend-shots" id="trendShots_${item.id}"><span style="font-size:0.72rem;color:var(--text-muted);">Loading stills…</span></div>
+        </div>`;
+      return wrap;
+    }
+
+    async function hydrateTrendLane(item) {
+      const type = item.media_type || (item.title ? 'movie' : 'tv');
+      try {
+        const imgs = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/images?api_key=${apiKey}`);
+        renderTrendShots(item.id, imgs);
+      } catch (_) {}
+      if (type === 'movie') {
+        try {
+          const det = await cachedFetch(`${TMDB_BASE}/movie/${item.id}?api_key=${apiKey}`);
+          if (det && det.belongs_to_collection) {
+            const col = await cachedFetch(`${TMDB_BASE}/collection/${det.belongs_to_collection.id}?api_key=${apiKey}`);
+            const row = document.getElementById(`trendParts_${item.id}`);
+            if (row && col.parts) {
+              row.innerHTML = '';
+              col.parts.filter(p => p.poster_path).slice(0, 12).forEach(part => {
+                const d = document.createElement('div');
+                d.className = 'trend-part-card';
+                d.title = part.title;
+                d.innerHTML = `<img src="${IMAGE_BASE}${part.poster_path}" alt="" loading="lazy" decoding="async" />`;
+                d.onclick = () => openMediaPage(part, 'movie');
+                row.appendChild(d);
+              });
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    function setTrendShotMode(id, mode, btn) {
+      trendingShotMode[id] = mode;
+      const wrap = btn && btn.parentElement;
+      if (wrap) wrap.querySelectorAll('.art-toggle-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const cache = window._trendImgs && window._trendImgs[id];
+      if (cache) renderTrendShots(id, cache);
+    }
+
+    function renderTrendShots(id, data) {
+      window._trendImgs = window._trendImgs || {};
+      if (data) window._trendImgs[id] = data;
+      const box = document.getElementById(`trendShots_${id}`);
+      if (!box) return;
+      const mode = trendingShotMode[id] || 'backdrops';
+      const list = ((data && data[mode]) || []).slice(0, 14);
+      if (!list.length) {
+        box.innerHTML = '<span style="font-size:0.72rem;color:var(--text-muted);">No official stills yet.</span>';
+        return;
+      }
+      box.innerHTML = '';
+      list.forEach((art, idx) => {
+        const full = `${IMAGE_ORIGINAL}${art.file_path}`;
+        const thumb = `${IMAGE_BASE}${art.file_path}`;
+        const card = document.createElement('div');
+        card.className = `trend-shot ${mode === 'posters' ? 'portrait' : 'landscape'}`;
+        card.innerHTML = `<img src="${thumb}" alt="" loading="lazy" decoding="async" /><div class="art-download-badge"><i class="fa-solid fa-download"></i></div>`;
+        card.querySelector('.art-download-badge').addEventListener('click', (e) => {
+          e.stopPropagation();
+          downloadImageDirectly(full, `BWHS-Still-${id}-${idx+1}.jpg`);
+        });
+        card.addEventListener('click', () => openLightbox(full, `BWHS-Still-${id}-${idx+1}.jpg`));
+        box.appendChild(card);
+      });
+    }
+
+    function playTrendSlot(id, type, provider) {
+      const vp = document.getElementById(`trendVp_${id}`);
+      if (!vp) return;
+      if (provider) {
+        const idx = PROVIDERS.indexOf(provider);
+        if (idx >= 0) currentProviderIndex = idx;
+      }
+      if (activeTrendPlayer && activeTrendPlayer !== vp) {
+        activeTrendPlayer.querySelectorAll('iframe').forEach(f => f.remove());
+        if (!activeTrendPlayer.querySelector('.trend-play-fab')) {
+          const fab = document.createElement('div');
+          fab.className = 'trend-play-fab';
+          const tid = activeTrendPlayer._tid;
+          const ttype = activeTrendPlayer._ttype;
+          fab.innerHTML = '<i class="fa-solid fa-circle-play"></i>';
+          fab.onclick = () => playTrendSlot(tid, ttype);
+          activeTrendPlayer.appendChild(fab);
+        }
+      }
+      vp._tid = id; vp._ttype = type;
+      const item = (trendingPool || []).find(i => i.id === id) || { id, media_type: type };
+      const prev = activeMedia;
+      activeMedia = { ...item, computedType: type };
+      const url = getProviderUrl(PROVIDERS[currentProviderIndex] || PROVIDERS[0]);
+      activeMedia = prev;
+      vp.querySelectorAll('.trend-play-fab').forEach(n => n.remove());
+      vp.querySelectorAll('iframe').forEach(n => n.remove());
+      const iframe = document.createElement('iframe');
+      iframe.src = url;
+      iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+      iframe.setAttribute('allowfullscreen', 'true');
+      vp.appendChild(iframe);
+      activeTrendPlayer = vp;
+      const bar = document.getElementById(`trendSrv_${id}`);
+      if (bar) {
+        bar.querySelectorAll('.srv-btn').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-prv') === (PROVIDERS[currentProviderIndex] || PROVIDERS[0]));
+        });
       }
     }
 
@@ -6195,7 +6688,7 @@
       currentHeroIndex = index;
       const item = heroItems[index];
 
-      heroBgImg.src = `${IMAGE_ORIGINAL}${item.backdrop_path}`;
+      heroBgImg.src = `${IMAGE_MID}${item.backdrop_path}`;
       heroMiniPoster.src = `${IMAGE_BASE}${item.poster_path}`;
       heroTitle.textContent = item.title || item.name;
       heroRating.textContent = item.vote_average ? item.vote_average.toFixed(1) : '8.5';
@@ -6219,7 +6712,7 @@
           const next = (currentHeroIndex + 1) % heroItems.length;
           renderHeroSlide(next);
         }
-      }, 7000);
+      }, currentType === 'trending' ? 2800 : 7000);
     }
 
     function stepHeroSlide(dir) {
@@ -6346,7 +6839,7 @@
       // Fix sidebar active for findsimilar
       document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
       const sideMap = {
-        all: 'sideAll', movie: 'sideMovie', tv: 'sideTv', anime: 'sideAnime',
+        all: 'sideHome', trending: 'sideTrending', movie: 'sideMovie', tv: 'sideTv', anime: 'sideAnime',
         upcoming: 'sideUpcoming', latest: 'sideLatest', cartoon: 'sideCartoon',
         animation: 'sideAnimation', actors_page: 'sideActors', nextplay: 'sideNextplay',
         favorites: 'sideFav', findsimilar: 'sideFindsimilar', moods: 'sideMoods'
@@ -6400,8 +6893,24 @@
         return;
       }
 
+      const trendExp = document.getElementById('trendingExperience');
+      if (trendExp) trendExp.classList.toggle('active', type === 'trending');
+
       if (type === 'all') {
+        if (trendExp) trendExp.classList.remove('active');
         bootstrapHomeView();
+        return;
+      }
+
+      if (type === 'trending') {
+        if (actorsShowcaseSection) actorsShowcaseSection.style.display = 'none';
+        curatedShelvesContainer.innerHTML = '';
+        upcomingViewContainer.style.display = 'none';
+        mediaGrid.innerHTML = '';
+        if (feedTitle) feedTitle.innerHTML = `<i class="fa-solid fa-fire" style="color:#f97316;"></i> Trending Right Now`;
+        topFilterSuite.classList.remove('active');
+        if (heroSpotlight) heroSpotlight.style.display = 'none';
+        bootstrapTrendingView();
         return;
       }
 
@@ -7250,7 +7759,7 @@
     }
 
     async function fetchCatalog(page = 1, reset = false) {
-      if (currentType === 'favorites' || currentType === 'nextplay' || currentType === 'upcoming') return;
+      if (currentType === 'favorites' || currentType === 'nextplay' || currentType === 'upcoming' || currentType === 'trending') return;
       if (currentType === 'moods') {
         if (reset) renderMoodsHub(true);
         else appendMoodCards(12);
@@ -9210,14 +9719,19 @@
     }
 
     function syncSocialPreview(item) {
+      const isPage = !item || item._shareKind === 'page' || (!item.id && item._shareKind !== 'actor');
       const title = item ? (item.title || item.name || 'BWHS') : 'BWHS - Binge Watch Humble Streams';
-      const overview = item && item.overview
-        ? item.overview.slice(0, 160)
-        : 'Stream trending movies and TV in a fast cinematic player.';
-      const img = item && (item.backdrop_path || item.poster_path)
-        ? `${IMAGE_ORIGINAL}${item.backdrop_path || item.poster_path}`
-        : 'https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg';
-      const pageTitle = item ? `${title} · Watch on BWHS` : 'BWHS - Binge Watch Humble Streams';
+      const overview = isPage
+        ? 'Stream trending movies and TV in a fast cinematic player.'
+        : (item && item.id ? `Watch ${title} now at BWHS` : (item.overview || 'Stream trending movies and TV in a fast cinematic player.')).slice(0, 180);
+      const img = item && (item.backdrop_path || item.poster_path || item.profile_path)
+        ? `${IMAGE_ORIGINAL}${item.backdrop_path || item.poster_path || item.profile_path}`
+        : SITE_SHARE_IMAGE;
+      const pageTitle = (item && item.id)
+        ? `Watch ${title} now at BWHS`
+        : (item && item._shareKind === 'actor')
+          ? `${title} · Top Star on BWHS`
+          : 'BWHS - Binge Watch Humble Streams';
       document.title = pageTitle;
       setMetaTag('property', 'og:title', pageTitle);
       setMetaTag('property', 'og:description', overview);
@@ -9235,7 +9749,7 @@
       const isSite = !item || item._shareKind === 'page';
       const text = isSite
         ? `Binge Watch Humble Streams — ${title}`
-        : `Watch ${title} now at BWHS.online — Binge Watch Humble Streams`;
+        : `Watch ${title} now at BWHS`;
       const message = `${text}\n${url}`;
       return { title, url, text, message };
     }
@@ -9247,13 +9761,25 @@
           url: window.location.href
         };
       }
-      if (heroItems && heroItems[currentHeroIndex]) {
-        const item = heroItems[currentHeroIndex];
-        const type = item.media_type || (item.title ? 'movie' : 'tv');
-        const hash = type === 'tv' ? `#/watch/tv/${item.id}/1/1` : `#/watch/movie/${item.id}`;
+      if (currentType === 'actor_filmography' && currentPersonId) {
+        const name = encodeURIComponent(currentPersonName || 'Star');
         return {
-          item,
-          url: `${window.location.origin}${window.location.pathname}${hash}`
+          item: { title: currentPersonName, name: currentPersonName, poster_path: window._actorSharePoster || null, _shareKind: 'actor' },
+          url: `${window.location.origin}${window.location.pathname}#/actor/${currentPersonId}/${name}`
+        };
+      }
+      if (!currentType || currentType === 'all') {
+        const pool = (heroItems && heroItems.length ? heroItems : trendingPool) || [];
+        const pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+        return {
+          item: {
+            title: 'BWHS - Binge Watch Humble Streams',
+            overview: 'Stream trending movies and TV in a fast cinematic player.',
+            backdrop_path: pick && pick.backdrop_path,
+            poster_path: pick && pick.poster_path,
+            _shareKind: 'page'
+          },
+          url: `${window.location.origin}${window.location.pathname}`
         };
       }
       const firstCard = document.querySelector('.media-card[data-media-id], .shelf-card[data-media-id], .panel-item-card[data-media-id]');
@@ -9370,11 +9896,142 @@
       updateServerButtons();
       executeStreamLoad();
       scheduleAutoFullscreen();
+      scheduleEpisodeWatchFallback();
       updateLeftOffBanner();
+    }
+
+    let fsChromeTimer = null;
+    function showFsChrome() {
+      const vp = document.getElementById('videoViewport');
+      document.body.classList.add('fs-chrome-on');
+      if (vp) vp.classList.add('fs-chrome-on');
+      clearTimeout(fsChromeTimer);
+      fsChromeTimer = setTimeout(() => {
+        document.body.classList.remove('fs-chrome-on');
+        if (vp) vp.classList.remove('fs-chrome-on');
+      }, 2600);
+    }
+    function bindFsChromeHover() {
+      const vp = document.getElementById('videoViewport');
+      if (!vp || vp._fsChromeBound) return;
+      vp._fsChromeBound = true;
+      ['mousemove', 'mousedown', 'touchstart', 'pointerdown'].forEach(ev => {
+        vp.addEventListener(ev, () => {
+          if (document.fullscreenElement || document.webkitFullscreenElement || document.body.classList.contains('player-fs-active')) {
+            showFsChrome();
+          }
+        }, { passive: true });
+      });
     }
 
     function initTvAutoPrefs() {
       syncAutoFsButton();
+      syncAutoNextButton();
+      syncAutoPlayButton();
+      bindFsChromeHover();
+      window.addEventListener('message', handleEmbedPlayerMessage);
+    }
+
+    function syncAutoNextButton() {
+      const btn = document.getElementById('btnAutoNext');
+      const lab = document.getElementById('autoNextLabel');
+      if (btn) btn.classList.toggle('active', autoNextOn);
+      if (lab) lab.textContent = autoNextOn ? 'Auto Next On' : 'Auto Next Off';
+    }
+    function syncAutoPlayButton() {
+      const btn = document.getElementById('btnAutoPlay');
+      const lab = document.getElementById('autoPlayLabel');
+      if (btn) btn.classList.toggle('active', autoPlayOn);
+      if (lab) lab.textContent = autoPlayOn ? 'Auto Play On' : 'Auto Play Off';
+    }
+    function toggleAutoNext() {
+      autoNextOn = !autoNextOn;
+      localStorage.setItem('humble_auto_next', autoNextOn ? '1' : '0');
+      syncAutoNextButton();
+      showToast(autoNextOn ? 'Auto next episode on' : 'Auto next off');
+    }
+    function toggleAutoPlayPref() {
+      autoPlayOn = !autoPlayOn;
+      localStorage.setItem('humble_auto_play', autoPlayOn ? '1' : '0');
+      syncAutoPlayButton();
+      showToast(autoPlayOn ? 'Auto play on' : 'Auto play off');
+    }
+
+    function flattenEmbedPayload(data) {
+      if (data == null) return {};
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch (_) { return { event: data }; }
+      }
+      const inner = data.data || data.payload || data.detail || {};
+      return {
+        event: String(data.event || data.type || data.action || inner.event || inner.type || '').toLowerCase(),
+        current: Number(data.currentTime || data.current_time || data.time || inner.currentTime || inner.time || data.seconds),
+        duration: Number(data.duration || inner.duration || data.length),
+        progress: Number(data.progress || inner.progress)
+      };
+    }
+
+    function handleEmbedPlayerMessage(ev) {
+      const info = flattenEmbedPayload(ev && ev.data);
+      const evName = info.event || '';
+      if (evName.includes('end') || evName.includes('complete') || evName.includes('finish') || evName === 'ended' || evName === 'video_ended') {
+        maybeAutoNextEpisode();
+        return;
+      }
+      const dur = info.duration;
+      const cur = info.current;
+      if (dur > 20 && cur > 0 && (dur - cur) <= 2.8) {
+        maybeAutoNextEpisode();
+        return;
+      }
+      if (info.progress >= 0.97) {
+        maybeAutoNextEpisode();
+      }
+    }
+
+    function scheduleEpisodeWatchFallback() {
+      if (episodeWatchTimer) { clearTimeout(episodeWatchTimer); episodeWatchTimer = null; }
+      if (!autoNextOn || !activeMedia || activeMedia.computedType !== 'tv') return;
+      const ep = (currentSeasonEpisodes || []).find(e => Number(e.episode_number) === Number(activeEpisode));
+      const mins = (ep && ep.runtime) || (activeMedia.episode_run_time && activeMedia.episode_run_time[0]) || 45;
+      episodeWatchTimer = setTimeout(() => { maybeAutoNextEpisode(); }, Math.max(8, mins) * 60 * 1000 + 8000);
+    }
+
+    async function maybeAutoNextEpisode() {
+      if (!autoNextOn || !activeMedia) return;
+      const isTv = activeMedia.computedType === 'tv' || activeMedia.media_type === 'tv';
+      if (!isTv) return;
+      if (Date.now() - lastAutoNextAt < 2500) return;
+      lastAutoNextAt = Date.now();
+      let eps = currentSeasonEpisodes || [];
+      if (!eps.length && activeMedia.id) {
+        try {
+          await renderNamedEpisodeList(activeMedia.id, activeSeason || 1);
+          eps = currentSeasonEpisodes || [];
+        } catch (_) {}
+      }
+      const idx = eps.findIndex(e => Number(e.episode_number) === Number(activeEpisode));
+      const nextEp = idx > -1 ? (eps[idx + 1] && eps[idx + 1].episode_number) : (Number(activeEpisode) + 1);
+      if (nextEp && (idx === -1 || idx < eps.length - 1)) {
+        playEpisode(nextEp, { silent: true });
+        showToast('Next episode');
+        return;
+      }
+      const sel = document.getElementById('seasonDropdown');
+      if (sel) {
+        const opts = [...sel.options];
+        const cur = opts.findIndex(o => Number(o.value) === Number(activeSeason));
+        if (cur > -1 && cur < opts.length - 1) {
+          lastAutoNextAt = Date.now();
+          sel.value = opts[cur + 1].value;
+          activeSeason = parseInt(sel.value, 10);
+          activeEpisode = 1;
+          renderNamedEpisodeList(activeMedia.id, activeSeason).then(() => {
+            playEpisode(1, { silent: true });
+            showToast('Next season');
+          });
+        }
+      }
     }
 
     function syncAutoFsButton() {
@@ -9477,6 +10134,9 @@
         if (!fs) {
           userExitedFullscreen = true;
           clearAutoFsTimer();
+          document.body.classList.remove('fs-chrome-on');
+        } else {
+          showFsChrome();
         }
         syncFullscreenChrome();
       });
@@ -9492,18 +10152,25 @@
       if (banner) banner.classList.remove('active');
     }
 
-    function playEpisode(epNum) {
+    function playEpisode(epNum, opts) {
       if (!activeMedia) return;
+      const silent = !!(opts && opts.silent);
       activeEpisode = Number(epNum);
       document.querySelectorAll('.ep-named-card').forEach(b => {
         const n = parseInt(b.getAttribute('data-ep'), 10);
         const on = n === Number(epNum);
         b.classList.toggle('active', on);
-        if (on) {
+        if (on && !silent) {
           try { b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (_) {}
         }
       });
       loadActiveStream();
+      if (silent) {
+        const vp = document.getElementById('videoViewport');
+        if (vp && typeof vp.scrollIntoView === 'function') {
+          vp.scrollIntoView({ block: 'start', behavior: 'auto' });
+        }
+      }
       addToHistory(activeMedia, activeSeason, activeEpisode);
       setRoute({
         view: 'player',
