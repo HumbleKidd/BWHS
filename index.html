@@ -2301,6 +2301,36 @@
       pointer-events: auto !important;
     }
 
+    .fs-exit-overlay {
+      display: none;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 80;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.88);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 9999px;
+      padding: 8px 14px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+      backdrop-filter: blur(8px);
+    }
+    .fs-exit-overlay:hover {
+      background: var(--primary);
+      border-color: transparent;
+    }
+    .video-viewport:fullscreen .fs-exit-overlay,
+    .video-viewport:-webkit-full-screen .fs-exit-overlay,
+    body.player-fs-active .fs-exit-overlay {
+      display: inline-flex !important;
+    }
+
     /* Desktop Floating Mini Player — lower-left, small, menu-safe */
     @media (min-width: 1080px) {
       .video-viewport.is-floating-dock {
@@ -4068,9 +4098,13 @@
                     <div class="float-drag-handle" id="floatDragHandle" title="Drag to move">
                       <i class="fa-solid fa-grip-lines"></i> Drag
                     </div>
+                    <button type="button" class="fs-exit-overlay" id="fsExitOverlay" onclick="exitPlayerFullscreen(true)" title="Exit fullscreen">
+                      <i class="fa-solid fa-compress"></i> Exit Fullscreen
+                    </button>
                     <iframe 
                       id="playerFrame" 
                       src="" 
+                      loading="eager"
                       allowfullscreen="true" 
                       webkitallowfullscreen="true" 
                       mozallowfullscreen="true" 
@@ -4274,6 +4308,19 @@
                 <div class="filter-row" id="yearsContainer"></div>
                 <div class="row-slider-track" id="sliderYearsTrack">
                   <div class="row-slider-thumb" id="sliderYearsThumb"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-group-wrap" id="brandTypeFilterWrap" style="display:none;">
+              <span class="filter-label"><i class="fa-solid fa-clapperboard" style="color:var(--accent-cyan);"></i> In this studio:</span>
+              <div class="filter-scroll-wrapper">
+                <div class="filter-row" id="brandTypeContainer">
+                  <button class="filter-chip active" data-brand-type="all" onclick="setBrandMediaFilter('all')">All Titles</button>
+                  <button class="filter-chip" data-brand-type="movie" onclick="setBrandMediaFilter('movie')">Movies</button>
+                  <button class="filter-chip" data-brand-type="tv" onclick="setBrandMediaFilter('tv')">TV Shows</button>
+                  <button class="filter-chip" data-brand-type="animation" onclick="setBrandMediaFilter('animation')">Animation</button>
+                  <button class="filter-chip" data-brand-type="cartoon" onclick="setBrandMediaFilter('cartoon')">Cartoons</button>
                 </div>
               </div>
             </div>
@@ -4724,7 +4771,8 @@
 
 
     const TMDB_BASE = 'https://api.themoviedb.org/3';
-    const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+    const IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
+    const IMAGE_MID = 'https://image.tmdb.org/t/p/w780';
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
@@ -4803,6 +4851,7 @@
     let currentYearFilter = null;
     let currentSort = 'popularity.desc';
     let currentBrand = null;
+    let brandMediaFilter = 'all';
     let currentPersonId = null;
     let currentPersonName = '';
     let currentKeywordId = null;
@@ -4837,6 +4886,7 @@
     let seasonDataCache = {};
     let currentSeasonEpisodes = [];
     let autoFullscreenOn = localStorage.getItem('humble_auto_fs') === '1';
+    let userExitedFullscreen = false;
     let autoFsTimer = null;
     const EP_STROKES = [
       'linear-gradient(135deg, #4f46e5, #06b6d4)',
@@ -6228,7 +6278,7 @@
           const card = document.createElement('div');
           card.className = 'actor-avatar-card';
           card.innerHTML = `
-            <img src="${avatar}" class="actor-circle-img" alt="${person.name}" loading="lazy" />
+            <img src="${avatar}" class="actor-circle-img" alt="${person.name}" loading="lazy" decoding="async" />
             <span class="actor-name-text">${person.name}</span>
             <span class="actor-known-sub">${knownText}</span>
           `;
@@ -6249,6 +6299,7 @@
 
     function selectType(type, pushHistory = true) {
       currentType = type;
+      if (type !== 'brand') currentBrand = null;
       currentPersonId = null;
       currentPersonName = '';
       currentKeywordId = null;
@@ -6290,6 +6341,7 @@
       document.querySelectorAll('#sortsContainer .filter-chip').forEach(c => {
         c.classList.toggle('active', c.getAttribute('data-sort') === (currentSort || 'popularity.desc'));
       });
+      if (typeof syncBrandTypeChips === 'function') syncBrandTypeChips();
 
       // Fix sidebar active for findsimilar
       document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
@@ -6441,7 +6493,7 @@
         card.dataset.mediaTitle = item.title || '';
         if (item.poster_path) card.dataset.mediaPoster = item.poster_path;
         card.innerHTML = `
-          <img src="${poster}" class="upcoming-poster" alt="${item.title}" loading="lazy" />
+          <img src="${poster}" class="upcoming-poster" alt="${item.title}" loading="lazy" decoding="async" />
           <div class="upcoming-info">
             <div>
               <span class="upcoming-date-badge"><i class="fa-solid fa-calendar-check"></i> ${relDate}</span>
@@ -6535,7 +6587,7 @@
           card.className = 'media-card';
           card.innerHTML = `
             <div class="poster-wrap">
-              <img src="${avatar}" alt="${person.name}" loading="lazy" />
+              <img src="${avatar}" alt="${person.name}" loading="lazy" decoding="async" />
               <span class="badge-pill tag">Star</span>
               <span class="badge-pill rating"><i class="fa-solid fa-fire"></i> ${Math.round(person.popularity || 10)}</span>
             </div>
@@ -6606,32 +6658,32 @@
 
 
     const STREAM_NETWORKS = [
-      { id: 213, name: 'Netflix', accent: '#e50914', prefer: 'tv' },
-      { id: 1024, name: 'Amazon Prime Video', accent: '#00A8E1', prefer: 'tv' },
-      { id: 2739, name: 'Disney+', accent: '#113CCF', prefer: 'tv' },
-      { id: 3186, name: 'Max', accent: '#002BE7', prefer: 'tv' },
-      { id: 453, name: 'Hulu', accent: '#1CE783', prefer: 'tv' },
-      { id: 4330, name: 'Paramount+', accent: '#0064FF', prefer: 'tv' },
-      { id: 3353, name: 'Peacock', accent: '#000000', prefer: 'tv' },
-      { id: 2552, name: 'Apple TV+', accent: '#111111', prefer: 'tv' },
-      { id: 1112, name: 'Crunchyroll', accent: '#F47521', prefer: 'tv' },
-      { id: 49, name: 'HBO', accent: '#7b2ff7', prefer: 'tv' },
-      { id: 88, name: 'FX', accent: '#ff3c00', prefer: 'tv' },
-      { id: 174, name: 'AMC', accent: '#c8102e', prefer: 'tv' }
+      { id: 213, companyIds: [178464, 213], providerId: 8, name: 'Netflix', accent: '#e50914', prefer: 'tv' },
+      { id: 1024, companyIds: [20580, 1024], providerId: 9, name: 'Amazon Prime Video', accent: '#00A8E1', prefer: 'tv' },
+      { id: 2739, companyIds: [2, 3, 420, 6125], providerId: 337, name: 'Disney+', accent: '#113CCF', prefer: 'tv' },
+      { id: 3186, companyIds: [174, 17, 3268, 12], providerId: 1899, name: 'Max', accent: '#002BE7', prefer: 'tv' },
+      { id: 453, companyIds: [453], providerId: 15, name: 'Hulu', accent: '#1CE783', prefer: 'tv' },
+      { id: 4330, companyIds: [4], providerId: 531, name: 'Paramount+', accent: '#0064FF', prefer: 'tv' },
+      { id: 3353, companyIds: [6705, 6], providerId: 386, name: 'Peacock', accent: '#000000', prefer: 'tv' },
+      { id: 2552, companyIds: [86270], providerId: 350, name: 'Apple TV+', accent: '#111111', prefer: 'tv' },
+      { id: 1112, companyIds: [1112], providerId: 283, name: 'Crunchyroll', accent: '#F47521', prefer: 'tv' },
+      { id: 49, companyIds: [3268, 174], providerId: 384, name: 'HBO', accent: '#7b2ff7', prefer: 'tv' },
+      { id: 88, companyIds: [88], providerId: 80, name: 'FX', accent: '#ff3c00', prefer: 'tv' },
+      { id: 174, companyIds: [174, 808], providerId: 80, name: 'AMC', accent: '#c8102e', prefer: 'tv' }
     ];
     const MOVIE_STUDIOS = [
-      { id: 33, name: 'Universal Pictures', accent: '#138acb', prefer: 'movie' },
-      { id: 174, name: 'Warner Bros. Pictures', accent: '#1d4ed8', prefer: 'movie' },
-      { id: 5, name: 'Columbia Pictures', accent: '#2563eb', prefer: 'movie' },
-      { id: 34, name: 'Sony Pictures', accent: '#7c3aed', prefer: 'movie' },
-      { id: 4, name: 'Paramount Pictures', accent: '#0284c7', prefer: 'movie' },
-      { id: 2, name: 'Walt Disney Studios', accent: '#2563eb', prefer: 'movie' },
-      { id: 41077, name: 'A24', accent: '#111111', prefer: 'movie' },
-      { id: 1632, name: 'Lionsgate', accent: '#0f766e', prefer: 'movie' },
-      { id: 420, name: 'Marvel Studios', accent: '#e11d48', prefer: 'movie' },
-      { id: 3, name: 'Pixar', accent: '#0284c7', prefer: 'movie' },
-      { id: 521, name: 'DreamWorks', accent: '#059669', prefer: 'movie' },
-      { id: 25, name: '20th Century Studios', accent: '#b45309', prefer: 'movie' }
+      { id: 33, companyIds: [33, 7, 23, 30], networkIds: [6], name: 'Universal Pictures', accent: '#138acb', prefer: 'movie' },
+      { id: 174, companyIds: [174, 17, 12, 3268, 9993], networkIds: [49], name: 'Warner Bros. Pictures', accent: '#1d4ed8', prefer: 'movie' },
+      { id: 5, companyIds: [5, 34, 21], name: 'Columbia Pictures', accent: '#2563eb', prefer: 'movie' },
+      { id: 34, companyIds: [34, 5, 21, 2251], name: 'Sony Pictures', accent: '#7c3aed', prefer: 'movie' },
+      { id: 4, companyIds: [4], networkIds: [4330], name: 'Paramount Pictures', accent: '#0284c7', prefer: 'movie' },
+      { id: 2, companyIds: [2, 3, 420, 6125, 7505], networkIds: [2739], name: 'Walt Disney Studios', accent: '#2563eb', prefer: 'movie' },
+      { id: 41077, companyIds: [41077], name: 'A24', accent: '#111111', prefer: 'movie' },
+      { id: 1632, companyIds: [1632], name: 'Lionsgate', accent: '#0f766e', prefer: 'movie' },
+      { id: 420, companyIds: [420, 7505, 19551], name: 'Marvel Studios', accent: '#e11d48', prefer: 'movie' },
+      { id: 3, companyIds: [3], name: 'Pixar', accent: '#0284c7', prefer: 'movie' },
+      { id: 521, companyIds: [521, 7], name: 'DreamWorks', accent: '#059669', prefer: 'movie' },
+      { id: 25, companyIds: [25, 127253], networkIds: [456], name: '20th Century Studios', accent: '#b45309', prefer: 'movie' }
     ];
 
     function getSortParam(mediaIsTv) {
@@ -6760,9 +6812,35 @@
       } catch (_) {}
     }
 
+    function syncBrandTypeChips() {
+      const wrap = document.getElementById('brandTypeFilterWrap');
+      if (wrap) wrap.style.display = (currentType === 'brand' && currentBrand) ? 'flex' : 'none';
+      document.querySelectorAll('#brandTypeContainer .filter-chip').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-brand-type') === (brandMediaFilter || 'all'));
+      });
+    }
+
+    function setBrandMediaFilter(filter) {
+      brandMediaFilter = filter || 'all';
+      syncBrandTypeChips();
+      if (currentType === 'brand') fetchCatalog(1, true);
+    }
+
     function openBrandHub(kind, brand) {
-      currentBrand = { kind, id: brand.id, name: brand.name, prefer: brand.prefer || (kind === 'network' ? 'tv' : 'movie'), accent: brand.accent };
+      currentBrand = {
+        kind,
+        id: brand.id,
+        companyId: brand.companyId || (kind === 'studio' || kind === 'company' ? brand.id : null),
+        companyIds: brand.companyIds || (kind !== 'network' ? [brand.id] : []),
+        networkId: brand.networkId || (kind === 'network' ? brand.id : null),
+        networkIds: brand.networkIds || (kind === 'network' ? [brand.id] : []),
+        providerId: brand.providerId || null,
+        name: brand.name,
+        prefer: brand.prefer || (kind === 'network' ? 'tv' : 'movie'),
+        accent: brand.accent
+      };
       currentType = 'brand';
+      brandMediaFilter = 'all';
       currentGenre = null;
       currentYearFilter = null;
       currentSort = 'popularity.desc';
@@ -6779,6 +6857,7 @@
       document.querySelectorAll('#sortsContainer .filter-chip').forEach(c => {
         c.classList.toggle('active', c.getAttribute('data-sort') === currentSort);
       });
+      syncBrandTypeChips();
       buildGenreChips();
       buildYearChips();
       curatedShelvesContainer.innerHTML = '';
@@ -7002,7 +7081,7 @@
               card.className = `shelf-card`;
               card.innerHTML = `
                 <div class="shelf-poster">
-                  <img src="${poster}" alt="${title}" loading="lazy" />
+                  <img src="${poster}" alt="${title}" loading="lazy" decoding="async" />
                 </div>
                 <div class="shelf-card-title">${title}</div>
                 <div class="shelf-sub">
@@ -7021,6 +7100,84 @@
         shelfJobs.push(job);
       }
       await Promise.all(shelfJobs);
+    }
+
+    function brandYearQuery(isTv) {
+      let yearQuery = '';
+      if (currentYearFilter) {
+        const yObj = YEAR_FILTERS.find(y => y.id === currentYearFilter);
+        if (yObj) {
+          const gteKey = isTv ? 'first_air_date.gte' : 'primary_release_date.gte';
+          const lteKey = isTv ? 'first_air_date.lte' : 'primary_release_date.lte';
+          if (yObj.gte) yearQuery += `&${gteKey}=${yObj.gte}`;
+          if (yObj.lte) yearQuery += `&${lteKey}=${yObj.lte}`;
+        }
+      }
+      return yearQuery;
+    }
+
+    function brandCompanyIds() {
+      if (!currentBrand) return [];
+      const ids = [];
+      (currentBrand.companyIds || []).forEach(id => ids.push(id));
+      if (currentBrand.companyId) ids.push(currentBrand.companyId);
+      if (currentBrand.kind !== 'network' && currentBrand.id) ids.push(currentBrand.id);
+      return [...new Set(ids.filter(Boolean))];
+    }
+    function brandNetworkIds() {
+      if (!currentBrand) return [];
+      const ids = [];
+      (currentBrand.networkIds || []).forEach(id => ids.push(id));
+      if (currentBrand.networkId) ids.push(currentBrand.networkId);
+      if (currentBrand.kind === 'network' && currentBrand.id) ids.push(currentBrand.id);
+      return [...new Set(ids.filter(Boolean))];
+    }
+
+    function buildBrandEndpoint(page, forceKind) {
+      const sortBy = getSortParam(forceKind === 'tv');
+      const filt = brandMediaFilter || 'all';
+      const genreQuery = currentGenre ? `&with_genres=${currentGenre}` : '';
+      const excludeBadTvGenres = `&without_genres=10763,10764,10767,10766`;
+      const companies = brandCompanyIds().join('|');
+      const networks = brandNetworkIds().join('|');
+      const providerId = currentBrand && currentBrand.providerId;
+      const animGenre = currentGenre ? `16,${currentGenre}` : '16';
+      const wantMovie = forceKind === 'movie' || filt === 'movie' || (filt === 'animation' && forceKind === 'movie');
+      const wantTv = forceKind === 'tv' || filt === 'tv' || filt === 'cartoon' || (filt === 'animation' && forceKind === 'tv');
+
+      if (wantMovie) {
+        const gq = (filt === 'animation') ? `&with_genres=${animGenre}` : genreQuery;
+        if (providerId && currentBrand.kind === 'network') {
+          return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_watch_providers=${providerId}&watch_region=US&sort_by=${sortBy}&page=${page}${gq}${brandYearQuery(false)}&include_adult=false`;
+        }
+        if (companies) {
+          return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${companies}&sort_by=${sortBy}&page=${page}${gq}${brandYearQuery(false)}&include_adult=false`;
+        }
+      }
+
+      if (wantTv || forceKind === 'tv') {
+        const isCartoon = filt === 'cartoon';
+        const isAnim = filt === 'animation' || isCartoon;
+        const gq = isAnim ? `&with_genres=${animGenre}` : genreQuery;
+        const lang = isCartoon ? '&with_original_language=en' : '';
+        if (providerId && currentBrand.kind === 'network') {
+          return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_watch_providers=${providerId}&watch_region=US&sort_by=${sortBy}&page=${page}${gq}${brandYearQuery(true)}${excludeBadTvGenres}${lang}&include_adult=false`;
+        }
+        if (networks) {
+          return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${networks}&sort_by=${sortBy}&page=${page}${gq}${brandYearQuery(true)}${excludeBadTvGenres}${lang}&include_adult=false`;
+        }
+        if (companies) {
+          return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_companies=${companies}&sort_by=${sortBy}&page=${page}${gq}${brandYearQuery(true)}${excludeBadTvGenres}${lang}&include_adult=false`;
+        }
+      }
+
+      if (companies) {
+        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${companies}&sort_by=${sortBy}&page=${page}${genreQuery}${brandYearQuery(false)}&include_adult=false`;
+      }
+      if (networks) {
+        return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${networks}&sort_by=${sortBy}&page=${page}${genreQuery}${brandYearQuery(true)}${excludeBadTvGenres}&include_adult=false`;
+      }
+      return `${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=${page}`;
     }
 
     function buildEndpoint(page) {
@@ -7052,10 +7209,7 @@
       const sortGate = ratingGate(currentSort);
 
       if (currentBrand) {
-        if (currentBrand.kind === 'network') {
-          return `${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${currentBrand.id}&sort_by=${sortBy}${sortGate}&page=${page}${genreQuery}${yearQuery}${excludeBadTvGenres}`;
-        }
-        return `${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${currentBrand.id}&sort_by=${sortBy}${sortGate}&page=${page}${genreQuery}${yearQuery}`;
+        return buildBrandEndpoint(page, 'auto');
       }
 
       if (currentType === 'latest') {
@@ -7171,6 +7325,38 @@
             cachedRawSearchResults = [...cachedRawSearchResults, ...results];
             renderItems(results);
           }
+        } else if (currentType === 'brand' && currentBrand) {
+          const pagesToLoad = reset ? [page, page + 1, page + 2] : [page];
+          const jobs = [];
+          const filt = brandMediaFilter || 'all';
+          pagesToLoad.forEach(pg => {
+            if (filt === 'all' || filt === 'animation' || filt === 'movie') {
+              jobs.push(cachedFetch(buildBrandEndpoint(pg, 'movie')).then(d => ({ d, kind: 'movie', pg })));
+            }
+            if (filt === 'all' || filt === 'animation' || filt === 'tv' || filt === 'cartoon') {
+              jobs.push(cachedFetch(buildBrandEndpoint(pg, 'tv')).then(d => ({ d, kind: 'tv', pg })));
+            }
+          });
+          const packs = await Promise.all(jobs);
+          let maxPages = 1;
+          let results = [];
+          packs.forEach(({ d, kind }) => {
+            maxPages = Math.max(maxPages, d.total_pages || 1);
+            (d.results || []).forEach(item => {
+              results.push({ ...item, media_type: kind === 'movie' ? 'movie' : (item.media_type || 'tv') });
+            });
+          });
+          totalPages = Math.min(maxPages, 500);
+          currentPage = pagesToLoad[pagesToLoad.length - 1];
+          if (currentPage >= totalPages) hasMorePages = false;
+          results = results.filter(i => i && i.id && (i.poster_path || i.backdrop_path) && (i.title || i.name));
+          results.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+          renderItems(results);
+          if (hasMorePages) {
+            const next = currentPage + 1;
+            cachedFetch(buildBrandEndpoint(next, 'movie'));
+            cachedFetch(buildBrandEndpoint(next, 'tv'));
+          }
         } else {
           const url = buildEndpoint(page);
           const data = await cachedFetch(url);
@@ -7181,6 +7367,12 @@
             if (!i.poster_path && !i.backdrop_path) return false;
             return isCleanCinemaContent(i);
           });
+          if (currentType === 'brand') {
+            results = results.map(i => ({
+              ...i,
+              media_type: i.media_type || ((brandMediaFilter === 'tv' || brandMediaFilter === 'cartoon') ? 'tv' : (i.title ? 'movie' : 'tv'))
+            }));
+          }
 
           renderItems(results);
         }
@@ -7200,7 +7392,7 @@
               if (currentType !== 'favorites' && currentType !== 'nextplay' && currentType !== 'upcoming') {
                 if (!playerPageView.classList.contains('active')) {
                   const scrollPos = window.innerHeight + window.scrollY;
-                  const triggerThreshold = document.documentElement.offsetHeight - 900;
+                  const triggerThreshold = document.documentElement.offsetHeight - 1600;
                   if (scrollPos >= triggerThreshold) {
                     fetchCatalog(currentPage + 1, false);
                   }
@@ -7240,7 +7432,8 @@
       } else if (currentType === 'tv') {
         feedTitle.innerHTML = `<i class="fa-solid fa-tv" style="color: var(--primary);"></i> TV Shows Catalog${genreLabel}${yearLabel}`;
       } else if (currentType === 'brand' && currentBrand) {
-        const extra = [currentBrand.name, currentSort === 'latest' ? 'Latest' : currentSort === 'rating' ? 'Top Rated' : currentSort === 'title' ? 'A–Z' : 'Popular'].filter(Boolean).join(' · ');
+        const typeLab = { all: 'All Titles', movie: 'Movies', tv: 'TV Shows', animation: 'Animation', cartoon: 'Cartoons' }[brandMediaFilter] || 'All Titles';
+        const extra = [currentBrand.name, typeLab, currentSort === 'latest' ? 'Latest' : currentSort === 'rating' ? 'Top Rated' : currentSort === 'title' ? 'A–Z' : 'Popular'].filter(Boolean).join(' · ');
         feedTitle.innerHTML = `<i class="fa-solid fa-clapperboard" style="color: var(--primary);"></i> ${extra}${genreLabel}${yearLabel}`;
       } else if (currentType === 'nextplay') {
         feedTitle.innerHTML = `<i class="fa-solid fa-list-check" style="color: var(--primary);"></i> Must Watch & Next Play List`;
@@ -7288,7 +7481,7 @@
           card.className = 'media-card';
           card.innerHTML = `
             <div class="poster-wrap">
-              <img src="${avatar}" alt="${item.name}" loading="lazy" />
+              <img src="${avatar}" alt="${item.name}" loading="lazy" decoding="async" />
               <span class="badge-pill tag">Star</span>
               <span class="badge-pill rating"><i class="fa-solid fa-fire"></i> ${Math.round(item.popularity || 10)}</span>
             </div>
@@ -7328,7 +7521,7 @@
         card.className = `media-card`;
         card.innerHTML = `
           <div class="poster-wrap">
-            <img src="${poster}" alt="${title}" loading="lazy" />
+            <img src="${poster}" alt="${title}" loading="lazy" decoding="async" />
             <span class="badge-pill tag">${type === 'movie' ? 'Movie' : 'TV'}</span>
             <span class="badge-pill rating"><i class="fa-solid fa-star"></i> ${rating}</span>
             <button class="fav-heart-btn ${isFav ? 'active' : ''}" onclick="toggleFavoriteCard(event, ${item.id})">
@@ -7679,7 +7872,7 @@
           const year = (item.release_date || item.first_air_date || '').split('-')[0];
           const row = document.createElement('div');
           row.className = 'fs-suggest-item';
-          row.innerHTML = `<img src="${IMAGE_BASE}${item.poster_path}" alt="" loading="lazy" /><span>${title} ${year ? '('+year+')' : ''} · ${type === 'tv' ? 'TV' : 'Movie'}</span>`;
+          row.innerHTML = `<img src="${IMAGE_BASE}${item.poster_path}" alt="" loading="lazy" decoding="async" /><span>${title} ${year ? '('+year+')' : ''} · ${type === 'tv' ? 'TV' : 'Movie'}</span>`;
           row.addEventListener('click', () => {
             box.classList.remove('active');
             box.innerHTML = '';
@@ -7971,7 +8164,7 @@
               const div = document.createElement('div');
               div.className = 'suggestion-item';
               div.innerHTML = `
-                <img src="${thumb}" class="suggestion-thumb" alt="${title}" loading="lazy" />
+                <img src="${thumb}" class="suggestion-thumb" alt="${title}" loading="lazy" decoding="async" />
                 <div class="suggestion-info">
                   <span class="suggestion-title">${title}</span>
                   <div class="suggestion-meta">
@@ -8144,7 +8337,7 @@
         card.dataset.mediaTitle = item.title || '';
         if (item.poster_path) card.dataset.mediaPoster = item.poster_path;
         card.innerHTML = `
-          <img src="${poster}" class="panel-poster" alt="${item.title}" loading="lazy" />
+          <img src="${poster}" class="panel-poster" alt="${item.title}" loading="lazy" decoding="async" />
           <div class="panel-item-info">
             <span class="panel-item-title">${item.title}</span>
             <span class="panel-item-sub">${subtext}</span>
@@ -8169,7 +8362,7 @@
         mobCard.className = 'mobile-cw-card';
         mobCard.style.cssText = 'width:80px; flex-shrink:0; cursor:pointer; display:flex; flex-direction:column; gap:3px;';
         mobCard.innerHTML = `
-          <img src="${poster}" style="width:100%; aspect-ratio:2/3; border-radius:8px; object-fit:cover; background:#000;" alt="${item.title}" loading="lazy" />
+          <img src="${poster}" style="width:100%; aspect-ratio:2/3; border-radius:8px; object-fit:cover; background:#000;" alt="${item.title}" loading="lazy" decoding="async" />
           <span style="font-size:0.65rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-main);">${item.title}</span>
           <span style="font-size:0.6rem; color:var(--primary); font-weight:700;">${subtext}</span>
         `;
@@ -8268,6 +8461,7 @@
         }, !alreadyInPlayer);
       }
 
+      userExitedFullscreen = false;
       snapToPlayerView();
       loadActiveStream();
       addToHistory(item, activeSeason, activeEpisode);
@@ -8375,7 +8569,7 @@
               card.className = 'shelf-card';
               card.innerHTML = `
                 <div class="shelf-poster" style="${isCurrent ? 'outline: 2px solid var(--primary);' : ''}">
-                  <img src="${poster}" alt="${part.title}" loading="lazy" />
+                  <img src="${poster}" alt="${part.title}" loading="lazy" decoding="async" />
                   <span class="badge-pill tag" style="left:6px; top:6px;">Part ${index + 1}</span>
                 </div>
                 <div class="shelf-card-title">${part.title}</div>
@@ -8435,7 +8629,7 @@
         const card = document.createElement('div');
         card.className = `art-card ${isLandscape ? 'landscape' : 'portrait'}`;
         card.innerHTML = `
-          <img src="${thumbUrl}" alt="Official Artwork" loading="lazy" />
+          <img src="${thumbUrl}" alt="Official Artwork" loading="lazy" decoding="async" />
           <div class="art-download-badge" title="Download">
             <i class="fa-solid fa-download"></i>
           </div>
@@ -8490,7 +8684,7 @@
             const chip = document.createElement('div');
             chip.className = 'single-cast-chip';
             chip.innerHTML = `
-              <img src="${pAvatar}" alt="${person.name}" class="single-cast-avatar" loading="lazy" />
+              <img src="${pAvatar}" alt="${person.name}" class="single-cast-avatar" loading="lazy" decoding="async" />
               <div class="single-cast-text">
                 <span>${person.name}</span>
                 <span class="single-cast-char">${charName}</span>
@@ -8571,7 +8765,7 @@
         card.className = 'media-card';
         card.innerHTML = `
           <div class="poster-wrap">
-            <img src="${avatar}" alt="${person.name}" loading="lazy" />
+            <img src="${avatar}" alt="${person.name}" loading="lazy" decoding="async" />
             <span class="badge-pill tag">Cast</span>
           </div>
           <div class="card-body">
@@ -8644,7 +8838,7 @@
           card.className = 'shelf-card';
           card.innerHTML = `
             <div class="shelf-poster">
-              <img src="${poster}" alt="${title}" loading="lazy" />
+              <img src="${poster}" alt="${title}" loading="lazy" decoding="async" />
             </div>
             <div class="shelf-card-title">${title}</div>
             <div class="shelf-sub">
@@ -8712,7 +8906,7 @@
           <div class="sidebar-rec-thumb-wrap">
             <picture>
               <source media="(min-width: 1080px)" srcset="${IMAGE_BASE}${backdropPath}">
-              <img src="${IMAGE_BASE}${posterPath}" class="sidebar-rec-thumb" alt="${title}" loading="lazy" />
+              <img src="${IMAGE_BASE}${posterPath}" class="sidebar-rec-thumb" alt="${title}" loading="lazy" decoding="async" />
             </picture>
           </div>
           <div class="sidebar-rec-info">
@@ -9209,42 +9403,84 @@
     function scheduleAutoFullscreen() {
       clearAutoFsTimer();
       if (!autoFullscreenOn) return;
+      if (userExitedFullscreen) return;
+      if (isPlayerFullscreen()) return;
       if (!playerPageView || !playerPageView.classList.contains('active')) return;
       autoFsTimer = setTimeout(() => {
+        if (!autoFullscreenOn || userExitedFullscreen || isPlayerFullscreen()) return;
         requestPlayerFullscreen();
       }, 3000);
     }
 
     function isPlayerFullscreen() {
-      const el = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
-      return !!el;
+      const el = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+      const vp = document.getElementById('videoViewport');
+      return !!el && (!vp || el === vp || vp.contains(el) || el === document.documentElement);
+    }
+
+    function syncFullscreenChrome() {
+      const fs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+      document.body.classList.toggle('player-fs-active', fs);
+      const overlay = document.getElementById('fsExitOverlay');
+      if (overlay) overlay.style.display = fs ? 'inline-flex' : '';
     }
 
     function requestPlayerFullscreen() {
       const vp = document.getElementById('videoViewport') || document.getElementById('playerPageView');
       if (!vp) return;
+      if (isPlayerFullscreen()) {
+        syncFullscreenChrome();
+        return;
+      }
       const req = vp.requestFullscreen || vp.webkitRequestFullscreen || vp.mozRequestFullScreen || vp.msRequestFullscreen;
       if (req) {
-        try { req.call(vp); } catch (_) {}
+        const p = req.call(vp);
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      }
+      // Do not postMessage into the embed — that steals FS and hides our exit control.
+      setTimeout(syncFullscreenChrome, 80);
+    }
+
+    function exitPlayerFullscreen(fromUser) {
+      if (fromUser) {
+        userExitedFullscreen = true;
+        clearAutoFsTimer();
+      }
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+      if (exit) {
+        try {
+          const p = exit.call(document);
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } catch (_) {}
       }
       try {
         if (playerFrame && playerFrame.contentWindow) {
-          playerFrame.contentWindow.postMessage({ type: 'fullscreen', action: 'enter' }, '*');
+          playerFrame.contentWindow.postMessage({ type: 'fullscreen', action: 'exit' }, '*');
         }
       } catch (_) {}
-    }
-
-    function exitPlayerFullscreen() {
-      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
-      if (exit && isPlayerFullscreen()) {
-        try { exit.call(document); } catch (_) {}
-      }
+      document.body.classList.remove('player-fs-active');
+      syncFullscreenChrome();
     }
 
     function togglePlayerFullscreen() {
-      if (isPlayerFullscreen()) exitPlayerFullscreen();
-      else requestPlayerFullscreen();
+      if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+        exitPlayerFullscreen(true);
+      } else {
+        userExitedFullscreen = false;
+        requestPlayerFullscreen();
+      }
     }
+
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(ev => {
+      document.addEventListener(ev, () => {
+        const fs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        if (!fs) {
+          userExitedFullscreen = true;
+          clearAutoFsTimer();
+        }
+        syncFullscreenChrome();
+      });
+    });
 
     function findHistoryEntry(item) {
       if (!item || !item.id) return null;
