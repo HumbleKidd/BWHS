@@ -3899,7 +3899,7 @@
       border-radius: 18px; overflow: hidden; background: #111827;
       box-shadow: var(--shadow-md);
     }
-    .trending-experience.active .trend-hero { display: block; }
+    .trending-experience.active .trend-hero { display: none; }
     .trend-hero-track {
       display: flex; gap: 8px; overflow: hidden; height: 280px;
     }
@@ -3937,9 +3937,49 @@
       background: var(--surface); border-radius: 20px; padding: 14px;
       box-shadow: var(--shadow-sm); content-visibility: auto; contain-intrinsic-size: 0 420px;
     }
+    .trend-lane.flip { grid-template-columns: 0.85fr 1.15fr; }
+    .trend-lane.flip .trend-player-col { order: 2; }
+    .trend-lane.flip .trend-art-col { order: 1; }
     @media (max-width: 900px) {
-      .trend-lane { grid-template-columns: 1fr; padding: 12px; }
+      .trend-lane, .trend-lane.flip { grid-template-columns: 1fr; padding: 12px; }
+      .trend-lane.flip .trend-player-col, .trend-lane.flip .trend-art-col { order: unset; }
     }
+    .trend-mid-rail {
+      background: var(--surface); border-radius: 16px; padding: 10px 12px 8px;
+      box-shadow: var(--shadow-sm);
+    }
+    .trend-mid-label {
+      font-size: 0.72rem; font-weight: 800; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px;
+    }
+    .trend-cast-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .trend-cast-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface-subtle); border-radius: 9999px;
+      padding: 4px 10px 4px 4px; cursor: pointer; font-size: 0.7rem; font-weight: 700;
+    }
+    .trend-cast-chip img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: #000; }
+    .fs-corner-btn {
+      display: none; position: absolute; right: 10px; bottom: 10px; z-index: 82;
+      width: 40px; height: 40px; border-radius: 50%; border: none;
+      background: rgba(15,23,42,0.82); color: #fff; cursor: pointer;
+      align-items: center; justify-content: center; font-size: 0.95rem;
+      opacity: 0.95; pointer-events: auto;
+    }
+    .fs-hot-edge {
+      display: none; position: absolute; left: 0; right: 0; height: 56px; z-index: 81;
+      pointer-events: auto; background: transparent;
+    }
+    .fs-hot-edge.top { top: 0; }
+    .fs-hot-edge.bottom { bottom: 0; }
+    .video-viewport:fullscreen .fs-corner-btn,
+    .video-viewport:-webkit-full-screen .fs-corner-btn,
+    body.player-fs-active .fs-corner-btn,
+    .video-viewport:fullscreen .fs-hot-edge,
+    .video-viewport:-webkit-full-screen .fs-hot-edge,
+    body.player-fs-active .fs-hot-edge { display: flex; }
+    .fs-corner-btn { display: inline-flex; }
+
     .trend-player-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
     .trend-viewport {
       position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px;
@@ -4218,8 +4258,13 @@
                     <div class="float-drag-handle" id="floatDragHandle" title="Drag to move">
                       <i class="fa-solid fa-grip-lines"></i> Drag
                     </div>
+                    <div class="fs-hot-edge top" id="fsHotTop"></div>
+                    <div class="fs-hot-edge bottom" id="fsHotBottom"></div>
                     <button type="button" class="fs-exit-overlay" id="fsExitOverlay" onclick="exitPlayerFullscreen(true)" title="Exit fullscreen">
                       <i class="fa-solid fa-compress"></i> Exit Fullscreen
+                    </button>
+                    <button type="button" class="fs-corner-btn" id="fsCornerBtn" onclick="togglePlayerFullscreen()" title="Fullscreen">
+                      <i class="fa-solid fa-expand" id="fsCornerIcon"></i>
                     </button>
                     <iframe 
                       id="playerFrame" 
@@ -5054,6 +5099,10 @@
     let activeTrendPlayer = null;
     let trendingPool = [];
     let trendingShotMode = {};
+    let trendingPage = 1;
+    let trendingLoading = false;
+    let midRailPool = [];
+    let midRailCursor = 0;
     let autoFsTimer = null;
     const EP_STROKES = [
       'linear-gradient(135deg, #4f46e5, #06b6d4)',
@@ -6332,7 +6381,8 @@
           unique.push(item);
         });
 
-        heroItems = unique.slice(0, currentType === 'trending' ? 16 : 8);
+                unique.sort(() => Math.random() - 0.5);
+        heroItems = unique.slice(0, currentType === 'trending' ? 18 : 8);
         
         if (heroItems.length > 0) {
           heroIndicators.innerHTML = '';
@@ -6391,8 +6441,13 @@
 
     async function bootstrapTrendingView() {
       initTrendingFilters();
-      if (heroSpotlight) heroSpotlight.style.display = 'none';
-      loadTrendHeroRail();
+      if (heroSpotlight) {
+        heroSpotlight.style.display = 'flex';
+        heroSpotlight.style.opacity = '1';
+      }
+      await loadHeroFeatured();
+      startHeroInterval();
+      trendingPage = 1;
       loadTrendingLanes(true);
     }
 
@@ -6437,7 +6492,14 @@
     async function loadTrendingLanes(reset) {
       const box = document.getElementById('trendingLanes');
       if (!box) return;
-      if (reset) box.innerHTML = '';
+      if (reset) {
+        box.innerHTML = '';
+        trendingPage = 1;
+        trendingPool = [];
+      }
+      if (trendingLoading) return;
+      trendingLoading = true;
+      const pg = reset ? 1 : (trendingPage + 1);
       const typeSel = (document.getElementById('trendType') || {}).value || 'all';
       const genre = (document.getElementById('trendGenre') || {}).value || '';
       const yearId = (document.getElementById('trendYear') || {}).value || '';
@@ -6473,21 +6535,21 @@
         const provider = studioOpt.dataset.provider;
         const nid = studioOpt.dataset.id;
         if (mediaKind !== 'tv' && company) {
-          urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${company}&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}`);
+          urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_companies=${company}&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}`);
         }
         if (mediaKind !== 'movie' && (provider || nid)) {
-          if (provider) urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_watch_providers=${provider}&watch_region=US&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}${lang}`);
-          else urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${nid}&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}${lang}`);
+          if (provider) urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_watch_providers=${provider}&watch_region=US&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}${lang}`);
+          else urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&with_networks=${nid}&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}${lang}`);
         }
       } else if (mediaKind === 'movie') {
-        urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}`);
-        urls.push(`${TMDB_BASE}/trending/movie/day?api_key=${apiKey}&page=1`);
+        urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}`);
+        urls.push(`${TMDB_BASE}/trending/movie/day?api_key=${apiKey}&page=${pg}`);
       } else if (mediaKind === 'tv') {
-        urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=${sortBy}&page=1${genreQuery}${yearQuery}${lang}&without_genres=10763,10764,10767`);
-        urls.push(`${TMDB_BASE}/trending/tv/day?api_key=${apiKey}&page=1`);
+        urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=${sortBy}&page=${pg}${genreQuery}${yearQuery}${lang}&without_genres=10763,10764,10767`);
+        urls.push(`${TMDB_BASE}/trending/tv/day?api_key=${apiKey}&page=${pg}`);
       } else {
-        urls.push(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=1`);
-        urls.push(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`);
+        urls.push(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=${pg}`);
+        urls.push(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=${pg}`);
       }
 
       const packs = await Promise.all(urls.map(u => cachedFetch(u)));
@@ -6502,20 +6564,34 @@
         });
       });
       items.sort((a,b) => (b.popularity||0)-(a.popularity||0));
-      trendingPool = items.slice(0, 24);
+      if (!items.length) { hasMorePages = false; trendingLoading = false; return; }
+      const startIdx = trendingPool.length;
+      items.forEach(it => {
+        if (trendingPool.some(p => p.id === it.id)) return;
+        trendingPool.push(it);
+      });
+      midRailPool = midRailPool.concat(items);
       const frag = document.createDocumentFragment();
-      trendingPool.slice(0, 10).forEach(item => frag.appendChild(buildTrendLane(item)));
+      const fresh = trendingPool.slice(startIdx);
+      fresh.forEach((item, i) => {
+        frag.appendChild(buildTrendLane(item, startIdx + i));
+        frag.appendChild(buildTrendMidRail(startIdx + i));
+      });
       box.appendChild(frag);
-      trendingPool.slice(0, 10).forEach(item => hydrateTrendLane(item));
+      fresh.forEach(item => hydrateTrendLane(item));
+      trendingPage = pg;
+      hasMorePages = true;
+      trendingLoading = false;
+      isLoading = false;
     }
 
-    function buildTrendLane(item) {
+    function buildTrendLane(item, idx) {
       const type = item.media_type || (item.title ? 'movie' : 'tv');
       const title = item.title || item.name || 'Untitled';
       const poster = item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '';
       const back = item.backdrop_path ? `${IMAGE_MID}${item.backdrop_path}` : poster;
       const wrap = document.createElement('article');
-      wrap.className = 'trend-lane';
+      wrap.className = 'trend-lane' + ((idx % 2) ? ' flip' : '');
       wrap.innerHTML = `
         <div class="trend-player-col">
           <div class="trend-viewport" id="trendVp_${item.id}">
@@ -6529,7 +6605,10 @@
         <div class="trend-art-col">
           <div class="trend-poster-syn">
             <img class="trend-portrait" src="${poster}" alt="${title}" loading="lazy" decoding="async" />
-            <p class="trend-syn">${(item.overview || 'Synopsis loading…').replace(/</g,'')}</p>
+            <div>
+              <p class="trend-syn">${(item.overview || 'Synopsis loading…').replace(/</g,'')}</p>
+              <div class="trend-cast-row" id="trendCast_${item.id}"></div>
+            </div>
           </div>
           <div class="trend-grad-line"></div>
           <div class="art-toggle-group" style="align-self:flex-start;">
@@ -6541,11 +6620,68 @@
       return wrap;
     }
 
+    const MID_RAIL_TITLES = [
+      'Still Going Crazy', 'Blockbusters On Fire', 'People Can\'t Stop Watching',
+      'This Week\'s Noise', 'Cult + Certified Hits', 'Fresh Heat'
+    ];
+
+    function buildTrendMidRail(idx) {
+      const wrap = document.createElement('div');
+      wrap.className = 'trend-mid-rail';
+      const sid = 'trendMid_' + idx;
+      wrap.innerHTML = `
+        <div class="trend-mid-label"><i class="fa-solid fa-bolt" style="color:var(--accent);"></i> ${MID_RAIL_TITLES[idx % MID_RAIL_TITLES.length]}</div>
+        <div class="row-scroll-container">
+          <div class="shelf-scroll" id="${sid}"></div>
+          <div class="row-slider-track" id="${sid}_track"><div class="row-slider-thumb" id="${sid}_thumb"></div></div>
+        </div>`;
+      requestAnimationFrame(() => fillTrendMidRail(sid, idx));
+      return wrap;
+    }
+
+    async function fillTrendMidRail(sid, idx) {
+      const row = document.getElementById(sid);
+      if (!row) return;
+      if (!midRailPool.length) {
+        const extra = await cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=${(idx % 5) + 2}`);
+        midRailPool = (extra.results || []).filter(i => i.poster_path);
+      }
+      const start = (idx * 7) % Math.max(midRailPool.length, 1);
+      const slice = [];
+      for (let i = 0; i < 14 && midRailPool.length; i++) slice.push(midRailPool[(start + i) % midRailPool.length]);
+      row.innerHTML = '';
+      slice.forEach(item => {
+        const type = item.media_type || (item.title ? 'movie' : 'tv');
+        const card = document.createElement('div');
+        card.className = 'shelf-card';
+        card.style.width = '92px';
+        card.innerHTML = `<div class="shelf-poster"><img src="${IMAGE_BASE}${item.poster_path}" alt="" loading="lazy" decoding="async" /></div>
+          <div class="shelf-card-title">${item.title || item.name || ''}</div>`;
+        attachCardInteractions(card, item, type);
+        row.appendChild(card);
+      });
+      if (typeof setupRowSliderListener === 'function') setupRowSliderListener(sid, sid + '_thumb', sid + '_track');
+    }
+
     async function hydrateTrendLane(item) {
       const type = item.media_type || (item.title ? 'movie' : 'tv');
       try {
         const imgs = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/images?api_key=${apiKey}`);
         renderTrendShots(item.id, imgs);
+      } catch (_) {}
+      try {
+        const cred = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/credits?api_key=${apiKey}`);
+        const row = document.getElementById(`trendCast_${item.id}`);
+        if (row) {
+          row.innerHTML = '';
+          (cred.cast || []).filter(p => p.profile_path).slice(0, 4).forEach(p => {
+            const chip = document.createElement('div');
+            chip.className = 'trend-cast-chip';
+            chip.innerHTML = `<img src="${IMAGE_BASE}${p.profile_path}" alt="" loading="lazy" decoding="async" /><span>${p.name}</span>`;
+            chip.onclick = (e) => { e.stopPropagation(); filterByActor(p.id, p.name); };
+            row.appendChild(chip);
+          });
+        }
       } catch (_) {}
       if (type === 'movie') {
         try {
@@ -6805,6 +6941,7 @@
       searchFilterSuite.classList.remove('active');
 
       closePlayerPage(false);
+      if (feedTitle) feedTitle.style.display = '';
       buildGenreChips();
       buildYearChips();
 
@@ -6907,9 +7044,12 @@
         curatedShelvesContainer.innerHTML = '';
         upcomingViewContainer.style.display = 'none';
         mediaGrid.innerHTML = '';
-        if (feedTitle) feedTitle.innerHTML = `<i class="fa-solid fa-fire" style="color:#f97316;"></i> Trending Right Now`;
+        if (feedTitle) feedTitle.style.display = 'none';
         topFilterSuite.classList.remove('active');
-        if (heroSpotlight) heroSpotlight.style.display = 'none';
+        if (heroSpotlight) {
+          heroSpotlight.style.display = 'flex';
+          heroSpotlight.style.opacity = '1';
+        }
         bootstrapTrendingView();
         return;
       }
@@ -7903,7 +8043,8 @@
                   const scrollPos = window.innerHeight + window.scrollY;
                   const triggerThreshold = document.documentElement.offsetHeight - 1600;
                   if (scrollPos >= triggerThreshold) {
-                    fetchCatalog(currentPage + 1, false);
+                    if (currentType === 'trending') loadTrendingLanes(false);
+                    else fetchCatalog(currentPage + 1, false);
                   }
                 }
               }
@@ -9001,6 +9142,10 @@
       } else {
         tvControlSuite.style.display = 'none';
       }
+      const nextBtn = document.getElementById('btnAutoNext');
+      const playBtn = document.getElementById('btnAutoPlay');
+      if (nextBtn) nextBtn.style.display = type === 'tv' ? 'inline-flex' : 'none';
+      if (playBtn) playBtn.style.display = type === 'tv' ? 'inline-flex' : 'none';
 
       snapToPlayerView();
 
@@ -9915,12 +10060,22 @@
       const vp = document.getElementById('videoViewport');
       if (!vp || vp._fsChromeBound) return;
       vp._fsChromeBound = true;
-      ['mousemove', 'mousedown', 'touchstart', 'pointerdown'].forEach(ev => {
-        vp.addEventListener(ev, () => {
-          if (document.fullscreenElement || document.webkitFullscreenElement || document.body.classList.contains('player-fs-active')) {
-            showFsChrome();
-          }
-        }, { passive: true });
+      const kick = () => {
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.body.classList.contains('player-fs-active')) {
+          showFsChrome();
+        }
+      };
+      ['mousemove', 'mousedown', 'touchstart', 'pointerdown', 'keydown'].forEach(ev => {
+        document.addEventListener(ev, kick, { passive: true });
+        vp.addEventListener(ev, kick, { passive: true });
+      });
+      ['fsHotTop', 'fsHotBottom', 'fsCornerBtn', 'fsExitOverlay'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('mousemove', kick, { passive: true });
+          el.addEventListener('mouseenter', kick, { passive: true });
+          el.addEventListener('touchstart', kick, { passive: true });
+        }
       });
     }
 
@@ -10080,6 +10235,9 @@
       document.body.classList.toggle('player-fs-active', fs);
       const overlay = document.getElementById('fsExitOverlay');
       if (overlay) overlay.style.display = fs ? 'inline-flex' : '';
+      const icon = document.getElementById('fsCornerIcon');
+      if (icon) icon.className = fs ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+      if (fs) showFsChrome();
     }
 
     function requestPlayerFullscreen() {
