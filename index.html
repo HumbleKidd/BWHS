@@ -5178,6 +5178,24 @@
     let trendingShotMode = {};
     let trendingPage = 1;
     let trendingLoading = false;
+    let catalogViewId = 0;
+
+    function hideTrendingExperience() {
+      const trendExp = document.getElementById('trendingExperience');
+      if (trendExp) trendExp.classList.remove('active');
+      trendingLoading = false;
+      if (typeof trendHeroTimer !== 'undefined' && trendHeroTimer) {
+        clearInterval(trendHeroTimer);
+        trendHeroTimer = null;
+      }
+    }
+
+    function bumpCatalogView() {
+      catalogViewId += 1;
+      hideTrendingExperience();
+      return catalogViewId;
+    }
+
     let midRailPool = [];
     let midRailCursor = 0;
     let midRailUsedIds = new Set();
@@ -6243,6 +6261,7 @@
     }
 
     function filterByActor(personId, personName, pushHistory = true) {
+      bumpCatalogView();
       currentType = 'actor_filmography';
       currentPersonId = personId;
       currentPersonName = personName;
@@ -6434,23 +6453,25 @@
     }
 
     async function loadHeroFeatured() {
+      const viewId = catalogViewId;
+      const heroMode = currentType;
       try {
         const thisYear = new Date().getFullYear();
-        const pages = currentType === 'trending'
+        const pages = heroMode === 'trending'
           ? [
               cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`),
-              cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=800&primary_release_date.gte=2000-01-01&primary_release_date.lte=${thisYear}-12-31&page=${randInt(1, 12)}`),
-              cachedFetch(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=500&first_air_date.gte=2000-01-01&first_air_date.lte=${thisYear}-12-31&without_genres=10763,10764,10767&page=${randInt(1, 10)}`),
-              cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=popularity.desc&vote_count.gte=400&primary_release_date.gte=2010-01-01&page=${randInt(1, 15)}`)
+              cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=800&primary_release_date.gte=2000-01-01&primary_release_date.lte=${thisYear}-12-31&page=${randInt(1, 8)}`),
+              cachedFetch(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=500&first_air_date.gte=2000-01-01&first_air_date.lte=${thisYear}-12-31&without_genres=10763,10764,10767&page=${randInt(1, 6)}`)
             ]
           : [
               cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`),
               cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=1`)
             ];
         const packs = await Promise.all(pages);
+        if (viewId !== catalogViewId) return;
 
         const combined = packs.flatMap(p => p.results || [])
-          .filter(i => i.backdrop_path && i.poster_path && i.overview && (currentType === 'trending' ? isModernKnownCinema(i) : isCleanCinemaContent(i)));
+          .filter(i => i.backdrop_path && i.poster_path && i.overview && (heroMode === 'trending' ? isModernKnownCinema(i) : isCleanCinemaContent(i)));
 
         const unique = [];
         const seen = new Set();
@@ -6461,7 +6482,7 @@
         });
 
         shuffleInPlace(unique);
-        heroItems = unique.slice(0, currentType === 'trending' ? 18 : 8);
+        heroItems = unique.slice(0, heroMode === 'trending' ? 12 : 8);
         
         if (heroItems.length > 0) {
           heroIndicators.innerHTML = '';
@@ -6485,6 +6506,7 @@
     let trendHeroTimer = null;
     let trendHeroOffset = 0;
     async function loadTrendHeroRail() {
+      const viewId = catalogViewId;
       const track = document.getElementById('trendHeroTrack');
       const wrap = document.getElementById('trendHero');
       if (!track || !wrap) return;
@@ -6492,6 +6514,7 @@
         cachedFetch(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=1`),
         cachedFetch(`${TMDB_BASE}/trending/tv/day?api_key=${apiKey}&page=1`)
       ]);
+      if (viewId !== catalogViewId || currentType !== 'trending') return;
       const seen = new Set();
       const items = [];
       [...(d1.results||[]), ...(d2.results||[])].forEach(it => {
@@ -6519,12 +6542,14 @@
     }
 
     async function bootstrapTrendingView() {
+      const viewId = catalogViewId;
       initTrendingFilters();
       if (heroSpotlight) {
         heroSpotlight.style.display = 'flex';
         heroSpotlight.style.opacity = '1';
       }
       await loadHeroFeatured();
+      if (viewId !== catalogViewId || currentType !== 'trending') return;
       startHeroInterval();
       trendingPage = 1;
       loadTrendingLanes(true);
@@ -6569,6 +6594,11 @@
     }
 
     async function loadTrendingLanes(reset) {
+      if (currentType !== 'trending') {
+        hideTrendingExperience();
+        return;
+      }
+      const viewId = catalogViewId;
       const box = document.getElementById('trendingLanes');
       if (!box) return;
       if (reset) {
@@ -6657,6 +6687,10 @@
       }
 
       const packs = await Promise.all(urls.map(u => cachedFetch(u)));
+      if (viewId !== catalogViewId || currentType !== 'trending') {
+        trendingLoading = false;
+        return;
+      }
       const seen = new Set(trendingPool.map(p => p.id));
       const items = [];
       packs.forEach(d => {
@@ -6945,7 +6979,8 @@
     }
 
     async function bootstrapHomeView() {
-      if (homeBootstrapPromise) return homeBootstrapPromise;
+      const viewId = catalogViewId;
+      hideTrendingExperience();
       if (heroSpotlight) {
         heroSpotlight.style.opacity = '0';
         heroSpotlight.style.display = 'flex';
@@ -6955,30 +6990,27 @@
         actorsShowcaseSection.style.display = 'flex';
       }
 
-      homeBootstrapPromise = Promise.all([
-        loadHeroFeatured(),
-        loadTopActorsShowcase(),
-        loadCuratedShelves(),
-        fetchCatalog(1, true)
-      ]).then(() => {
+      const showHero = () => {
+        if (viewId !== catalogViewId || currentType !== 'all') return;
         if (heroSpotlight && heroItems.length) {
           heroSpotlight.style.display = 'flex';
           heroSpotlight.style.opacity = '1';
         } else if (heroSpotlight) {
           heroSpotlight.style.display = 'none';
         }
+      };
+      const showActors = () => {
+        if (viewId !== catalogViewId || currentType !== 'all') return;
         if (actorsShowcaseSection) {
           actorsShowcaseSection.style.display = 'flex';
           actorsShowcaseSection.style.opacity = '1';
         }
-      }).catch(() => {
-        if (heroSpotlight) heroSpotlight.style.opacity = '1';
-        if (actorsShowcaseSection) actorsShowcaseSection.style.opacity = '1';
-      }).finally(() => {
-        homeBootstrapPromise = null;
-      });
+      };
 
-      return homeBootstrapPromise;
+      loadHeroFeatured().then(showHero).catch(showHero);
+      loadTopActorsShowcase().then(showActors).catch(showActors);
+      loadCuratedShelves();
+      fetchCatalog(1, true);
     }
 
     function renderHeroSlide(index) {
@@ -7089,6 +7121,7 @@
     }
 
     function selectType(type, pushHistory = true) {
+      bumpCatalogView();
       currentType = type;
       if (type !== 'brand') currentBrand = null;
       currentPersonId = null;
@@ -7122,6 +7155,7 @@
       if (activeMobBtn) activeMobBtn.classList.add('active');
 
       upcomingViewContainer.style.display = 'none';
+      hideTrendingExperience();
       const fsSticky = document.getElementById('findSimilarSticky');
       if (fsSticky) fsSticky.classList.toggle('active', type === 'findsimilar');
 
@@ -7193,10 +7227,13 @@
       }
 
       const trendExp = document.getElementById('trendingExperience');
-      if (trendExp) trendExp.classList.toggle('active', type === 'trending');
+      if (trendExp) {
+        if (type === 'trending') trendExp.classList.add('active');
+        else trendExp.classList.remove('active');
+      }
 
       if (type === 'all') {
-        if (trendExp) trendExp.classList.remove('active');
+        hideTrendingExperience();
         bootstrapHomeView();
         return;
       }
@@ -7212,6 +7249,7 @@
           heroSpotlight.style.display = 'flex';
           heroSpotlight.style.opacity = '1';
         }
+        if (trendExp) trendExp.classList.add('active');
         bootstrapTrendingView();
         return;
       }
@@ -7650,6 +7688,7 @@
         prefer: brand.prefer || (kind === 'network' ? 'tv' : 'movie'),
         accent: brand.accent
       };
+      bumpCatalogView();
       currentType = 'brand';
       brandMediaFilter = 'all';
       currentGenre = null;
@@ -7730,6 +7769,7 @@
       const cat = THEME_CATEGORIES.find((c) => c.id === id);
       if (!cat) return;
       currentThemeCat = cat;
+      bumpCatalogView();
       currentType = 'theme_lane';
       currentPersonId = null;
       currentPersonName = '';
@@ -8903,6 +8943,7 @@
     }
 
     function executeSearchAction(queryText) {
+      bumpCatalogView();
       // Hide suggestions and dismiss mobile keyboard immediately
       searchSuggestions.classList.remove('active');
       searchSuggestions.innerHTML = '';
@@ -8924,6 +8965,7 @@
       heroSpotlight.style.display = 'none';
       actorsShowcaseSection.style.display = 'none';
       upcomingViewContainer.style.display = 'none';
+      hideTrendingExperience();
       curatedShelvesContainer.innerHTML = '';
       topFilterSuite.classList.remove('active');
       
@@ -9541,6 +9583,7 @@
       const mediaTitle = (mediaRef && (mediaRef.title || mediaRef.name)) || 'This title';
       
       closePlayerPage(false);
+      bumpCatalogView();
       currentType = 'full_cast_view';
       currentPersonId = null;
       currentPersonName = '';
