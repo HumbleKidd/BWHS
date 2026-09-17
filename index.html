@@ -2330,6 +2330,8 @@
       border: none;
       z-index: 1;
       pointer-events: auto !important;
+      transform: translateZ(0);
+      backface-visibility: hidden;
     }
 
     .fs-exit-overlay {
@@ -2955,6 +2957,111 @@
       flex-direction: column;
       gap: 20px;
       background: var(--surface);
+    }
+
+    .player-trailers-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .player-trailers-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px) {
+      .player-trailers-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    .player-trailer-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+    .player-trailer-frame-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: var(--shadow-md);
+    }
+    .player-trailer-frame-wrap iframe,
+    .player-trailer-frame-wrap .trailer-poster-thumb {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      object-fit: cover;
+    }
+    .player-trailer-frame-wrap iframe {
+      z-index: 1;
+      opacity: 0;
+      pointer-events: none;
+      background: #000;
+    }
+    .player-trailer-frame-wrap.is-playing iframe {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .player-trailer-frame-wrap.is-playing .trailer-poster-thumb,
+    .player-trailer-frame-wrap.is-playing .trailer-play-overlay {
+      display: none;
+    }
+    .trailer-play-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      border: none;
+      background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.55));
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.78rem;
+    }
+    .trailer-play-overlay i {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 8px 20px rgba(79,70,229,0.45);
+    }
+    .player-trailers-film {
+      color: var(--primary);
+      font-weight: 800;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.82rem;
+      max-width: 52vw;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-trailers-film:not(:empty)::before {
+      content: '·';
+      margin: 0 6px 0 4px;
+      color: var(--text-muted);
+    }
+    .trailer-slot-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .overview-text {
@@ -3640,9 +3747,10 @@
       position: fixed;
       z-index: 9010;
       min-width: 210px;
-      background: var(--surface);
+      background: color-mix(in srgb, var(--surface) 72%, transparent);
+      backdrop-filter: blur(10px);
       border-radius: 16px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.28), 0 0 0 1px var(--border);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.22);
       padding: 8px;
       display: none !important;
       flex-direction: column;
@@ -3650,13 +3758,35 @@
       animation: ctxPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       transform-origin: top left;
       pointer-events: auto;
+      opacity: 0.55;
+      isolation: isolate;
+    }
+    .ctx-menu::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      padding: 1.5px;
+      background: linear-gradient(135deg, #4f46e5, #06b6d4, #10b981, #f59e0b, #ec4899, #8b5cf6);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
     }
     .ctx-menu.active {
       display: flex !important;
     }
+    .ctx-menu.hover-mode {
+      opacity: 0.48;
+    }
+    .ctx-menu.hover-mode:hover,
+    .ctx-menu:hover {
+      opacity: 1;
+      background: var(--surface);
+    }
     @keyframes ctxPop {
       from { opacity: 0; transform: scale(0.92); }
-      to { opacity: 1; transform: scale(1); }
+      to { opacity: 0.55; transform: scale(1); }
     }
     .ctx-menu-title {
       font-size: 0.72rem;
@@ -3704,6 +3834,206 @@
       height: 1px;
       background: var(--border);
       margin: 4px 8px;
+    }
+    .ctx-menu.hover-mode {
+      pointer-events: auto;
+    }
+    .ctx-menu-backdrop.hover-mode {
+      background: transparent;
+      pointer-events: none;
+    }
+
+    .trailer-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 9200;
+      background: rgba(2, 6, 23, 0.82);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      backdrop-filter: blur(8px);
+    }
+    .trailer-modal-backdrop.active {
+      display: flex;
+    }
+    .trailer-modal-card {
+      position: relative;
+      width: min(960px, 94vw);
+      background: #050816;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    }
+    .trailer-modal-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+    }
+    .trailer-modal-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .trailer-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 3;
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(15,23,42,0.88);
+      color: #fff;
+      cursor: pointer;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .trailer-modal-title {
+      padding: 10px 16px 12px;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.88rem;
+    }
+
+    .player-click-shield {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: transparent;
+      cursor: pointer;
+      display: none;
+    }
+    .player-click-shield.active {
+      display: block;
+    }
+
+    .reels-rift {
+      position: fixed;
+      right: 10px;
+      bottom: 92px;
+      z-index: 58;
+      width: 72px;
+      height: 168px;
+      border-radius: 22px;
+      text-decoration: none;
+      color: #fff;
+      overflow: hidden;
+      isolation: isolate;
+      box-shadow: 0 16px 40px rgba(15,23,42,0.35);
+      transform: rotate(-6deg);
+      transition: transform 0.25s ease, width 0.25s ease, height 0.25s ease;
+    }
+    .reels-rift::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      padding: 2px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #f59e0b, #ec4899, #4f46e5, #06b6d4);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .reels-rift-phone {
+      position: absolute;
+      inset: 3px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #050816;
+    }
+    .reels-rift-strip {
+      display: flex;
+      flex-direction: column;
+      animation: riftScroll 14s linear infinite;
+    }
+    .reels-rift-strip img {
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      object-fit: cover;
+      display: block;
+    }
+    @keyframes riftScroll {
+      from { transform: translateY(0); }
+      to { transform: translateY(-50%); }
+    }
+    .reels-rift-copy {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 8px;
+      z-index: 2;
+      text-align: center;
+      text-shadow: 0 2px 8px #000;
+      pointer-events: none;
+    }
+    .reels-rift-copy b {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    .reels-rift-copy span {
+      display: block;
+      font-size: 0.58rem;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+    .reels-rift:hover {
+      transform: rotate(0deg) scale(1.12);
+      width: 118px;
+      height: 210px;
+    }
+    body.player-page-live .reels-rift,
+    body.theater-mode-active .reels-rift {
+      display: none !important;
+    }
+    @media (min-width: 900px) {
+      .reels-rift {
+        bottom: 28px;
+        right: 18px;
+        width: 84px;
+        height: 196px;
+      }
+    }
+    a.sidebar-btn.reels-side-link,
+    a.sheet-nav-item.featured-link {
+      text-decoration: none;
+    }
+    .featured-link {
+      position: relative;
+      overflow: hidden;
+    }
+    .featured-link em {
+      font-style: normal;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #fde68a;
+      margin-left: 6px;
+    }
+    .featured-link {
+      box-shadow: 0 0 0 1px rgba(245,158,11,0.45), 0 0 14px rgba(236,72,153,0.28);
+      animation: featuredPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes featuredPulse {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 0 10px rgba(79,70,229,0.2); }
+      50% { box-shadow: 0 0 0 1.5px rgba(236,72,153,0.7), 0 0 18px rgba(245,158,11,0.35); }
+    }
+
+    body.player-page-live .hero-spotlight,
+    body.player-page-live .shelf-section,
+    body.player-page-live .media-card,
+    body.player-page-live .ep-named-card.active {
+      animation: none !important;
     }
 
     /* Theater mode: pure video + auto-fade chrome (exit + ad notice) */
@@ -4067,6 +4397,12 @@
     <button type="button" class="ctx-menu-item" id="ctxFavorite" data-ctx-action="favorite">
       <i class="fa-solid fa-heart" style="color:#ef4444;"></i> <span id="ctxFavoriteLabel">Add to Favorites</span>
     </button>
+    <button type="button" class="ctx-menu-item" id="ctxTrailer" data-ctx-action="trailer">
+      <i class="fa-solid fa-clapperboard" style="color:var(--accent);"></i> Watch Trailer
+    </button>
+    <button type="button" class="ctx-menu-item" id="ctxOpenTab" data-ctx-action="opentab">
+      <i class="fa-solid fa-arrow-up-right-from-square" style="color:var(--primary);"></i> Open in new tab
+    </button>
     <div class="ctx-menu-divider"></div>
     <button type="button" class="ctx-menu-item" id="ctxShare" data-ctx-action="share">
       <i class="fa-solid fa-share-nodes" style="color:var(--accent);"></i> Share Watch Link
@@ -4074,6 +4410,18 @@
     <button type="button" class="ctx-menu-item" id="ctxShareCover" data-ctx-action="sharecover">
       <i class="fa-solid fa-image" style="color:var(--primary);"></i> Share Cover Art
     </button>
+  </div>
+
+  <div class="trailer-modal-backdrop" id="trailerModalBackdrop">
+    <div class="trailer-modal-card" id="trailerModalCard">
+      <button type="button" class="trailer-modal-close" id="trailerModalClose" aria-label="Close trailer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="trailer-modal-frame">
+        <iframe id="trailerModalFrame" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div class="trailer-modal-title" id="trailerModalTitle">Official Trailer</div>
+    </div>
   </div>
 
   <!-- Dynamic Ambient Glow Backdrop for Theater Mode -->
@@ -4133,6 +4481,10 @@
         <i class="fa-solid fa-shapes" style="color: #f97316;"></i>
         <span>Cartoons Hub</span>
       </button>
+      <a class="sidebar-btn reels-side-link featured-link" href="https://bwreels.online" target="_blank" rel="noopener noreferrer">
+        <i class="fa-solid fa-bolt" style="color:#f59e0b;"></i>
+        <span>BWReels <em>Featured</em></span>
+      </a>
       <button class="sidebar-btn" id="sideAnimation" onclick="selectType('animation')">
         <i class="fa-solid fa-wand-magic-sparkles" style="color: #d946ef;"></i>
         <span>Animation</span>
@@ -4315,11 +4667,11 @@
                       webkitallowfullscreen="true" 
                       mozallowfullscreen="true" 
                       allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *; clipboard-read *; clipboard-write *"
-                      loading="eager"
                       referrerpolicy="no-referrer"
                       frameborder="0"
                       scrolling="no"
                     ></iframe>
+                    <div class="player-click-shield active" id="playerClickShield" title="Start playback"></div>
                   </div>
                 </div>
 
@@ -4382,6 +4734,40 @@
 
                 <div class="details-section">
                   <p class="overview-text" id="playerOverview">Loading synopsis...</p>
+
+                  <div class="player-trailers-block" id="playerTrailersBlock">
+                    <div class="block-heading-wrap">
+                      <div class="block-heading">
+                        <i class="fa-solid fa-clapperboard" style="color: var(--accent);"></i>
+                        <span>Official Trailers</span>
+                        <span class="player-trailers-film" id="playerTrailersFilmName"></span>
+                      </div>
+                    </div>
+                    <div class="player-trailers-row" id="playerTrailersRow">
+                      <div class="player-trailer-slot" id="trailerSlotA">
+                        <div class="player-trailer-frame-wrap">
+                          <img class="trailer-poster-thumb" id="trailerThumbA" alt="Trailer 1" />
+                          <iframe id="playerTrailerA" title="Trailer 1" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                          <button type="button" class="trailer-play-overlay" onclick="playSingleTrailer(0)">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Trailer 1</span>
+                          </button>
+                        </div>
+                        <p class="trailer-slot-label" id="trailerLabelA">Trailer</p>
+                      </div>
+                      <div class="player-trailer-slot" id="trailerSlotB">
+                        <div class="player-trailer-frame-wrap">
+                          <img class="trailer-poster-thumb" id="trailerThumbB" alt="Trailer 2" />
+                          <iframe id="playerTrailerB" title="Trailer 2" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                          <button type="button" class="trailer-play-overlay" onclick="playSingleTrailer(1)">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Trailer 2</span>
+                          </button>
+                        </div>
+                        <p class="trailer-slot-label" id="trailerLabelB">Teaser</p>
+                      </div>
+                    </div>
+                  </div>
 
                   <!-- Extended Cast Bar -->
                   <div id="castBarAnchor">
@@ -4469,6 +4855,7 @@
 
         <!-- CATALOG BROWSER VIEW WRAPPER -->
         <div id="catalogBrowserView">
+          
           <!-- Find Similar sticky search panel -->
           <div class="find-similar-sticky" id="findSimilarSticky">
             <div class="find-similar-seed" id="findSimilarSeed" onclick="openFindSimilarSeed()">
@@ -4822,6 +5209,10 @@
         <i class="fa-solid fa-shapes" style="color:#f97316;"></i>
         <span>Cartoons Hub</span>
       </button>
+      <a class="sheet-nav-item featured-link" href="https://bwreels.online" target="_blank" rel="noopener noreferrer" onclick="closeMoreSheet(null)">
+        <i class="fa-solid fa-bolt" style="color:#f59e0b;"></i>
+        <span>BWReels <em>Featured</em></span>
+      </a>
       <button class="sheet-nav-item" onclick="selectType('animation'); closeMoreSheet(null);">
         <i class="fa-solid fa-wand-magic-sparkles" style="color:#d946ef;"></i>
         <span>Animation</span>
@@ -4909,36 +5300,43 @@
   <script>
     // POP-UP & UNWANTED TAB BLOCKER (NO SANDBOX on player iframe — providers detect & refuse sandbox)
     // Aggressively block external popups / redirects / new tabs from ads while keeping player free.
+    window.__bwhsAllowNextOpen = false;
     (function() {
       const originalOpen = window.open;
+      window.__bwhsNativeOpen = originalOpen;
       window.open = function(url, target, features) {
         try {
-          if (!url || url === 'about:blank' || (typeof url === 'string' && (url.startsWith('blob:') || url.startsWith('data:')))) {
+          if (window.__bwhsAllowNextOpen) {
+            window.__bwhsAllowNextOpen = false;
             return originalOpen.apply(this, arguments);
+          }
+          if (!url || url === 'about:blank' || (typeof url === 'string' && (url.startsWith('blob:') || url.startsWith('data:')))) {
+            return null;
           }
           if (typeof url === 'string') {
             const u = url.trim().toLowerCase();
-            // Block EVERY external origin. Only allow same-origin / relative / hash.
             if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('//')) {
               try {
                 const abs = new URL(url, window.location.href);
+                if (abs.hostname === 'bwreels.online' || abs.hostname.endsWith('.bwreels.online')) {
+                  return originalOpen.apply(this, arguments);
+                }
                 if (abs.origin !== window.location.origin) {
                   console.warn('[BWHS] Blocked external popup:', url);
                   return null;
                 }
+                // Same-origin only when we explicitly opted in above
+                return null;
               } catch (_) {
                 return null;
               }
             }
-          } else {
-            return null;
           }
+          return null;
         } catch (_) {
           return null;
         }
-        return originalOpen.apply(this, arguments);
       };
-      // Freeze so scripts cannot easily restore original
       try {
         Object.defineProperty(window, 'open', {
           value: window.open,
@@ -4957,6 +5355,9 @@
       if (!href || href === '#' || href.startsWith('javascript:')) return;
       try {
         const abs = new URL(href, window.location.href);
+        if (abs.hostname === 'bwreels.online' || abs.hostname.endsWith('.bwreels.online')) {
+          return;
+        }
         if (abs.origin !== window.location.origin) {
           e.preventDefault();
           e.stopImmediatePropagation();
@@ -4974,10 +5375,29 @@
 
     // Reclaim focus if a popup somehow stole visibility while player is open
     document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && typeof playerPageView !== 'undefined' && playerPageView && playerPageView.classList.contains('active')) {
+        try { window.focus(); } catch (_) {}
+      }
       if (document.visibilityState === 'visible' && typeof playerPageView !== 'undefined' && playerPageView && playerPageView.classList.contains('active')) {
         try { window.focus(); } catch (_) {}
       }
     });
+    window.addEventListener('blur', () => {
+      const playing = typeof playerPageView !== 'undefined' && playerPageView && playerPageView.classList.contains('active');
+      if (!playing) return;
+      setTimeout(() => {
+        try { window.focus(); } catch (_) {}
+      }, 30);
+    });
+    document.addEventListener('auxclick', (e) => {
+      if (e.button === 1) {
+        const inPlayer = e.target && e.target.closest && e.target.closest('#videoViewport, #playerPageView');
+        if (inPlayer) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    }, true);
 
     // Extra safety: block form submissions that try to open new windows / navigate away
     document.addEventListener('submit', (e) => {
@@ -5017,9 +5437,10 @@
 
 
     const TMDB_BASE = 'https://api.themoviedb.org/3';
-    const IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
-    const IMAGE_MID = 'https://image.tmdb.org/t/p/w780';
+    const IMAGE_BASE = 'https://image.tmdb.org/t/p/w780';
+    const IMAGE_MID = 'https://image.tmdb.org/t/p/w1280';
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
+    const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w500';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
     const PROVIDERS = ['vixsrc', 'videasy', 'vidsrc', 'vidcore', 'vidlink', 'vidapi', 'moviesapi', 'vidbolt'];
@@ -6109,27 +6530,63 @@
       }
     }
 
+    function artworkDownloadName(kind = 'Artwork') {
+      const film = (activeMedia && (activeMedia.title || activeMedia.name)) || 'Film';
+      const safe = String(film).replace(/[^\w\s-]+/g, '').trim().replace(/\s+/g, '_').slice(0, 70) || 'Film';
+      return `BWHS-${safe}-${kind}.jpg`;
+    }
+
+    function triggerBlobDownload(blob, filename) {
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      link.rel = 'noopener';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+    }
+
     async function downloadImageDirectly(imageUrl, filename = 'BWHS-Artwork.jpg') {
-      showToast('Downloading artwork...');
+      if (!filename || filename === 'BWHS-Artwork.jpg') {
+        filename = artworkDownloadName('Artwork');
+      }
       try {
-        const response = await fetch(imageUrl, { mode: 'cors' });
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-        showToast('Download complete');
-      } catch (err) {
-        const link = document.createElement('a');
-        link.href = imageUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const response = await fetch(imageUrl, { mode: 'cors', cache: 'force-cache' });
+        if (response.ok) {
+          triggerBlobDownload(await response.blob(), filename);
+          return;
+        }
+      } catch (_) {}
+      try {
+        const blob = await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth || img.width;
+              canvas.height = img.naturalHeight || img.height;
+              canvas.getContext('2d').drawImage(img, 0, 0);
+              canvas.toBlob((b) => b ? resolve(b) : reject(new Error('blob')), 'image/jpeg', 0.95);
+            } catch (err) { reject(err); }
+          };
+          img.onerror = reject;
+          img.src = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 'download=1';
+        });
+        triggerBlobDownload(blob, filename);
+      } catch (_) {
+        try {
+          const img = document.getElementById('lightboxImg');
+          if (img && img.src && img.naturalWidth) {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            canvas.toBlob((b) => { if (b) triggerBlobDownload(b, filename); }, 'image/jpeg', 0.95);
+          }
+        } catch (__) {}
       }
     }
 
@@ -6397,7 +6854,10 @@
     }
 
     function showToast(msg) {
-      toastMessage.textContent = msg;
+      const text = String(msg || '');
+      const allowed = /favorite|favourites|must watch|next play/i.test(text);
+      if (!allowed) return;
+      toastMessage.textContent = text;
       toastAlert.classList.add('active');
       setTimeout(() => {
         toastAlert.classList.remove('active');
@@ -6456,17 +6916,9 @@
       const viewId = catalogViewId;
       const heroMode = currentType;
       try {
-        const thisYear = new Date().getFullYear();
-        const pages = heroMode === 'trending'
-          ? [
-              cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`),
-              cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=800&primary_release_date.gte=2000-01-01&primary_release_date.lte=${thisYear}-12-31&page=${randInt(1, 8)}`),
-              cachedFetch(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&sort_by=vote_count.desc&vote_count.gte=500&first_air_date.gte=2000-01-01&first_air_date.lte=${thisYear}-12-31&without_genres=10763,10764,10767&page=${randInt(1, 6)}`)
-            ]
-          : [
-              cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`),
-              cachedFetch(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=1`)
-            ];
+        const pages = [
+          cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`)
+        ];
         const packs = await Promise.all(pages);
         if (viewId !== catalogViewId) return;
 
@@ -6495,6 +6947,7 @@
 
           renderHeroSlide(0);
           startHeroInterval();
+          fillReelsRift(heroItems);
         }
       } catch (err) {
         heroItems = [];
@@ -7013,13 +7466,30 @@
       fetchCatalog(1, true);
     }
 
+    function fillReelsRift(items) {
+      const strip = document.getElementById('reelsRiftStrip');
+      if (!strip) return;
+      const posters = (items || []).filter(i => i.poster_path).slice(0, 8);
+      if (!posters.length) return;
+      const html = posters.map(i => `<img src="${IMAGE_THUMB}${i.poster_path}" alt="" loading="eager" decoding="async" />`).join('');
+      strip.innerHTML = html + html;
+    }
+
     function renderHeroSlide(index) {
       if (!heroItems[index]) return;
       currentHeroIndex = index;
       const item = heroItems[index];
+      if (heroSpotlight) {
+        heroSpotlight.style.display = 'flex';
+        heroSpotlight.style.opacity = '1';
+      }
 
-      heroBgImg.src = `${IMAGE_MID}${item.backdrop_path}`;
-      heroMiniPoster.src = `${IMAGE_BASE}${item.poster_path}`;
+      heroBgImg.src = item.backdrop_path ? `${IMAGE_MID}${item.backdrop_path}` : (item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '');
+      heroMiniPoster.src = item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '';
+      if (item.backdrop_path) {
+        const warm = new Image();
+        warm.src = `${IMAGE_MID}${item.backdrop_path}`;
+      }
       heroTitle.textContent = item.title || item.name;
       heroRating.textContent = item.vote_average ? item.vote_average.toFixed(1) : '8.5';
       const release = item.release_date || item.first_air_date || '';
@@ -7384,23 +7854,7 @@
     }
 
     async function playTrailerLightbox(id, type) {
-      try {
-        const vData = await cachedFetch(`${TMDB_BASE}/${type}/${id}/videos?api_key=${apiKey}`);
-        const trailer = (vData.results || []).find(v => (v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube');
-        if (trailer) {
-          infoModalTitle.textContent = 'Official Trailer';
-          infoModalBody.innerHTML = `
-            <div style="position:relative; width:100%; aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:#000;">
-              <iframe src="https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1" style="position:absolute; width:100%; height:100%; border:none;" allowfullscreen></iframe>
-            </div>
-          `;
-          openInfoModal();
-        } else {
-          showToast('No video trailer available for this release.');
-        }
-      } catch (e) {
-        showToast('Trailer playback failed');
-      }
+      await openTrailerModal(id, type, 'Official Trailer');
     }
 
     async function renderTopStarsPage(page = 1, reset = false) {
@@ -8485,6 +8939,10 @@
       return null;
     }
 
+    let ctxHoverTimer = null;
+    let ctxHoverCloseTimer = null;
+    let ctxHoverMode = false;
+
     function attachCardInteractions(element, item, type) {
       // Store for delegated context menu + attributes for reliability
       element._bwhsItem = item;
@@ -8508,10 +8966,30 @@
       });
     }
 
-    function openContextMenu(x, y, item, type) {
+    function scheduleHoverMenu(card, clientX, clientY) {
+      if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
+      clearTimeout(ctxHoverTimer);
+      clearTimeout(ctxHoverCloseTimer);
+      ctxHoverTimer = setTimeout(() => {
+        const data = resolveCardMediaData(card);
+        if (!data) return;
+        ctxHoverMode = true;
+        openContextMenu(clientX, clientY, data.item, data.type, true);
+      }, 280);
+    }
+
+    function scheduleHoverMenuClose() {
+      clearTimeout(ctxHoverCloseTimer);
+      ctxHoverCloseTimer = setTimeout(() => {
+        if (ctxHoverMode) closeContextMenu();
+      }, 260);
+    }
+
+    function openContextMenu(x, y, item, type, hoverMode = false) {
       if (!item || !item.id) return;
       ctxMenuItem = item;
       ctxMenuType = type || item.media_type || (item.title ? 'movie' : 'tv');
+      ctxHoverMode = !!hoverMode;
       const menu = document.getElementById('ctxMenu');
       const backdrop = document.getElementById('ctxMenuBackdrop');
       const titleEl = document.getElementById('ctxMenuTitle');
@@ -8528,6 +9006,8 @@
       const isNext = sharedMustWatchQueue.some(q => q.id === item.id);
       if (nextLabel) nextLabel.textContent = isNext ? 'Remove from Next Play' : 'Add to Next Play';
 
+      backdrop.classList.toggle('hover-mode', ctxHoverMode);
+      menu.classList.toggle('hover-mode', ctxHoverMode);
       backdrop.classList.add('active');
       menu.classList.add('active');
 
@@ -8550,10 +9030,13 @@
       const menu = document.getElementById('ctxMenu');
       const backdrop = document.getElementById('ctxMenuBackdrop');
       if (menu) {
-        menu.classList.remove('active');
+        menu.classList.remove('active', 'hover-mode');
         menu.style.removeProperty('display');
       }
-      if (backdrop) backdrop.classList.remove('active');
+      if (backdrop) backdrop.classList.remove('active', 'hover-mode');
+      ctxHoverMode = false;
+      clearTimeout(ctxHoverTimer);
+      clearTimeout(ctxHoverCloseTimer);
       ctxMenuItem = null;
       ctxMenuType = null;
     }
@@ -8588,6 +9071,12 @@
           } else if (action === 'favorite') {
             ctxMenuItem = item; ctxMenuType = type;
             ctxActionFavorite();
+          } else if (action === 'trailer') {
+            ctxMenuItem = item; ctxMenuType = type;
+            ctxActionTrailer();
+          } else if (action === 'opentab') {
+            ctxMenuItem = item; ctxMenuType = type;
+            ctxActionOpenNewTab();
           } else if (action === 'share') {
             ctxMenuItem = item; ctxMenuType = type;
             ctxActionShareLink();
@@ -8596,11 +9085,124 @@
             ctxActionShare();
           }
         });
+        menu.addEventListener('mouseenter', () => {
+          clearTimeout(ctxHoverCloseTimer);
+        });
+        menu.addEventListener('mouseleave', () => {
+          if (ctxHoverMode) scheduleHoverMenuClose();
+        });
       }
+      bindTrailerModalUI();
+      setupCardHoverMenus();
       // Escape closes menu
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeContextMenu();
+        if (e.key === 'Escape') {
+          closeContextMenu();
+          closeTrailerModal();
+        }
       });
+    }
+
+    function setupCardHoverMenus() {
+      document.addEventListener('mouseover', (e) => {
+        if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
+        const card = e.target.closest('.media-card, .shelf-card, .sidebar-rec-card, .upcoming-card, .panel-item-card, .hero-mini-poster');
+        if (!card) return;
+        if (e.target.closest('.fav-heart-btn, .btn-upcoming-reminder, .btn-upcoming-trailer, .ctx-menu')) return;
+        const rect = card.getBoundingClientRect();
+        scheduleHoverMenu(card, rect.right - 8, rect.top + 12);
+      });
+      document.addEventListener('mouseout', (e) => {
+        const card = e.target.closest('.media-card, .shelf-card, .sidebar-rec-card, .upcoming-card, .panel-item-card, .hero-mini-poster');
+        if (!card) return;
+        const next = e.relatedTarget;
+        if (next && (next.closest && (next.closest('#ctxMenu') || next.closest(card.tagName) === card))) return;
+        if (next && next.closest && next.closest('#ctxMenu')) return;
+        clearTimeout(ctxHoverTimer);
+        if (ctxHoverMode) scheduleHoverMenuClose();
+      });
+    }
+
+    function buildWatchUrl(item, type) {
+      const t = type || item.media_type || (item.title ? 'movie' : 'tv');
+      const hash = t === 'tv'
+        ? `#/watch/tv/${item.id}/1/1`
+        : `#/watch/movie/${item.id}`;
+      return `${window.location.origin}${window.location.pathname}${hash}`;
+    }
+
+    function ctxActionOpenNewTab() {
+      const item = ctxMenuItem;
+      const type = ctxMenuType;
+      closeContextMenu();
+      if (!item || !item.id) return;
+      const url = buildWatchUrl(item, type);
+      window.__bwhsAllowNextOpen = true;
+      const opener = window.__bwhsNativeOpen || window.open;
+      let w = null;
+      try { w = opener.call(window, url, '_blank'); } catch (_) {}
+      try { if (w) w.blur(); } catch (_) {}
+      try { window.focus(); } catch (_) {}
+      setTimeout(() => { try { window.focus(); } catch (_) {} }, 0);
+      setTimeout(() => { try { window.focus(); } catch (_) {} }, 40);
+    }
+
+    async function ctxActionTrailer() {
+      const item = ctxMenuItem;
+      const type = ctxMenuType || (item && (item.media_type || (item.title ? 'movie' : 'tv')));
+      closeContextMenu();
+      if (!item || !item.id) return;
+      await openTrailerModal(item.id, type, item.title || item.name || 'Trailer');
+    }
+
+    function bindTrailerModalUI() {
+      const backdrop = document.getElementById('trailerModalBackdrop');
+      const closeBtn = document.getElementById('trailerModalClose');
+      if (backdrop && !backdrop._bound) {
+        backdrop._bound = true;
+        backdrop.addEventListener('click', (e) => {
+          if (e.target === backdrop) closeTrailerModal();
+        });
+      }
+      if (closeBtn && !closeBtn._bound) {
+        closeBtn._bound = true;
+        closeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          closeTrailerModal();
+        });
+      }
+    }
+
+    async function openTrailerModal(id, type, title) {
+      bindTrailerModalUI();
+      const backdrop = document.getElementById('trailerModalBackdrop');
+      const frame = document.getElementById('trailerModalFrame');
+      const titleEl = document.getElementById('trailerModalTitle');
+      if (!backdrop || !frame) return;
+      if (titleEl) titleEl.textContent = title ? `${title} — Trailer` : 'Official Trailer';
+      frame.src = '';
+      backdrop.classList.add('active');
+      try {
+        const vData = await cachedFetch(`${TMDB_BASE}/${type || 'movie'}/${id}/videos?api_key=${apiKey}`);
+        let picks = pickBestVideos(vData.results);
+        if (!picks.length) {
+          showToast('No trailer available');
+          closeTrailerModal();
+          return;
+        }
+        frame.src = youtubeEmbedUrl(picks[0].key, true);
+      } catch (_) {
+        showToast('Trailer failed to load');
+        closeTrailerModal();
+      }
+    }
+
+    function closeTrailerModal() {
+      const backdrop = document.getElementById('trailerModalBackdrop');
+      const frame = document.getElementById('trailerModalFrame');
+      if (frame) frame.src = '';
+      if (backdrop) backdrop.classList.remove('active');
     }
 
     function ctxActionWatch() {
@@ -9302,6 +9904,8 @@
       if (typeof forceExitFloatingDock === 'function') forceExitFloatingDock(); else if (typeof exitFloatingDock === 'function') exitFloatingDock();
       catalogBrowserView.style.display = 'none';
       playerPageView.classList.add('active');
+      document.body.classList.add('player-page-live');
+      clearInterval(heroCarouselInterval);
 
       if (pushHistory) {
         const alreadyInPlayer = !!(window.history.state && window.history.state.view === 'player');
@@ -9316,8 +9920,8 @@
       }
 
       userExitedFullscreen = false;
-      snapToPlayerView();
       loadActiveStream();
+      snapToPlayerView();
       addToHistory(item, activeSeason, activeEpisode);
 
       // Refresh full metadata so back-navigation never keeps the previous film's info
@@ -9327,6 +9931,7 @@
         const mediaTitle = activeMedia.title || activeMedia.name || 'Media Player';
         playerPageTitle.textContent = mediaTitle;
         playerOverview.textContent = activeMedia.overview || 'No synopsis available for this title.';
+        setPlayerTrailersFilmName(activeMedia);
         const auraImgUrl = activeMedia.backdrop_path
           ? `${IMAGE_ORIGINAL}${activeMedia.backdrop_path}`
           : (activeMedia.poster_path ? `${IMAGE_BASE}${activeMedia.poster_path}` : '');
@@ -9338,6 +9943,7 @@
       loadMediaArtworks(item.id, type, loadId);
       loadFranchiseParts(item.id, type, loadId);
       loadSidebarAlsoWatch(item.id, type, loadId);
+      loadPlayerTrailers(item.id, type, loadId);
       syncSocialPreview(activeMedia);
 
       if (type === 'tv') {
@@ -9381,8 +9987,13 @@
       floatDockPos = null;
       playerPageView.classList.remove('active');
       catalogBrowserView.style.display = 'block';
+      document.body.classList.remove('player-page-live');
       activeMedia = null;
       playerFrame.src = '';
+      resetPlayerTrailers();
+      const shield = document.getElementById('playerClickShield');
+      if (shield) shield.classList.add('active');
+      if (currentType === 'all' || currentType === 'trending') startHeroInterval();
       playerNavStack = [];
       clearAutoFsTimer();
       closeContextMenu();
@@ -9482,7 +10093,7 @@
       list.forEach((art, idx) => {
         const thumbUrl = `${IMAGE_BASE}${art.file_path}`;
         const fullUrl = `${IMAGE_ORIGINAL}${art.file_path}`;
-        const fileName = `BWHS-${activeMedia ? (activeMedia.title || activeMedia.name || 'Artwork').replace(/[^a-zA-Z0-9]/g, '_') : 'Artwork'}-${idx + 1}.jpg`;
+        const fileName = artworkDownloadName(isLandscape ? `Backdrop-${idx + 1}` : `Poster-${idx + 1}`);
 
         const card = document.createElement('div');
         card.className = `art-card ${isLandscape ? 'landscape' : 'portrait'}`;
@@ -9950,6 +10561,119 @@
     }
 
 
+    let playerTrailerKeys = [];
+
+    function youtubeThumb(key) {
+      return `https://i.ytimg.com/vi/${key}/maxresdefault.jpg`;
+    }
+    function youtubeEmbedUrl(key, autoplay) {
+      const ap = autoplay ? 1 : 0;
+      return `https://www.youtube-nocookie.com/embed/${key}?autoplay=${ap}&mute=0&rel=0&modestbranding=1&playsinline=1&hd=1&vq=hd1080&enablejsapi=1`;
+    }
+
+    function resetPlayerTrailers() {
+      playerTrailerKeys = [];
+      const nameEl = document.getElementById('playerTrailersFilmName');
+      if (nameEl && !activeMedia) nameEl.textContent = '';
+      ['playerTrailerA', 'playerTrailerB'].forEach((id) => {
+        const frame = document.getElementById(id);
+        if (frame) frame.src = '';
+      });
+      document.querySelectorAll('.player-trailer-frame-wrap').forEach((wrap) => {
+        wrap.classList.remove('is-playing');
+      });
+    }
+
+    function pickBestVideos(list) {
+      const order = ['Trailer', 'Teaser', 'Clip', 'Featurette', 'Opening Credits', 'Behind the Scenes'];
+      const yt = (list || []).filter(v => v && v.site === 'YouTube' && v.key);
+      const ranked = [];
+      order.forEach((type) => {
+        yt.filter(v => v.type === type).forEach(v => {
+          if (!ranked.some(r => r.key === v.key)) ranked.push(v);
+        });
+      });
+      yt.forEach(v => {
+        if (!ranked.some(r => r.key === v.key)) ranked.push(v);
+      });
+      return ranked;
+    }
+
+    function setPlayerTrailersFilmName(item) {
+      const el = document.getElementById('playerTrailersFilmName');
+      if (!el) return;
+      el.textContent = (item && (item.title || item.name)) || '';
+    }
+
+    async function loadPlayerTrailers(id, type, loadId = mediaSessionId) {
+      resetPlayerTrailers();
+      setPlayerTrailersFilmName(activeMedia);
+      const thumbA = document.getElementById('trailerThumbA');
+      const thumbB = document.getElementById('trailerThumbB');
+      const posterFallback = activeMedia && activeMedia.backdrop_path
+        ? `${IMAGE_MID}${activeMedia.backdrop_path}`
+        : (activeMedia && activeMedia.poster_path ? `${IMAGE_BASE}${activeMedia.poster_path}` : '');
+      if (thumbA && posterFallback) thumbA.src = posterFallback;
+      if (thumbB && posterFallback) thumbB.src = posterFallback;
+
+      try {
+        const data = await cachedFetch(`${TMDB_BASE}/${type}/${id}/videos?api_key=${apiKey}`);
+        if (loadId !== mediaSessionId) return;
+        let picks = pickBestVideos(data.results);
+
+        if (picks.length < 2) {
+          try {
+            const rec = await cachedFetch(`${TMDB_BASE}/${type}/${id}/recommendations?api_key=${apiKey}&page=1`);
+            const extras = (rec.results || []).filter(isCleanCinemaContent).slice(0, 4);
+            for (const extra of extras) {
+              if (picks.length >= 2) break;
+              const extraType = extra.media_type || (extra.title ? 'movie' : 'tv');
+              const extraVids = await cachedFetch(`${TMDB_BASE}/${extraType}/${extra.id}/videos?api_key=${apiKey}`);
+              const extraPicks = pickBestVideos(extraVids.results);
+              extraPicks.forEach(v => {
+                if (picks.length >= 2) return;
+                if (!picks.some(p => p.key === v.key)) {
+                  picks.push({ ...v, name: v.name || extra.title || extra.name });
+                }
+              });
+            }
+          } catch (_) {}
+        }
+
+        if (loadId !== mediaSessionId) return;
+        if (picks.length === 1) picks.push(picks[0]);
+        playerTrailerKeys = picks.slice(0, 2);
+
+        const slots = [
+          { frame: 'playerTrailerA', thumb: 'trailerThumbA', label: 'trailerLabelA' },
+          { frame: 'playerTrailerB', thumb: 'trailerThumbB', label: 'trailerLabelB' }
+        ];
+        slots.forEach((slot, i) => {
+          const vid = playerTrailerKeys[i];
+          const label = document.getElementById(slot.label);
+          const thumb = document.getElementById(slot.thumb);
+          if (!vid) return;
+          if (label) label.textContent = vid.name || (i === 0 ? 'Official Trailer' : 'Second Trailer');
+          if (thumb) {
+            thumb.src = youtubeThumb(vid.key);
+            thumb.onerror = () => {
+              if (posterFallback) thumb.src = posterFallback;
+            };
+          }
+        });
+      } catch (_) {}
+    }
+
+    function playSingleTrailer(index) {
+      if (!playerTrailerKeys.length) return;
+      const vid = playerTrailerKeys[index] || playerTrailerKeys[0];
+      const frame = document.getElementById(index === 1 ? 'playerTrailerB' : 'playerTrailerA');
+      if (!frame || !vid) return;
+      const wrap = frame.closest('.player-trailer-frame-wrap');
+      if (wrap) wrap.classList.add('is-playing');
+      frame.src = youtubeEmbedUrl(vid.key, true);
+    }
+
     function getProviderUrl(providerName) {
       if (!activeMedia) return '';
       const id = activeMedia.id;
@@ -9960,13 +10684,13 @@
       switch (providerName) {
         case 'vidapi':
           return isTv
-            ? `https://vidapi.ru/embed/tv/${id}/${s}/${e}?autoplay=1`
-            : `https://vidapi.ru/embed/movie/${id}?autoplay=1`;
+            ? `https://vidapi.ru/embed/tv/${id}/${s}/${e}?autoplay=1&quality=1080`
+            : `https://vidapi.ru/embed/movie/${id}?autoplay=1&quality=1080`;
 
         case 'vidsrc':
           return isTv
-            ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}&autoplay=1`
-            : `https://vidsrc.xyz/embed/movie?tmdb=${id}&autoplay=1`;
+            ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}&autoplay=1&ds_lang=en`
+            : `https://vidsrc.xyz/embed/movie?tmdb=${id}&autoplay=1&ds_lang=en`;
 
         case 'embedsu':
           return isTv
@@ -9980,8 +10704,8 @@
 
         case 'videasy':
           return isTv
-            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=false`
-            : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=false`;
+            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=false&colour=4f46e5`
+            : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=false&colour=4f46e5`;
 
         case 'vidbolt':
           return isTv
@@ -10564,13 +11288,27 @@
 
       playerFrame.setAttribute(
         'allow',
-        'autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *; clipboard-read *; clipboard-write *'
+        "autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *; clipboard-read *; clipboard-write *"
       );
       playerFrame.setAttribute('allowfullscreen', 'true');
       playerFrame.setAttribute('webkitallowfullscreen', 'true');
       playerFrame.setAttribute('mozallowfullscreen', 'true');
       playerFrame.setAttribute('referrerpolicy', 'no-referrer');
       playerFrame.removeAttribute('sandbox');
+      const shield = document.getElementById('playerClickShield');
+      if (shield) {
+        shield.classList.add('active');
+        if (!shield._bound) {
+          shield._bound = true;
+          shield.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            shield.classList.remove('active');
+            try { window.focus(); } catch (_) {}
+          });
+        }
+        setTimeout(() => shield.classList.remove('active'), 280);
+      }
 
       let markedReady = false;
       const markReady = () => {
@@ -10592,7 +11330,7 @@
         if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active')) {
           autoFailoverPlayer();
         }
-      }, 9000);
+      }, 6500);
     }
 
     function autoFailoverPlayer() {
