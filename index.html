@@ -11352,38 +11352,14 @@
         setTimeout(() => shield.classList.remove('active'), 280);
       }
 
-      let markedReady = false;
-      const markReady = () => {
-        markedReady = true;
-        if (playerFailoverTimer) {
-          clearTimeout(playerFailoverTimer);
-          playerFailoverTimer = null;
-        }
-      };
-      playerFrame.onload = markReady;
-      playerFrame.onerror = () => {
-        if (!markedReady) autoFailoverPlayer();
-      };
-
+      playerFrame.onload = null;
+      playerFrame.onerror = null;
       playerFrame.src = url;
-
-      // If a source hangs / black-screens, hop to the next embed automatically.
-      playerFailoverTimer = setTimeout(() => {
-        if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active')) {
-          autoFailoverPlayer();
-        }
-      }, 6500);
     }
 
     function autoFailoverPlayer() {
-      if (!activeMedia) return;
-      const next = (currentProviderIndex + 1) % PROVIDERS.length;
-      if (next === 0 && currentProviderIndex === PROVIDERS.length - 1) return;
-      currentProviderIndex = next;
-      updateServerButtons();
-      executeStreamLoad();
-      const name = PROVIDER_NAMES[PROVIDERS[currentProviderIndex]] || PROVIDERS[currentProviderIndex];
-      showToast('Switching source to ' + name);
+      // Servers change only when the user taps one.
+      return;
     }
 
     function openServerSheet() {
