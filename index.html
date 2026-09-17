@@ -4327,7 +4327,8 @@
       width: 40px; height: 40px; border-radius: 50%; border: none;
       background: rgba(15,23,42,0.82); color: #fff; cursor: pointer;
       align-items: center; justify-content: center; font-size: 0.95rem;
-      opacity: 0.95; pointer-events: auto;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.28s ease;
     }
     .fs-hot-edge {
       display: none; position: absolute; left: 0; right: 0; height: 56px; z-index: 81;
@@ -4335,13 +4336,17 @@
     }
     .fs-hot-edge.top { top: 0; }
     .fs-hot-edge.bottom { bottom: 0; }
-    .video-viewport:fullscreen .fs-corner-btn,
-    .video-viewport:-webkit-full-screen .fs-corner-btn,
-    body.player-fs-active .fs-corner-btn,
     .video-viewport:fullscreen .fs-hot-edge,
     .video-viewport:-webkit-full-screen .fs-hot-edge,
     body.player-fs-active .fs-hot-edge { display: flex; }
-    .fs-corner-btn { display: inline-flex; }
+    .video-viewport:fullscreen .fs-corner-btn,
+    .video-viewport:-webkit-full-screen .fs-corner-btn,
+    body.player-fs-active .fs-corner-btn { display: inline-flex; }
+    .video-viewport.fs-chrome-on .fs-corner-btn,
+    body.player-fs-active.fs-chrome-on .fs-corner-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
     .trend-player-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
     .trend-viewport {
@@ -5581,7 +5586,10 @@
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    let currentType = 'all'; 
+    let currentType = 'all';
+    let actorCreditKind = 'all';
+    let cachedActorCredits = [];
+    let cachedPopularStars = []; 
     let currentGenre = null;
     let currentYearFilter = null;
     let currentSort = 'popularity.desc';
@@ -6694,10 +6702,12 @@
           document.querySelectorAll('#genresContainer .filter-chip').forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
           currentGenre = genre.id;
-          currentPersonId = null;
-          currentPersonName = '';
-          currentKeywordId = null;
-          currentKeywordName = '';
+          if (currentType !== 'actor_filmography' && currentType !== 'actors_page') {
+            currentPersonId = null;
+            currentPersonName = '';
+            currentKeywordId = null;
+            currentKeywordName = '';
+          }
           searchQuery = '';
           searchInput.value = '';
           curatedShelvesContainer.innerHTML = '';
@@ -6726,7 +6736,8 @@
           if (mobileYearSelect) mobileYearSelect.value = yr.id || '';
           curatedShelvesContainer.innerHTML = '';
           closePlayerPage();
-          fetchCatalog(1, true);
+          if (currentType === 'actors_page') renderTopStarsPage(1, true);
+          else fetchCatalog(1, true);
         });
         yearsContainer.appendChild(chip);
 
@@ -6747,7 +6758,8 @@
       });
       curatedShelvesContainer.innerHTML = '';
       closePlayerPage();
-      fetchCatalog(1, true);
+      if (currentType === 'actors_page') renderTopStarsPage(1, true);
+      else fetchCatalog(1, true);
     }
 
     function filterByActor(personId, personName, pushHistory = true) {
@@ -6770,8 +6782,11 @@
       actorsShowcaseSection.style.display = 'none';
       curatedShelvesContainer.innerHTML = '';
       upcomingViewContainer.style.display = 'none';
-      topFilterSuite.classList.remove('active');
+      topFilterSuite.classList.add('active');
       searchFilterSuite.classList.remove('active');
+      actorCreditKind = 'all';
+      if (mediaGrid) mediaGrid.style.display = 'grid';
+      if (feedTitle) feedTitle.style.display = 'flex';
       
       document.querySelectorAll('.sidebar-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.m-nav-item').forEach(btn => btn.classList.remove('active'));
@@ -6957,6 +6972,10 @@
     async function loadHeroFeatured() {
       const viewId = catalogViewId;
       const heroMode = currentType;
+      if (heroMode !== 'all' && heroMode !== 'trending') {
+        hideHeroSpotlight();
+        return;
+      }
       try {
         const pages = [
           cachedFetch(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`)
@@ -7517,7 +7536,21 @@
       strip.innerHTML = html + html;
     }
 
+    function heroAllowedHere() {
+      return currentType === 'all' || currentType === 'trending';
+    }
+
+    function hideHeroSpotlight() {
+      if (!heroSpotlight) return;
+      heroSpotlight.style.display = 'none';
+      heroSpotlight.style.opacity = '0';
+    }
+
     function renderHeroSlide(index) {
+      if (!heroAllowedHere()) {
+        hideHeroSpotlight();
+        return;
+      }
       if (!heroItems[index]) return;
       currentHeroIndex = index;
       const item = heroItems[index];
@@ -7549,7 +7582,16 @@
 
     function startHeroInterval() {
       clearInterval(heroCarouselInterval);
+      if (!heroAllowedHere()) {
+        hideHeroSpotlight();
+        return;
+      }
       heroCarouselInterval = setInterval(() => {
+        if (!heroAllowedHere()) {
+          clearInterval(heroCarouselInterval);
+          hideHeroSpotlight();
+          return;
+        }
         if (heroItems.length > 1) {
           const next = (currentHeroIndex + 1) % heroItems.length;
           renderHeroSlide(next);
@@ -7704,9 +7746,15 @@
       }
 
       if (type === 'actors_page') {
-        heroSpotlight.style.display = 'none';
+        hideHeroSpotlight();
+        clearInterval(heroCarouselInterval);
         actorsShowcaseSection.style.display = 'none';
         curatedShelvesContainer.innerHTML = '';
+        upcomingViewContainer.style.display = 'none';
+        mediaGrid.style.display = 'grid';
+        if (feedTitle) feedTitle.style.display = 'flex';
+        topFilterSuite.classList.add('active');
+        actorCreditKind = 'all';
         renderTopStarsPage(1, true);
         return;
       }
@@ -7766,7 +7814,8 @@
         return;
       }
 
-      heroSpotlight.style.display = 'none';
+      hideHeroSpotlight();
+      clearInterval(heroCarouselInterval);
       actorsShowcaseSection.style.display = 'none';
 
       if (type === 'favorites') {
@@ -7899,34 +7948,135 @@
       await openTrailerModal(id, type, 'Official Trailer');
     }
 
+    function starKnownYear(person) {
+      const years = (person.known_for || []).map(mediaYearOf).filter(y => y > 1900);
+      if (!years.length) return 0;
+      return Math.max.apply(null, years);
+    }
+
+    function itemMatchesYearFilter(item, yearId) {
+      if (!yearId) return true;
+      const y = mediaYearOf(item);
+      if (!y) return yearId === 'classic';
+      const spec = YEAR_FILTERS.find(yr => String(yr.id) === String(yearId));
+      if (!spec) return String(y) === String(yearId);
+      if (yearId === 'classic') return y <= 1989;
+      if (yearId === '1990') return y >= 1990 && y <= 1999;
+      if (spec.gte && spec.lte) {
+        const g = parseInt(String(spec.gte).slice(0, 4), 10);
+        const l = parseInt(String(spec.lte).slice(0, 4), 10);
+        return y >= g && y <= l;
+      }
+      return String(y) === String(yearId);
+    }
+
+    function isAnimationTitle(item) {
+      const ids = item.genre_ids || (item.genres ? item.genres.map(g => g.id) : []);
+      return ids.includes(16);
+    }
+
+    function creditMediaKind(item) {
+      const type = item.media_type || (item.title ? 'movie' : 'tv');
+      if (isAnimationTitle(item)) return 'animation';
+      return type === 'tv' ? 'tv' : 'movie';
+    }
+
+    function setActorCreditKind(kind) {
+      actorCreditKind = kind || 'all';
+      document.querySelectorAll('#actorKindBar .filter-chip').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-kind') === actorCreditKind);
+      });
+      if (currentType === 'actor_filmography') fetchCatalog(1, true);
+      if (currentType === 'actors_page') renderTopStarsPage(1, true);
+    }
+
+    function renderActorKindBar(targetTitle) {
+      const existing = document.getElementById('actorKindBar');
+      if (existing) existing.remove();
+      const bar = document.createElement('div');
+      bar.id = 'actorKindBar';
+      bar.className = 'search-filter-chips';
+      bar.style.margin = '0 0 12px';
+      const kinds = [
+        ['all', 'All titles'],
+        ['movie', 'Movies'],
+        ['tv', 'TV Shows'],
+        ['animation', 'Animation']
+      ];
+      bar.innerHTML = kinds.map(([id, label]) =>
+        `<button class="filter-chip ${actorCreditKind === id ? 'active' : ''}" data-kind="${id}" onclick="setActorCreditKind('${id}')">${label}</button>`
+      ).join('');
+      if (targetTitle && targetTitle.parentNode) {
+        targetTitle.parentNode.insertBefore(bar, targetTitle.nextSibling);
+      } else if (mediaGrid && mediaGrid.parentNode) {
+        mediaGrid.parentNode.insertBefore(bar, mediaGrid);
+      }
+    }
+
     async function renderTopStarsPage(page = 1, reset = false) {
-      feedTitle.innerHTML = `<span><i class="fa-solid fa-star" style="color: var(--accent);"></i> Top Stars Worldwide</span>`;
+      hideHeroSpotlight();
+      if (feedTitle) {
+        feedTitle.style.display = 'flex';
+        feedTitle.innerHTML = `<span><i class="fa-solid fa-star" style="color: var(--accent);"></i> Top Stars Worldwide</span>`;
+      }
+      if (mediaGrid) mediaGrid.style.display = 'grid';
+      topFilterSuite.classList.add('active');
+      renderActorKindBar(feedTitle);
       if (reset) {
         mediaGrid.innerHTML = '';
         globalSeenKeys.clear();
         currentPage = 1;
         hasMorePages = true;
+        cachedPopularStars = [];
       }
 
       isLoading = true;
       loadingSpinner.classList.add('active');
 
       try {
-        const data = await cachedFetch(`${TMDB_BASE}/person/popular?api_key=${apiKey}&page=${page}`);
-        totalPages = data.total_pages || 500;
-        const actors = (data.results || []).filter(p => p.profile_path);
+        const pagesToLoad = reset ? [1, 2, 3] : [page];
+        let actors = [];
+        for (const pg of pagesToLoad) {
+          const data = await cachedFetch(`${TMDB_BASE}/person/popular?api_key=${apiKey}&page=${pg}`);
+          totalPages = data.total_pages || 500;
+          actors = actors.concat(data.results || []);
+          currentPage = pg;
+        }
+        actors = actors.filter(person => person && (person.profile_path || person.name));
+        if (reset) cachedPopularStars = actors.slice();
+        else cachedPopularStars = cachedPopularStars.concat(actors);
 
-        if (actors.length === 0 || page >= totalPages) {
+        let list = cachedPopularStars.slice();
+        if (currentYearFilter) {
+          list = list.filter(person => {
+            const works = person.known_for || [];
+            if (!works.length) return currentYearFilter === 'classic';
+            return works.some(w => itemMatchesYearFilter(w, currentYearFilter));
+          });
+        }
+        list.sort((a, b) => {
+          if (currentYearFilter) return starKnownYear(b) - starKnownYear(a);
+          return (b.popularity || 0) - (a.popularity || 0);
+        });
+
+        if (actors.length === 0 || currentPage >= totalPages) {
           hasMorePages = false;
         }
 
-        actors.forEach(person => {
+        mediaGrid.innerHTML = '';
+        globalSeenKeys.clear();
+        if (!list.length) {
+          mediaGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:36px 16px; color:var(--text-muted); font-weight:700;">No stars matched that year. Try All Years.</div>`;
+        }
+
+        list.forEach(person => {
           if (globalSeenKeys.has('p_' + person.id)) return;
           globalSeenKeys.add('p_' + person.id);
 
-          const avatar = `${IMAGE_BASE}${person.profile_path}`;
+          const avatar = person.profile_path ? `${IMAGE_BASE}${person.profile_path}` : 'https://via.placeholder.com/300x450?text=Star';
           const topWork = (person.known_for && person.known_for[0]) ? (person.known_for[0].title || person.known_for[0].name) : '';
-          const knownText = topWork ? `Known for ${topWork}` : 'Featured Star';
+          const yearHint = starKnownYear(person) || '';
+          const knownText = topWork ? `Known for ${topWork}${yearHint ? ' · ' + yearHint : ''}` : 'Featured Star';
 
           const card = document.createElement('div');
           card.className = 'media-card';
@@ -7954,6 +8104,7 @@
           mediaGrid.appendChild(card);
         });
       } catch (err) {
+        mediaGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:36px 16px; color:var(--text-muted); font-weight:700;">Could not load stars. Pull refresh or try again.</div>`;
       } finally {
         isLoading = false;
         loadingSpinner.classList.remove('active');
@@ -8643,13 +8794,45 @@
       try {
         if (currentPersonId) {
           const creditsData = await cachedFetch(`${TMDB_BASE}/person/${currentPersonId}/combined_credits?api_key=${apiKey}`);
-          const rawItems = creditsData.cast || [];
-          const sorted = rawItems
-            .filter(i => (i.poster_path || i.backdrop_path) && (i.character || i.title || i.name) && isCleanCinemaContent(i))
-            .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-          
+          const rawItems = []
+            .concat(creditsData.cast || [])
+            .concat(creditsData.crew || []);
+          const seen = new Set();
+          let list = [];
+          rawItems.forEach(i => {
+            if (!i || !i.id) return;
+            const type = i.media_type || (i.title ? 'movie' : 'tv');
+            const key = type + '_' + i.id;
+            if (seen.has(key)) return;
+            seen.add(key);
+            list.push({ ...i, media_type: type });
+          });
+          if (actorCreditKind && actorCreditKind !== 'all') {
+            list = list.filter(i => creditMediaKind(i) === actorCreditKind);
+          }
+          if (currentGenre) {
+            list = list.filter(i => {
+              const ids = i.genre_ids || [];
+              return ids.includes(currentGenre);
+            });
+          }
+          if (currentYearFilter) {
+            list = list.filter(i => itemMatchesYearFilter(i, currentYearFilter));
+          }
+          list.sort((a, b) => {
+            const yb = mediaYearOf(b);
+            const ya = mediaYearOf(a);
+            if (yb !== ya) return yb - ya;
+            return (b.popularity || 0) - (a.popularity || 0);
+          });
+          cachedActorCredits = list;
           hasMorePages = false;
-          renderItems(sorted);
+          if (feedTitle) {
+            feedTitle.style.display = 'flex';
+            feedTitle.innerHTML = `<i class="fa-solid fa-user-tag" style="color: var(--primary);"></i> ${currentPersonName}: ${list.length} titles`;
+          }
+          renderActorKindBar(feedTitle);
+          renderItems(list);
         } else if (currentKeywordId) {
           const movieRes = await cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&with_keywords=${currentKeywordId}&sort_by=popularity.desc&page=${page}`);
           const combined = (movieRes.results || []).map(m => ({ ...m, media_type: 'movie' })).filter(isCleanCinemaContent);
@@ -11352,14 +11535,38 @@
         setTimeout(() => shield.classList.remove('active'), 280);
       }
 
-      playerFrame.onload = null;
-      playerFrame.onerror = null;
+      let markedReady = false;
+      const markReady = () => {
+        markedReady = true;
+        if (playerFailoverTimer) {
+          clearTimeout(playerFailoverTimer);
+          playerFailoverTimer = null;
+        }
+      };
+      playerFrame.onload = markReady;
+      playerFrame.onerror = () => {
+        if (!markedReady) autoFailoverPlayer();
+      };
+
       playerFrame.src = url;
+
+      // If a source hangs / black-screens, hop to the next embed automatically.
+      playerFailoverTimer = setTimeout(() => {
+        if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active')) {
+          autoFailoverPlayer();
+        }
+      }, 6500);
     }
 
     function autoFailoverPlayer() {
-      // Servers change only when the user taps one.
-      return;
+      if (!activeMedia) return;
+      const next = (currentProviderIndex + 1) % PROVIDERS.length;
+      if (next === 0 && currentProviderIndex === PROVIDERS.length - 1) return;
+      currentProviderIndex = next;
+      updateServerButtons();
+      executeStreamLoad();
+      const name = PROVIDER_NAMES[PROVIDERS[currentProviderIndex]] || PROVIDERS[currentProviderIndex];
+      showToast('Switching source to ' + name);
     }
 
     function openServerSheet() {
