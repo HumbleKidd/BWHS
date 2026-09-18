@@ -245,6 +245,18 @@
       background: var(--scroll-thumb-hover);
     }
 
+    img, iframe {
+      content-visibility: auto;
+    }
+    .shelf-poster img, .poster-wrap img, .panel-poster, .suggestion-thumb {
+      content-visibility: auto;
+      contain: paint;
+    }
+    body.player-page-live .hero-spotlight,
+    body.player-page-live .shelves-container,
+    body.player-page-live .actors-section {
+      display: none !important;
+    }
     body {
       background-color: var(--bg);
       color: var(--text-main);
@@ -4714,6 +4726,7 @@
                       allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *; clipboard-read *; clipboard-write *"
                       referrerpolicy="origin-when-cross-origin"
                       importance="high"
+                      fetchpriority="high"
                       frameborder="0"
                       scrolling="no"
                     ></iframe>
@@ -5483,10 +5496,10 @@
 
 
     const TMDB_BASE = 'https://api.themoviedb.org/3';
-    const IMAGE_BASE = 'https://image.tmdb.org/t/p/w780';
-    const IMAGE_MID = 'https://image.tmdb.org/t/p/w1280';
+    const IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
+    const IMAGE_MID = 'https://image.tmdb.org/t/p/w780';
     const IMAGE_ORIGINAL = 'https://image.tmdb.org/t/p/original';
-    const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w500';
+    const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w185';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
     const PROVIDERS = ['vixsrc', 'videasy', 'vidsrc', 'vidlink', 'vidcore', 'vidapi', 'moviesapi', 'vidbolt'];
@@ -5554,14 +5567,22 @@
     const sessionCache = {};
     async function cachedFetch(url) {
       if (sessionCache[url]) return sessionCache[url];
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        sessionCache[url] = data;
-        return data;
-      } catch (err) {
-        return {};
-      }
+      if (sessionCache._pend && sessionCache._pend[url]) return sessionCache._pend[url];
+      sessionCache._pend = sessionCache._pend || {};
+      const job = (async () => {
+        try {
+          const res = await fetch(url, { cache: 'default', credentials: 'omit' });
+          const data = await res.json();
+          sessionCache[url] = data;
+          return data;
+        } catch (err) {
+          return {};
+        } finally {
+          try { delete sessionCache._pend[url]; } catch (_) {}
+        }
+      })();
+      sessionCache._pend[url] = job;
+      return job;
     }
 
     const DISALLOWED_GENRE_IDS = [10763, 10764, 10767, 10766];
@@ -10229,15 +10250,11 @@
       }).catch(() => {});
 
       syncSocialPreview(activeMedia);
-      // Defer extras so the first seconds of bandwidth go to VixSrc, not posters/trailers.
-      setTimeout(() => {
-        if (loadId !== mediaSessionId) return;
-        loadCastData(item.id, type, loadId);
-        loadMediaArtworks(item.id, type, loadId);
-        loadFranchiseParts(item.id, type, loadId);
-        loadSidebarAlsoWatch(item.id, type, loadId);
-        loadPlayerTrailers(item.id, type, loadId);
-      }, 2200);
+      loadCastData(item.id, type, loadId);
+      loadMediaArtworks(item.id, type, loadId);
+      loadFranchiseParts(item.id, type, loadId);
+      loadSidebarAlsoWatch(item.id, type, loadId);
+      loadPlayerTrailers(item.id, type, loadId);
 
       if (type === 'tv') {
         tvControlSuite.style.display = 'flex';
