@@ -26,6 +26,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://image.tmdb.org" />
   <link rel="preconnect" href="https://api.themoviedb.org" />
+  <link rel="preconnect" href="https://vixsrc.to" crossorigin />
+  <link rel="preconnect" href="https://player.videasy.net" crossorigin />
   <link rel="dns-prefetch" href="https://player.videasy.net" />
   <link rel="dns-prefetch" href="https://vixsrc.to" />
   <link rel="dns-prefetch" href="https://vidbolt.xyz" />
@@ -2332,6 +2334,12 @@
       pointer-events: auto !important;
       transform: translateZ(0);
       backface-visibility: hidden;
+      will-change: transform;
+      contain: strict;
+    }
+    .video-viewport {
+      isolation: isolate;
+      contain: layout paint;
     }
 
     .fs-exit-overlay {
@@ -4704,11 +4712,12 @@
                       webkitallowfullscreen="true" 
                       mozallowfullscreen="true" 
                       allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *; clipboard-read *; clipboard-write *"
-                      referrerpolicy="no-referrer"
+                      referrerpolicy="origin-when-cross-origin"
+                      importance="high"
                       frameborder="0"
                       scrolling="no"
                     ></iframe>
-                    <div class="player-click-shield active" id="playerClickShield" title="Start playback"></div>
+                    <div class="player-click-shield" id="playerClickShield" title="Start playback"></div>
                   </div>
                 </div>
 
@@ -5480,7 +5489,7 @@
     const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w500';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'videasy', 'vidsrc', 'vidcore', 'vidlink', 'vidapi', 'moviesapi', 'vidbolt'];
+    const PROVIDERS = ['vixsrc', 'videasy', 'vidsrc', 'vidlink', 'vidcore', 'vidapi', 'moviesapi', 'vidbolt'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
       videasy: 'Videasy',
@@ -5493,6 +5502,54 @@
       moviesapi: 'MoviesAPI'
     };
     let currentProviderIndex = 0;
+    const warmedEmbeds = new Set();
+
+    function vixsrcUrlFor(id, type, season, episode) {
+      const isTv = type === 'tv';
+      const s = season || 1;
+      const e = episode || 1;
+      return isTv
+        ? `https://vixsrc.to/tv/${id}/${s}/${e}?autoplay=1&autoPlay=true&startAt=0`
+        : `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&startAt=0`;
+    }
+
+    function prefetchEmbed(id, type, season, episode) {
+      if (!id) return;
+      const url = vixsrcUrlFor(id, type, season, episode);
+      if (warmedEmbeds.has(url)) return;
+      warmedEmbeds.add(url);
+      try {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = url;
+        link.as = 'document';
+        document.head.appendChild(link);
+      } catch (_) {}
+    }
+
+    function warmupPlayerOrigin() {
+      if (window.__bwhsOriginWarm) return;
+      window.__bwhsOriginWarm = true;
+      try {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = 'https://vixsrc.to/favicon.ico';
+      } catch (_) {}
+      try {
+        fetch('https://vixsrc.to/', { mode: 'no-cors', cache: 'force-cache', credentials: 'omit' }).catch(() => {});
+      } catch (_) {}
+    }
+
+    document.addEventListener('pointerover', (ev) => {
+      const card = ev.target && ev.target.closest && ev.target.closest('.media-card, .shelf-card, .panel-item-card, .upcoming-card, .sidebar-rec-card, .actor-avatar-card');
+      if (!card) return;
+      const id = card.dataset && (card.dataset.mediaId || card.dataset.id);
+      const type = (card.dataset && (card.dataset.mediaType || card.dataset.type)) || 'movie';
+      if (id) prefetchEmbed(id, type);
+    }, { passive: true });
+
+    window.addEventListener('load', warmupPlayerOrigin);
+
 
     const sessionCache = {};
     async function cachedFetch(url) {
@@ -7480,8 +7537,10 @@
       vp.querySelectorAll('iframe').forEach(n => n.remove());
       const iframe = document.createElement('iframe');
       iframe.src = url;
-      iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+      iframe.allow = 'autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *';
       iframe.setAttribute('allowfullscreen', 'true');
+      iframe.setAttribute('referrerpolicy', 'origin-when-cross-origin');
+      iframe.setAttribute('loading', 'eager');
       vp.appendChild(iframe);
       activeTrendPlayer = vp;
       const bar = document.getElementById(`trendSrv_${id}`);
@@ -10106,6 +10165,12 @@
       currentProviderIndex = 0;
       similarCurrentPage = 1;
       similarSeenSet.clear();
+      prefetchEmbed(item.id, type, season, episode);
+
+      // Start VixSrc in the same click as opening the title so the browser allows unmuted autoplay.
+      if (playerPageView) playerPageView.classList.add('active');
+      if (catalogBrowserView) catalogBrowserView.style.display = 'none';
+      loadActiveStream();
 
       if (desktopRightPanel) {
         desktopRightPanel.classList.add('player-hidden');
@@ -10145,7 +10210,6 @@
       }
 
       userExitedFullscreen = false;
-      loadActiveStream();
       snapToPlayerView();
       addToHistory(item, activeSeason, activeEpisode);
 
@@ -10164,12 +10228,16 @@
         syncSocialPreview(activeMedia);
       }).catch(() => {});
 
-      loadCastData(item.id, type, loadId);
-      loadMediaArtworks(item.id, type, loadId);
-      loadFranchiseParts(item.id, type, loadId);
-      loadSidebarAlsoWatch(item.id, type, loadId);
-      loadPlayerTrailers(item.id, type, loadId);
       syncSocialPreview(activeMedia);
+      // Defer extras so the first seconds of bandwidth go to VixSrc, not posters/trailers.
+      setTimeout(() => {
+        if (loadId !== mediaSessionId) return;
+        loadCastData(item.id, type, loadId);
+        loadMediaArtworks(item.id, type, loadId);
+        loadFranchiseParts(item.id, type, loadId);
+        loadSidebarAlsoWatch(item.id, type, loadId);
+        loadPlayerTrailers(item.id, type, loadId);
+      }, 2200);
 
       if (type === 'tv') {
         tvControlSuite.style.display = 'flex';
@@ -10929,8 +10997,8 @@
 
         case 'videasy':
           return isTv
-            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=false&colour=4f46e5`
-            : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=false&colour=4f46e5`;
+            ? `https://player.videasy.net/tv/${id}/${s}/${e}?autoplay=true&nextButton=false&colour=4f46e5&startAt=0`
+            : `https://player.videasy.net/movie/${id}?autoplay=true&nextButton=false&colour=4f46e5&startAt=0`;
 
         case 'vidbolt':
           return isTv
@@ -10944,8 +11012,8 @@
 
         case 'vixsrc':
           return isTv
-            ? `https://vixsrc.to/tv/${id}/${s}/${e}?autoplay=1`
-            : `https://vixsrc.to/movie/${id}?autoplay=1`;
+            ? `https://vixsrc.to/tv/${id}/${s}/${e}?autoplay=1&autoPlay=true&startAt=0`
+            : `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&startAt=0`;
 
         case 'vidcore':
           return isTv
@@ -11194,7 +11262,6 @@
     function loadActiveStream() {
       updateServerButtons();
       executeStreamLoad();
-      scheduleAutoFullscreen();
       scheduleEpisodeWatchFallback();
       updateLeftOffBanner();
     }
@@ -11506,7 +11573,6 @@
         playerFailoverTimer = null;
       }
 
-      // CRITICAL: Never put sandbox on the player iframe.
       if (playerFrame.hasAttribute('sandbox')) {
         playerFrame.removeAttribute('sandbox');
       }
@@ -11520,19 +11586,15 @@
       playerFrame.setAttribute('mozallowfullscreen', 'true');
       playerFrame.setAttribute('referrerpolicy', 'no-referrer');
       playerFrame.removeAttribute('sandbox');
+
       const shield = document.getElementById('playerClickShield');
-      if (shield) {
-        shield.classList.add('active');
-        if (!shield._bound) {
-          shield._bound = true;
-          shield.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            shield.classList.remove('active');
-            try { window.focus(); } catch (_) {}
-          });
-        }
-        setTimeout(() => shield.classList.remove('active'), 280);
+      if (shield) shield.classList.remove('active');
+
+      // Assign src in this same click turn so VixSrc autoplay is allowed with sound.
+      if (playerFrame.src !== url) {
+        playerFrame.src = url;
+      } else {
+        playerFrame.src = url;
       }
 
       let markedReady = false;
@@ -11548,18 +11610,18 @@
         if (!markedReady) autoFailoverPlayer();
       };
 
-      playerFrame.src = url;
-
-      // If a source hangs / black-screens, hop to the next embed automatically.
       playerFailoverTimer = setTimeout(() => {
         if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active')) {
           autoFailoverPlayer();
         }
-      }, 6500);
+      }, 18000);
     }
 
     function autoFailoverPlayer() {
       if (!activeMedia) return;
+      const current = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
+      // Do not yank VixSrc mid-buffer — that is what made playback stick and restart.
+      if (current === 'vixsrc') return;
       const next = (currentProviderIndex + 1) % PROVIDERS.length;
       if (next === 0 && currentProviderIndex === PROVIDERS.length - 1) return;
       currentProviderIndex = next;
