@@ -5616,6 +5616,55 @@
       return true;
     }
 
+
+    function mediaKindOf(item) {
+      if (!item) return '';
+      if (item.media_type === 'movie' || item.media_type === 'tv') return item.media_type;
+      if (item.release_date && !item.first_air_date) return 'movie';
+      if (item.first_air_date && !item.release_date) return 'tv';
+      if (item.title && !item.name) return 'movie';
+      if (item.name && !item.title) return 'tv';
+      return item.title ? 'movie' : 'tv';
+    }
+
+    function tagMediaKind(item, forced) {
+      const kind = forced || mediaKindOf(item);
+      return Object.assign({}, item, { media_type: kind, computedType: kind });
+    }
+
+    async function fetchTypedPopular(kind) {
+      const isTv = kind === 'tv';
+      const urls = isTv
+        ? [
+            `${TMDB_BASE}/tv/popular?api_key=${apiKey}&page=1`,
+            `${TMDB_BASE}/tv/on_the_air?api_key=${apiKey}&page=1`,
+            `${TMDB_BASE}/trending/tv/day?api_key=${apiKey}&page=1`
+          ]
+        : [
+            `${TMDB_BASE}/movie/popular?api_key=${apiKey}&page=1`,
+            `${TMDB_BASE}/movie/now_playing?api_key=${apiKey}&page=1`,
+            `${TMDB_BASE}/trending/movie/day?api_key=${apiKey}&page=1`
+          ];
+      const packs = await Promise.all(urls.map(u => cachedFetch(u)));
+      const seen = new Set();
+      const out = [];
+      packs.forEach(p => {
+        (p.results || []).forEach(raw => {
+          const item = tagMediaKind(raw, kind);
+          if (!item || !item.id || !item.poster_path) return;
+          if (mediaKindOf(item) !== kind) return;
+          if (!isCleanCinemaContent(item)) return;
+          if (seen.has(item.id)) return;
+          const date = item.release_date || item.first_air_date || '';
+          if (date && date > todayStr) return;
+          seen.add(item.id);
+          out.push(item);
+        });
+      });
+      out.sort((a, b) => (b.popularity || 0) - (a.popularity || 0) || (b.vote_count || 0) - (a.vote_count || 0));
+      return out;
+    }
+
     function isWorldwideHit(item, seedSet) {
       if (!item || !item.id || !item.poster_path) return false;
       if (seedSet && seedSet.has(item.id)) return true;
@@ -7075,6 +7124,10 @@
         shuffleInPlace(unique);
         heroItems = unique.slice(0, heroMode === 'trending' ? 12 : 8);
         
+        if (currentType !== 'all' && currentType !== 'trending') {
+          hideHeroSpotlight();
+          return;
+        }
         if (heroItems.length > 0) {
           heroIndicators.innerHTML = '';
           heroItems.forEach((_, idx) => {
@@ -7757,6 +7810,10 @@
     function selectType(type, pushHistory = true) {
       bumpCatalogView();
       currentType = type;
+      if (type !== 'all' && type !== 'trending') {
+        hideHeroSpotlight();
+        clearInterval(heroCarouselInterval);
+      }
       if (type !== 'brand') currentBrand = null;
       currentPersonId = null;
       currentPersonName = '';
@@ -8448,8 +8505,8 @@
 
     function buildHomeShelves() {
       const pinned = [
-        { id: 'nowmovies', title: 'Most Popular Movies Right Now', icon: 'fa-film', color: '#ec4899', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/movie/now_playing?api_key=${apiKey}` },
-        { id: 'nowtv', title: "Shows People Won't Shut Up About", icon: 'fa-tv', color: '#3b82f6', type: 'tv', kind: 'endpoint', endpoint: `${TMDB_BASE}/tv/popular?api_key=${apiKey}` },
+        { id: 'nowmovies', title: 'Most Popular Movies Right Now', icon: 'fa-film', color: '#ec4899', type: 'movie', kind: 'popular_lane', endpoint: `${TMDB_BASE}/movie/popular?api_key=${apiKey}` },
+        { id: 'nowtv', title: "Shows People Won't Shut Up About", icon: 'fa-tv', color: '#3b82f6', type: 'tv', kind: 'popular_lane', endpoint: `${TMDB_BASE}/tv/popular?api_key=${apiKey}` },
         { id: 'certifiedhits', title: 'Certified Hits — Everybody Knows These', icon: 'fa-star', color: '#f59e0b', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/movie/top_rated?api_key=${apiKey}` }
       ];
       const themes = shuffleArray(THEME_CATEGORIES).slice(0, 6).map((c) => ({ ...c, kind: 'theme' }));
@@ -8541,20 +8598,20 @@
       searchQuery = '';
       searchInput.value = '';
       curatedShelvesContainer.innerHTML = '';
-      // Already closed by callers when needed; avoid push that forces Trending hash/title
       closePlayerPage(false);
-      heroSpotlight.style.display = 'none';
+      hideHeroSpotlight();
+      clearInterval(heroCarouselInterval);
       actorsShowcaseSection.style.display = 'none';
       upcomingViewContainer.style.display = 'none';
       topFilterSuite.classList.remove('active');
       searchFilterSuite.classList.remove('active');
-      
-      // Keep currentType as-is so sidebar does not jump; title is set explicitly below
+
+      const lane = (type === 'tv' || type === 'movie') ? type : mediaKindOf({ title: type === 'movie' ? 'x' : undefined, name: type === 'tv' ? 'x' : undefined });
+      if (lane === 'movie' || lane === 'tv') currentType = lane;
+
       feedTitle.innerHTML = `<i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> ${title}`;
-      
-      // Replace hash to a neutral catalog state without triggering selectType/Trending overwrite
       setRoute({ view: 'catalog', type: currentType || 'all' }, false);
-      
+
       mediaGrid.innerHTML = '';
       globalSeenKeys.clear();
       isLoading = true;
@@ -8563,8 +8620,13 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       try {
-        const page1 = await cachedFetch(endpoint + (endpoint.includes('?') ? '&page=1' : '?page=1'));
-        const combined = (page1.results || []).filter(isCleanCinemaContent);
+        let combined = [];
+        if (lane === 'movie' || lane === 'tv') {
+          combined = await fetchTypedPopular(lane);
+        } else {
+          const page1 = await cachedFetch(endpoint + (endpoint.includes('?') ? '&page=1' : '?page=1'));
+          combined = (page1.results || []).filter(isCleanCinemaContent);
+        }
         renderItems(combined);
       } catch (e) {
       } finally {
@@ -8623,13 +8685,17 @@
 
         const shelfPromise = shelf.kind === 'theme'
           ? collectThemeItems(shelf, 1).then(list => ({ results: list }))
-          : cachedFetch(shelf.endpoint);
+          : shelf.kind === 'popular_lane'
+            ? fetchTypedPopular(shelf.type).then(list => ({ results: list }))
+            : cachedFetch(shelf.endpoint);
 
         const job = shelfPromise
           .then(data => {
             const seedSet = new Set(shelf.seeds || []);
+            const want = shelf.type === 'tv' ? 'tv' : (shelf.type === 'movie' ? 'movie' : null);
             const items = (data.results || []).filter(i => {
               if (!i.poster_path || !isCleanCinemaContent(i)) return false;
+              if (want && mediaKindOf(i) !== want) return false;
               if (shelf.kind === 'theme' && !isWorldwideHit(i, seedSet)) return false;
               const date = i.release_date || i.first_air_date;
               return !date || date <= todayStr;
@@ -8642,7 +8708,8 @@
             let renderedCount = 0;
             const shelfSeen = new Set(); // local only — never share with main grid (fixes empty first shelf on cold load)
             items.forEach((item) => {
-              const itemType = shelf.type === 'all' ? (item.media_type || 'movie') : shelf.type;
+              const itemType = want || mediaKindOf(item) || 'movie';
+              item.media_type = itemType;
               const uniqueKey = `${itemType}_${item.id}`;
 
               if (shelfSeen.has(uniqueKey) || renderedCount >= 18) return;
@@ -9058,6 +9125,8 @@
     function renderItems(items) {
       const valid = items.filter(item => {
         const isPerson = item.media_type === 'person';
+        if (!isPerson && currentType === 'movie' && mediaKindOf(item) !== 'movie') return false;
+        if (!isPerson && currentType === 'tv' && mediaKindOf(item) !== 'tv') return false;
         if (isPerson) {
           if (!item.profile_path) return false;
           const key = `p_${item.id}`;
@@ -9115,7 +9184,8 @@
           return;
         }
 
-        const type = item.media_type || (item.title ? 'movie' : 'tv');
+        const type = mediaKindOf(item) || (item.title ? 'movie' : 'tv');
+        item.media_type = type;
         const uniqueKey = `${type}_${item.id}`;
         globalSeenKeys.add(uniqueKey);
 
