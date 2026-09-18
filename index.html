@@ -459,10 +459,50 @@
         display: flex;
       }
       .desktop-sidebar:hover,
-      .desktop-sidebar:focus-within {
+      .desktop-sidebar:focus-within,
+      .desktop-sidebar.is-pinned,
+      .desktop-sidebar.force-open {
         width: var(--sidebar-expanded-w);
         box-shadow: 0 10px 30px rgba(0,0,0,0.15);
       }
+      .desktop-sidebar.force-closed {
+        width: var(--sidebar-w) !important;
+        box-shadow: none !important;
+      }
+      .desktop-sidebar.force-closed .sidebar-brand-text,
+      .desktop-sidebar.force-closed .sidebar-btn span,
+      .desktop-sidebar.force-closed .sidebar-pin-btn span {
+        opacity: 0 !important;
+      }
+    }
+    .sidebar-pin-btn {
+      display: none;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 14px;
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 12px;
+      padding: 8px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .sidebar-pin-btn i { width: 34px; min-width: 34px; text-align: center; font-size: 0.95rem; }
+    .sidebar-pin-btn span { opacity: 0; transition: opacity 0.2s ease; white-space: nowrap; }
+    @media (min-width: 900px) {
+      .sidebar-pin-btn { display: flex; }
+      .desktop-sidebar:hover .sidebar-pin-btn span,
+      .desktop-sidebar:focus-within .sidebar-pin-btn span,
+      .desktop-sidebar.is-pinned .sidebar-pin-btn span,
+      .desktop-sidebar.force-open .sidebar-pin-btn span { opacity: 1; }
+    }
+    .desktop-sidebar.is-pinned .sidebar-pin-btn {
+      color: #fff;
+      background: var(--primary);
     }
 
     .sidebar-brand {
@@ -506,7 +546,9 @@
     }
 
     .desktop-sidebar:hover .sidebar-brand-text,
-    .desktop-sidebar:focus-within .sidebar-brand-text {
+    .desktop-sidebar:focus-within .sidebar-brand-text,
+    .desktop-sidebar.is-pinned .sidebar-brand-text,
+    .desktop-sidebar.force-open .sidebar-brand-text {
       opacity: 1;
     }
 
@@ -565,7 +607,9 @@
     }
 
     .desktop-sidebar:hover .sidebar-btn span,
-    .desktop-sidebar:focus-within .sidebar-btn span {
+    .desktop-sidebar:focus-within .sidebar-btn span,
+    .desktop-sidebar.is-pinned .sidebar-btn span,
+    .desktop-sidebar.force-open .sidebar-btn span {
       opacity: 1;
     }
 
@@ -602,6 +646,32 @@
     .desktop-right-panel.glowing-reminder {
       box-shadow: -4px 0 20px rgba(236, 72, 153, 0.25), 0 0 12px rgba(79, 70, 229, 0.3);
       border-left-color: var(--accent-pink);
+    }
+    .desktop-right-panel.collapsed.peek-out {
+      width: var(--right-panel-w) !important;
+      padding: 16px 14px !important;
+      overflow-y: auto !important;
+    }
+    .desktop-right-panel.collapsed.peek-out .panel-item-info,
+    .desktop-right-panel.collapsed.peek-out .panel-header span,
+    .desktop-right-panel.collapsed.peek-out .btn-cw-clear {
+      display: initial;
+    }
+    .desktop-right-panel.collapsed.peek-out .panel-item-card {
+      padding: 8px;
+      justify-content: flex-start;
+    }
+    .desktop-right-panel.collapsed.peek-out .panel-poster {
+      width: 48px;
+    }
+    .desktop-right-panel.peek-out .panel-item-card:first-child {
+      outline: 2px solid var(--accent-pink);
+      box-shadow: 0 0 18px rgba(236, 72, 153, 0.45);
+      animation: cwPeekPulse 1.1s ease-in-out 3;
+    }
+    @keyframes cwPeekPulse {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
     }
 
     .desktop-right-panel.collapsed {
@@ -3501,6 +3571,134 @@
       color: var(--text-muted);
     }
 
+
+    .feature-tip-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 9200;
+      background: rgba(8, 10, 22, 0.55);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 18px 14px calc(18px + env(safe-area-inset-bottom));
+    }
+    .feature-tip-backdrop.active { display: flex; }
+    @media (min-width: 900px) {
+      .feature-tip-backdrop {
+        align-items: center;
+      }
+    }
+    .feature-tip-card {
+      width: min(420px, 100%);
+      background: var(--surface);
+      color: var(--text-main);
+      border-radius: 20px;
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow-xl);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .feature-tip-kicker {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+    .feature-tip-card h3 {
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+    .feature-tip-card p {
+      font-size: 0.84rem;
+      line-height: 1.45;
+      color: var(--text-muted);
+    }
+    .feature-tip-demo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-subtle);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .feature-tip-demo i { color: var(--primary); }
+    .feature-tip-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .feature-tip-actions button {
+      flex: 1;
+      border: none;
+      border-radius: 9999px;
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .tip-later {
+      background: var(--surface-subtle);
+      color: var(--text-main);
+    }
+    .tip-never {
+      background: var(--primary);
+      color: #fff;
+    }
+    .live-demo-dot {
+      position: fixed;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 6px rgba(79,70,229,0.35), 0 0 22px rgba(236,72,153,0.9);
+      z-index: 9300;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      animation: demoDotPulse 0.9s ease-in-out infinite;
+    }
+    @keyframes demoDotPulse {
+      0%,100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.25); }
+    }
+    .live-demo-bubble {
+      position: fixed;
+      z-index: 9310;
+      max-width: 240px;
+      background: var(--surface);
+      color: var(--text-main);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow-xl);
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.35;
+      pointer-events: auto;
+    }
+    .live-demo-bubble strong { display:block; font-size:0.82rem; margin-bottom:4px; }
+    .live-demo-bubble .demo-skip {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    .live-demo-bubble .demo-skip button {
+      border: none;
+      border-radius: 9999px;
+      padding: 6px 10px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .poster-demo-glow {
+      outline: 3px solid var(--accent-pink) !important;
+      box-shadow: 0 0 0 6px rgba(236,72,153,0.28), 0 12px 28px rgba(79,70,229,0.35) !important;
+      z-index: 40;
+      position: relative;
+    }
+
     .toast-alert {
       position: fixed;
       bottom: 84px;
@@ -4502,6 +4700,10 @@
       </div>
     </div>
 
+    <button type="button" class="sidebar-pin-btn" id="sidebarPinBtn" onclick="toggleSidebarPin(event)" title="Pin menu open">
+      <i class="fa-solid fa-thumbtack" id="sidebarPinIcon"></i>
+      <span id="sidebarPinLabel">Pin menu</span>
+    </button>
     <nav class="sidebar-menu">
       <button class="sidebar-btn active" id="sideHome" onclick="selectType('all')">
         <i class="fa-solid fa-house" style="color: #f59e0b;"></i>
@@ -4729,6 +4931,16 @@
                       fetchpriority="high"
                       frameborder="0"
                       scrolling="no"
+                    ></iframe>
+                    <iframe
+                      id="playerFrameWarm"
+                      src="about:blank"
+                      loading="eager"
+                      allow="autoplay *; encrypted-media *; playsinline *"
+                      referrerpolicy="origin-when-cross-origin"
+                      style="position:absolute;inset:0;width:100%;height:100%;border:0;opacity:0;pointer-events:none;z-index:0;"
+                      tabindex="-1"
+                      aria-hidden="true"
                     ></iframe>
                     <div class="player-click-shield" id="playerClickShield" title="Start playback"></div>
                   </div>
@@ -5529,15 +5741,42 @@
     function prefetchEmbed(id, type, season, episode) {
       if (!id) return;
       const url = vixsrcUrlFor(id, type, season, episode);
+      const warm = document.getElementById('playerFrameWarm');
+      if (warm && warm.dataset.warmUrl !== url) {
+        warm.dataset.warmUrl = url;
+        try { warm.src = url; } catch (_) {}
+      }
       if (warmedEmbeds.has(url)) return;
       warmedEmbeds.add(url);
       try {
         const link = document.createElement('link');
-        link.rel = 'prefetch';
+        link.rel = 'preload';
         link.href = url;
         link.as = 'document';
         document.head.appendChild(link);
       } catch (_) {}
+    }
+
+    function instantStartStream(item, type, season, episode) {
+      if (!item || !item.id || !playerFrame) return '';
+      const t = type || item.computedType || item.media_type || (item.title ? 'movie' : 'tv');
+      const url = vixsrcUrlFor(item.id, t, season || 1, episode || 1);
+      const warm = document.getElementById('playerFrameWarm');
+      const current = playerFrame.getAttribute('src') || '';
+      if (current === url) return url;
+      if (warm && (warm.dataset.warmUrl === url || (warm.getAttribute('src') || '') === url)) {
+        try {
+          const keep = warm.src;
+          warm.src = playerFrame.src || 'about:blank';
+          playerFrame.src = keep || url;
+          warm.dataset.warmUrl = '';
+        } catch (_) {
+          playerFrame.src = url;
+        }
+        return url;
+      }
+      playerFrame.src = url;
+      return url;
     }
 
     function warmupPlayerOrigin() {
@@ -5554,12 +5793,27 @@
     }
 
     document.addEventListener('pointerover', (ev) => {
-      const card = ev.target && ev.target.closest && ev.target.closest('.media-card, .shelf-card, .panel-item-card, .upcoming-card, .sidebar-rec-card, .actor-avatar-card');
+      const card = ev.target && ev.target.closest && ev.target.closest('.media-card, .shelf-card, .panel-item-card, .upcoming-card, .sidebar-rec-card');
       if (!card) return;
       const id = card.dataset && (card.dataset.mediaId || card.dataset.id);
       const type = (card.dataset && (card.dataset.mediaType || card.dataset.type)) || 'movie';
       if (id) prefetchEmbed(id, type);
     }, { passive: true });
+    document.addEventListener('pointerdown', (ev) => {
+      if (ev.button && ev.button !== 0) return;
+      const card = ev.target && ev.target.closest && ev.target.closest('.media-card, .shelf-card, .panel-item-card, .upcoming-card, .sidebar-rec-card, .hero-mini-poster');
+      if (!card || ev.target.closest('.fav-heart-btn, .btn-upcoming-reminder, .btn-upcoming-trailer')) return;
+      let item = null, type = 'movie';
+      if (typeof resolveCardMediaData === 'function') {
+        const data = resolveCardMediaData(card);
+        if (data) { item = data.item; type = data.type; }
+      }
+      if (!item && card.dataset && card.dataset.mediaId) {
+        item = { id: card.dataset.mediaId, title: card.dataset.mediaTitle, media_type: card.dataset.mediaType };
+        type = card.dataset.mediaType || 'movie';
+      }
+      if (item && item.id) instantStartStream(item, type, 1, 1);
+    }, true);
 
     window.addEventListener('load', warmupPlayerOrigin);
 
@@ -5576,7 +5830,7 @@
           sessionCache[url] = data;
           return data;
         } catch (err) {
-          return {};
+          return sessionCache[url] || {};
         } finally {
           try { delete sessionCache._pend[url]; } catch (_) {}
         }
@@ -5748,7 +6002,8 @@
     let savedThemeMode = localStorage.getItem('humble_theme_mode') || 'auto';
     let savedAccentColor = localStorage.getItem('humble_custom_accent') || '#4f46e5';
 
-    let isCwPanelCollapsed = JSON.parse(localStorage.getItem('humble_cw_collapsed')) || false;
+    let _cwStored = localStorage.getItem('humble_cw_collapsed');
+    let isCwPanelCollapsed = _cwStored === null ? true : JSON.parse(_cwStored);
 
     let activeMedia = null;
     let activeSeason = 1;
@@ -6216,6 +6471,8 @@
       startRandomHistoryReminderAura();
       setupGlobalContextMenu();
       bindContextMenuUI();
+      applySidebarPinState();
+      scheduleFirstVisitTips();
       setupFloatingDrag();
       setupFloatingDockObserver();
       setupHeroCarouselControls();
@@ -6947,11 +7204,239 @@
       if (!desktopRightPanel) return;
       if (isCwPanelCollapsed) {
         desktopRightPanel.classList.add('collapsed');
-        cwToggleIcon.className = 'fa-solid fa-chevron-left';
+        if (cwToggleIcon) cwToggleIcon.className = 'fa-solid fa-chevron-left';
       } else {
         desktopRightPanel.classList.remove('collapsed');
-        cwToggleIcon.className = 'fa-solid fa-chevron-right';
+        if (cwToggleIcon) cwToggleIcon.className = 'fa-solid fa-chevron-right';
       }
+    }
+
+    let sidebarPinned = localStorage.getItem('humble_sidebar_pinned') === '1';
+    let sidebarCollapseTimer = null;
+
+    function applySidebarPinState() {
+      const sidebar = document.querySelector('.desktop-sidebar');
+      const icon = document.getElementById('sidebarPinIcon');
+      const label = document.getElementById('sidebarPinLabel');
+      if (!sidebar) return;
+      sidebar.classList.toggle('is-pinned', sidebarPinned);
+      sidebar.classList.remove('force-closed', 'force-open');
+      if (icon) icon.className = sidebarPinned ? 'fa-solid fa-thumbtack' : 'fa-solid fa-thumbtack';
+      if (label) label.textContent = sidebarPinned ? 'Unpin menu' : 'Pin menu';
+    }
+
+    function toggleSidebarPin(e) {
+      if (e) e.stopPropagation();
+      sidebarPinned = !sidebarPinned;
+      localStorage.setItem('humble_sidebar_pinned', sidebarPinned ? '1' : '0');
+      applySidebarPinState();
+      showToast(sidebarPinned ? 'Menu pinned open' : 'Menu will auto-collapse');
+    }
+
+    function collapseSidebarAfterNav() {
+      if (sidebarPinned) return;
+      const sidebar = document.querySelector('.desktop-sidebar');
+      if (!sidebar) return;
+      clearTimeout(sidebarCollapseTimer);
+      const active = document.activeElement;
+      if (active && sidebar.contains(active) && typeof active.blur === 'function') {
+        active.blur();
+      }
+      sidebar.classList.add('force-closed');
+      sidebar.classList.remove('force-open');
+      sidebarCollapseTimer = setTimeout(() => {
+        sidebar.classList.remove('force-closed');
+      }, 420);
+    }
+
+    function maybePeekContinueWatching() {
+      if (sessionStorage.getItem('humble_cw_peek') !== '1') return;
+      if (!watchHistory || !watchHistory.length) return;
+      if (playerPageView && playerPageView.classList.contains('active')) return;
+      sessionStorage.removeItem('humble_cw_peek');
+      const panel = desktopRightPanel;
+      if (!panel || window.innerWidth < 1200) {
+        if (mobileCwWrapper) {
+          mobileCwWrapper.classList.add('glowing-reminder');
+          setTimeout(() => mobileCwWrapper.classList.remove('glowing-reminder'), 3200);
+        }
+        return;
+      }
+      panel.classList.add('peek-out', 'glowing-reminder');
+      if (isCwPanelCollapsed) panel.classList.add('collapsed');
+      setTimeout(() => {
+        panel.classList.remove('peek-out', 'glowing-reminder');
+        applyCwPanelState();
+      }, 3200);
+    }
+
+    function scheduleFirstVisitTips() {
+      const laterUntil = Number(localStorage.getItem('humble_tip_later_until') || 0);
+      if (Date.now() < laterUntil) return;
+      const showCtx = localStorage.getItem('humble_tip_ctx') !== 'never';
+      const showCw = localStorage.getItem('humble_tip_cw') !== 'never';
+      if (!showCtx && !showCw) return;
+      const started = Date.now();
+      const wait = 3 * 60 * 1000;
+      const tick = () => {
+        if (Date.now() - started < wait) {
+          window.__bwhsTipTimer = setTimeout(tick, 4000);
+          return;
+        }
+        runLiveOnboarding(showCtx, showCw);
+      };
+      window.__bwhsTipTimer = setTimeout(tick, wait);
+    }
+
+    function clearLiveDemoBits() {
+      document.querySelectorAll('.live-demo-dot, .live-demo-bubble').forEach(el => el.remove());
+      document.querySelectorAll('.poster-demo-glow').forEach(el => el.classList.remove('poster-demo-glow'));
+      closeContextMenu();
+    }
+
+    function placeDemoBubble(x, y, html) {
+      const b = document.createElement('div');
+      b.className = 'live-demo-bubble';
+      b.innerHTML = html;
+      document.body.appendChild(b);
+      const pad = 10;
+      let left = x + 16;
+      let top = y + 16;
+      requestAnimationFrame(() => {
+        const w = b.offsetWidth || 220;
+        const h = b.offsetHeight || 90;
+        if (left + w > window.innerWidth - pad) left = Math.max(pad, x - w - 16);
+        if (top + h > window.innerHeight - pad) top = Math.max(pad, y - h - 12);
+        b.style.left = left + 'px';
+        b.style.top = top + 'px';
+      });
+      return b;
+    }
+
+    function placeDemoDot(x, y) {
+      const d = document.createElement('div');
+      d.className = 'live-demo-dot';
+      d.style.left = x + 'px';
+      d.style.top = y + 'px';
+      document.body.appendChild(d);
+      return d;
+    }
+
+    function markTip(kind, mode) {
+      if (mode === 'never') localStorage.setItem(kind === 'cw' ? 'humble_tip_cw' : 'humble_tip_ctx', 'never');
+      else localStorage.setItem('humble_tip_later_until', String(Date.now() + 1000 * 60 * 60 * 12));
+    }
+
+    function dismissFeatureTip(kind, mode) {
+      clearLiveDemoBits();
+      document.querySelectorAll('.feature-tip-backdrop').forEach(el => {
+        el.classList.remove('active');
+        el.setAttribute('aria-hidden', 'true');
+      });
+      markTip(kind, mode);
+    }
+
+    function openFeatureTip() { /* modal path unused — live demo instead */ }
+
+    async function runLiveOnboarding(showCtx, showCw) {
+      if (playerPageView && playerPageView.classList.contains('active')) {
+        window.__bwhsTipTimer = setTimeout(() => runLiveOnboarding(showCtx, showCw), 20000);
+        return;
+      }
+      if (showCtx) await playCtxMenuDemo();
+      if (showCw && localStorage.getItem('humble_tip_cw') !== 'never') {
+        await new Promise(r => setTimeout(r, 600));
+        await playCwPanelDemo();
+      }
+    }
+
+    function playCtxMenuDemo() {
+      return new Promise((resolve) => {
+        const card = document.querySelector('.shelf-card, .media-card');
+        if (!card) { resolve(); return; }
+        const rect = card.getBoundingClientRect();
+        const x = rect.left + rect.width * 0.72;
+        const y = rect.top + rect.height * 0.22;
+        card.classList.add('poster-demo-glow');
+        card.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+        const isTouch = window.matchMedia && window.matchMedia('(hover: none)').matches;
+        placeDemoDot(x, y);
+        placeDemoBubble(x, y, `<strong>${isTouch ? 'Press & hold a poster' : 'Right-click a poster'}</strong>${isTouch ? 'Hold any title to open extra options.' : 'Right-click any title for favorites, next play, share and more.'}<div class="demo-skip"><button class="tip-later" onclick="dismissFeatureTip('ctx','later')">Later</button><button class="tip-never" onclick="dismissFeatureTip('ctx','never')">Got it</button></div>`);
+        const data = typeof resolveCardMediaData === 'function' ? resolveCardMediaData(card) : null;
+        setTimeout(() => {
+          if (data && data.item) openContextMenu(x, y, data.item, data.type, false);
+          setTimeout(() => {
+            closeContextMenu();
+            clearLiveDemoBits();
+            if (localStorage.getItem('humble_tip_ctx') !== 'never') {
+              localStorage.setItem('humble_tip_ctx', 'never');
+            }
+            resolve();
+          }, 2800);
+        }, 900);
+      });
+    }
+
+    function playCwPanelDemo() {
+      return new Promise((resolve) => {
+        if (window.innerWidth < 1200) {
+          if (mobileCwWrapper) {
+            mobileCwWrapper.classList.add('glowing-reminder');
+            placeDemoBubble(window.innerWidth / 2, window.innerHeight - 120, `<strong>Continue Watching</strong>Titles you start land here so you can jump back in.<div class="demo-skip"><button class="tip-later" onclick="dismissFeatureTip('cw','later')">Later</button><button class="tip-never" onclick="dismissFeatureTip('cw','never')">Got it</button></div>`);
+            setTimeout(() => {
+              mobileCwWrapper.classList.remove('glowing-reminder');
+              clearLiveDemoBits();
+              localStorage.setItem('humble_tip_cw', 'never');
+              resolve();
+            }, 3200);
+          } else resolve();
+          return;
+        }
+        const panel = desktopRightPanel;
+        if (!panel) { resolve(); return; }
+        const real = (watchHistory || []).slice();
+        const demoIds = [];
+        const pool = document.querySelectorAll('.shelf-card[data-media-id], .media-card[data-media-id]');
+        const extras = [];
+        pool.forEach((el) => {
+          if (extras.length >= 2) return;
+          const data = resolveCardMediaData(el);
+          if (!data || !data.item) return;
+          extras.push({
+            id: 'demo-' + data.item.id,
+            title: data.item.title || data.item.name,
+            poster_path: data.item.poster_path,
+            backdrop_path: data.item.backdrop_path,
+            media_type: data.type || 'movie',
+            season: 1,
+            episode: 1,
+            timestamp: Date.now(),
+            _demo: true
+          });
+          demoIds.push('demo-' + data.item.id);
+        });
+        if (extras.length) {
+          watchHistory = extras.concat(real).slice(0, 12);
+          renderContinueWatchingPanels();
+        }
+        isCwPanelCollapsed = false;
+        applyCwPanelState();
+        panel.classList.add('peek-out', 'glowing-reminder');
+        const pr = panel.getBoundingClientRect();
+        placeDemoDot(pr.left + 24, pr.top + 70);
+        placeDemoBubble(pr.left - 8, pr.top + 40, `<strong>Continue Watching</strong>New titles peek out here. Latest one stays highlighted.<div class="demo-skip"><button class="tip-later" onclick="dismissFeatureTip('cw','later')">Later</button><button class="tip-never" onclick="dismissFeatureTip('cw','never')">Got it</button></div>`);
+        setTimeout(() => {
+          watchHistory = (watchHistory || []).filter(h => !h._demo && String(h.id).indexOf('demo-') !== 0);
+          if (!watchHistory.length && real.length) watchHistory = real;
+          renderContinueWatchingPanels();
+          panel.classList.remove('peek-out', 'glowing-reminder');
+          isCwPanelCollapsed = true;
+          applyCwPanelState();
+          clearLiveDemoBits();
+          localStorage.setItem('humble_tip_cw', 'never');
+          resolve();
+        }, 3800);
+      });
     }
 
     function setupGlobalClicks() {
@@ -7808,6 +8293,7 @@
     }
 
     function selectType(type, pushHistory = true) {
+      collapseSidebarAfterNav();
       bumpCatalogView();
       currentType = type;
       if (type !== 'all' && type !== 'trending') {
@@ -9479,23 +9965,7 @@
     }
 
     function setupCardHoverMenus() {
-      document.addEventListener('mouseover', (e) => {
-        if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
-        const card = e.target.closest('.media-card, .shelf-card, .sidebar-rec-card, .upcoming-card, .panel-item-card, .hero-mini-poster');
-        if (!card) return;
-        if (e.target.closest('.fav-heart-btn, .btn-upcoming-reminder, .btn-upcoming-trailer, .ctx-menu')) return;
-        const rect = card.getBoundingClientRect();
-        scheduleHoverMenu(card, rect.right - 8, rect.top + 12);
-      });
-      document.addEventListener('mouseout', (e) => {
-        const card = e.target.closest('.media-card, .shelf-card, .sidebar-rec-card, .upcoming-card, .panel-item-card, .hero-mini-poster');
-        if (!card) return;
-        const next = e.relatedTarget;
-        if (next && (next.closest && (next.closest('#ctxMenu') || next.closest(card.tagName) === card))) return;
-        if (next && next.closest && next.closest('#ctxMenu')) return;
-        clearTimeout(ctxHoverTimer);
-        if (ctxHoverMode) scheduleHoverMenuClose();
-      });
+      /* Hover auto-popup disabled — menu only on right-click / long-press */
     }
 
     function buildWatchUrl(item, type) {
@@ -10143,6 +10613,7 @@
       if (watchHistory.length > 15) watchHistory.pop();
       localStorage.setItem('humble_history', JSON.stringify(watchHistory));
       renderContinueWatchingPanels();
+      sessionStorage.setItem('humble_cw_peek', '1');
     }
 
     function renderContinueWatchingPanels() {
@@ -10256,11 +10727,10 @@
       currentProviderIndex = 0;
       similarCurrentPage = 1;
       similarSeenSet.clear();
-      prefetchEmbed(item.id, type, season, episode);
-
-      // Start VixSrc in the same click as opening the title so the browser allows unmuted autoplay.
+      instantStartStream(item, type, season, episode);
       if (playerPageView) playerPageView.classList.add('active');
       if (catalogBrowserView) catalogBrowserView.style.display = 'none';
+      document.body.classList.add('player-page-live');
       loadActiveStream();
 
       if (desktopRightPanel) {
@@ -10369,7 +10839,11 @@
       catalogBrowserView.style.display = 'block';
       document.body.classList.remove('player-page-live');
       activeMedia = null;
-      playerFrame.src = '';
+      setTimeout(() => {
+        if (!playerPageView || !playerPageView.classList.contains('active')) {
+          try { if (playerFrame && playerFrame.src && playerFrame.src !== 'about:blank') playerFrame.src = 'about:blank'; } catch (_) {}
+        }
+      }, 400);
       resetPlayerTrailers();
       const shield = document.getElementById('playerClickShield');
       if (shield) shield.classList.add('active');
@@ -10385,6 +10859,7 @@
       if (pushHistory && window.history.state && window.history.state.view === 'player') {
         setRoute({ view: 'catalog', type: currentType || 'all' }, true);
       }
+      maybePeekContinueWatching();
     }
 
     async function loadFranchiseParts(id, type, loadId = mediaSessionId) {
@@ -11671,18 +12146,22 @@
       playerFrame.setAttribute('allowfullscreen', 'true');
       playerFrame.setAttribute('webkitallowfullscreen', 'true');
       playerFrame.setAttribute('mozallowfullscreen', 'true');
-      playerFrame.setAttribute('referrerpolicy', 'no-referrer');
+      playerFrame.setAttribute('referrerpolicy', 'origin-when-cross-origin');
       playerFrame.removeAttribute('sandbox');
 
       const shield = document.getElementById('playerClickShield');
       if (shield) shield.classList.remove('active');
 
-      // Assign src in this same click turn so VixSrc autoplay is allowed with sound.
-      if (playerFrame.src !== url) {
-        playerFrame.src = url;
-      } else {
-        playerFrame.src = url;
+      const currentSrc = (playerFrame.getAttribute('src') || playerFrame.src || '').replace(/\/$/, '');
+      const want = url.replace(/\/$/, '');
+      if (currentSrc === want || currentSrc.indexOf(want) === 0 || want.indexOf(currentSrc.split('?')[0]) === 0 && currentSrc.includes(String(activeMedia.id))) {
+        if (playerFailoverTimer) {
+          clearTimeout(playerFailoverTimer);
+          playerFailoverTimer = null;
+        }
+        return;
       }
+      playerFrame.src = url;
 
       let markedReady = false;
       const markReady = () => {
@@ -11697,11 +12176,12 @@
         if (!markedReady) autoFailoverPlayer();
       };
 
+      // Only swap sources on a hard load failure, not mid-buffer.
       playerFailoverTimer = setTimeout(() => {
         if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active')) {
           autoFailoverPlayer();
         }
-      }, 18000);
+      }, 45000);
     }
 
     function autoFailoverPlayer() {
@@ -11755,6 +12235,30 @@
     }
   </script>
 
+<div class="feature-tip-backdrop" id="ctxTipBackdrop" aria-hidden="true">
+  <div class="feature-tip-card">
+    <div class="feature-tip-kicker">Quick tip</div>
+    <h3 id="ctxTipTitle">More options on every title</h3>
+    <p id="ctxTipBody">Right-click any poster for favorites, next play, share, trailers and more.</p>
+    <div class="feature-tip-demo" id="ctxTipDemo"><i class="fa-solid fa-computer-mouse"></i> Right-click a poster</div>
+    <div class="feature-tip-actions">
+      <button type="button" class="tip-later" onclick="dismissFeatureTip('ctx', 'later')">Remind me later</button>
+      <button type="button" class="tip-never" onclick="dismissFeatureTip('ctx', 'never')">Don't show again</button>
+    </div>
+  </div>
+</div>
+<div class="feature-tip-backdrop" id="cwTipBackdrop" aria-hidden="true">
+  <div class="feature-tip-card">
+    <div class="feature-tip-kicker">Continue watching</div>
+    <h3>Your watch list lives on the right</h3>
+    <p id="cwTipBody">The panel stays tucked in. After you watch something it peeks out on Home so you can jump back in.</p>
+    <div class="feature-tip-demo"><i class="fa-solid fa-clock-rotate-left"></i> Right rail · Continue Watching</div>
+    <div class="feature-tip-actions">
+      <button type="button" class="tip-later" onclick="dismissFeatureTip('cw', 'later')">Remind me later</button>
+      <button type="button" class="tip-never" onclick="dismissFeatureTip('cw', 'never')">Don't show again</button>
+    </div>
+  </div>
+</div>
 <div id="bmcModal" class="bmc-modal" aria-hidden="true">
   <div class="bmc-modal-bar">
     <strong>☕ Support the work</strong>
