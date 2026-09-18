@@ -4932,16 +4932,7 @@
                       frameborder="0"
                       scrolling="no"
                     ></iframe>
-                    <iframe
-                      id="playerFrameWarm"
-                      src="about:blank"
-                      loading="eager"
-                      allow="autoplay *; encrypted-media *; playsinline *"
-                      referrerpolicy="origin-when-cross-origin"
-                      style="position:absolute;inset:0;width:100%;height:100%;border:0;opacity:0;pointer-events:none;z-index:0;"
-                      tabindex="-1"
-                      aria-hidden="true"
-                    ></iframe>
+
                     <div class="player-click-shield" id="playerClickShield" title="Start playback"></div>
                   </div>
                 </div>
@@ -5741,42 +5732,27 @@
     function prefetchEmbed(id, type, season, episode) {
       if (!id) return;
       const url = vixsrcUrlFor(id, type, season, episode);
-      const warm = document.getElementById('playerFrameWarm');
-      if (warm && warm.dataset.warmUrl !== url) {
-        warm.dataset.warmUrl = url;
-        try { warm.src = url; } catch (_) {}
-      }
       if (warmedEmbeds.has(url)) return;
       warmedEmbeds.add(url);
       try {
         const link = document.createElement('link');
-        link.rel = 'preload';
-        link.href = url;
-        link.as = 'document';
+        link.rel = 'preconnect';
+        link.href = 'https://vixsrc.to';
         document.head.appendChild(link);
       } catch (_) {}
     }
 
-    function instantStartStream(item, type, season, episode) {
-      if (!item || !item.id || !playerFrame) return '';
-      const t = type || item.computedType || item.media_type || (item.title ? 'movie' : 'tv');
-      const url = vixsrcUrlFor(item.id, t, season || 1, episode || 1);
-      const warm = document.getElementById('playerFrameWarm');
-      const current = playerFrame.getAttribute('src') || '';
-      if (current === url) return url;
-      if (warm && (warm.dataset.warmUrl === url || (warm.getAttribute('src') || '') === url)) {
-        try {
-          const keep = warm.src;
-          warm.src = playerFrame.src || 'about:blank';
-          playerFrame.src = keep || url;
-          warm.dataset.warmUrl = '';
-        } catch (_) {
-          playerFrame.src = url;
+    function stopPlayerAudio() {
+      try {
+        if (playerFrame && playerFrame.contentWindow) {
+          playerFrame.contentWindow.postMessage({ event: 'command', func: 'pause', args: [] }, '*');
+          playerFrame.contentWindow.postMessage({ type: 'pause' }, '*');
+          playerFrame.contentWindow.postMessage({ event: 'pause' }, '*');
         }
-        return url;
-      }
-      playerFrame.src = url;
-      return url;
+      } catch (_) {}
+      try {
+        if (playerFrame) playerFrame.src = 'about:blank';
+      } catch (_) {}
     }
 
     function warmupPlayerOrigin() {
@@ -5799,21 +5775,7 @@
       const type = (card.dataset && (card.dataset.mediaType || card.dataset.type)) || 'movie';
       if (id) prefetchEmbed(id, type);
     }, { passive: true });
-    document.addEventListener('pointerdown', (ev) => {
-      if (ev.button && ev.button !== 0) return;
-      const card = ev.target && ev.target.closest && ev.target.closest('.media-card, .shelf-card, .panel-item-card, .upcoming-card, .sidebar-rec-card, .hero-mini-poster');
-      if (!card || ev.target.closest('.fav-heart-btn, .btn-upcoming-reminder, .btn-upcoming-trailer')) return;
-      let item = null, type = 'movie';
-      if (typeof resolveCardMediaData === 'function') {
-        const data = resolveCardMediaData(card);
-        if (data) { item = data.item; type = data.type; }
-      }
-      if (!item && card.dataset && card.dataset.mediaId) {
-        item = { id: card.dataset.mediaId, title: card.dataset.mediaTitle, media_type: card.dataset.mediaType };
-        type = card.dataset.mediaType || 'movie';
-      }
-      if (item && item.id) instantStartStream(item, type, 1, 1);
-    }, true);
+
 
     window.addEventListener('load', warmupPlayerOrigin);
 
@@ -10727,7 +10689,6 @@
       currentProviderIndex = 0;
       similarCurrentPage = 1;
       similarSeenSet.clear();
-      instantStartStream(item, type, season, episode);
       if (playerPageView) playerPageView.classList.add('active');
       if (catalogBrowserView) catalogBrowserView.style.display = 'none';
       document.body.classList.add('player-page-live');
@@ -10839,11 +10800,7 @@
       catalogBrowserView.style.display = 'block';
       document.body.classList.remove('player-page-live');
       activeMedia = null;
-      setTimeout(() => {
-        if (!playerPageView || !playerPageView.classList.contains('active')) {
-          try { if (playerFrame && playerFrame.src && playerFrame.src !== 'about:blank') playerFrame.src = 'about:blank'; } catch (_) {}
-        }
-      }, 400);
+      stopPlayerAudio();
       resetPlayerTrailers();
       const shield = document.getElementById('playerClickShield');
       if (shield) shield.classList.add('active');
