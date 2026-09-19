@@ -2412,7 +2412,7 @@
       width: 100%;
       height: 100%;
       border: none;
-      z-index: 1;
+      z-index: 5;
       pointer-events: auto !important;
       transform: translateZ(0);
       backface-visibility: hidden;
@@ -2429,7 +2429,7 @@
       position: absolute;
       top: 12px;
       right: 12px;
-      z-index: 80;
+      z-index: 90;
       align-items: center;
       gap: 8px;
       background: rgba(15, 23, 42, 0.88);
@@ -4405,6 +4405,33 @@
       cursor: pointer;
       white-space: nowrap;
     }
+
+    .find-similar-dd-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .find-similar-dd-row select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--surface);
+      color: var(--text-main);
+      border: 1.5px solid var(--border);
+      border-radius: 9999px;
+      padding: 8px 32px 8px 14px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      outline: none;
+      min-width: 120px;
+      box-shadow: var(--shadow-sm);
+    }
+    body.catalog-findsimilar .hero-spotlight,
+    body.catalog-findsimilar #heroSpotlight {
+      display: none !important;
+    }
     .find-similar-filters {
       display: flex;
       gap: 8px;
@@ -4549,8 +4576,8 @@
       transition: opacity 0.28s ease;
     }
     .fs-hot-edge {
-      display: none; position: absolute; left: 0; right: 0; height: 56px; z-index: 81;
-      pointer-events: auto; background: transparent;
+      display: none; position: absolute; left: 0; right: 0; height: 28px; z-index: 81;
+      pointer-events: none; background: transparent;
     }
     .fs-hot-edge.top { top: 0; }
     .fs-hot-edge.bottom { bottom: 0; }
@@ -5140,6 +5167,25 @@
               <button class="filter-chip" data-fs-filter="tv" onclick="setFindSimilarFilter('tv')">TV Shows</button>
               <button class="filter-chip" data-fs-filter="animation" onclick="setFindSimilarFilter('animation')">Animation</button>
               <button class="filter-chip" data-fs-filter="cartoon" onclick="setFindSimilarFilter('cartoon')">Cartoons</button>
+            </div>
+            <div class="find-similar-dd-row" id="findSimilarDropdowns">
+              <select id="fsTypeSelect" onchange="setFindSimilarType(this.value)" title="Type">
+                <option value="all">All types</option>
+                <option value="movie">Movies</option>
+                <option value="tv">TV Shows</option>
+              </select>
+              <select id="fsGenreSelect" onchange="setFindSimilarGenre(this.value)" title="Genre">
+                <option value="">All genres</option>
+              </select>
+              <select id="fsYearSelect" onchange="setFindSimilarYear(this.value)" title="Year">
+                <option value="">All years</option>
+              </select>
+              <select id="fsSortSelect" onchange="setFindSimilarSort(this.value)" title="Sort">
+                <option value="popularity">Popular</option>
+                <option value="rating">Top rated</option>
+                <option value="latest">Newest</option>
+                <option value="title">A–Z</option>
+              </select>
             </div>
           </div>
 
@@ -6029,6 +6075,10 @@
     let findSimilarPage = 1;
     let findSimilarHasMore = true;
     let findSimilarLoading = false;
+    let findSimilarType = 'all';
+    let findSimilarGenreId = '';
+    let findSimilarYear = '';
+    let findSimilarSort = 'popularity';
     let theaterChromeTimer = null;
     let ctxMenuItem = null;
     let ctxMenuType = null;
@@ -6036,7 +6086,60 @@
     let longPressTriggered = false;
     let touchStartPos = null;
 
-    const todayStr = new Date().toISOString().slice(0, 10);
+
+    function mediaYearOf(item) {
+      const d = (item && (item.release_date || item.first_air_date)) || '';
+      return d ? String(d).split('-')[0] : '';
+    }
+    function titleWithYear(item) {
+      const t = (item && (item.title || item.name)) || '';
+      const y = mediaYearOf(item);
+      return y ? (t + ' (' + y + ')') : t;
+    }
+    const FRANCHISE_PARTS = {
+      'the gods must be crazy': ['The Gods Must Be Crazy','The Gods Must Be Crazy II','Crazy Safari','Crazy Hong Kong','The Gods Must Be Funny in China','The Gods Must Be Crazy III','The Gods Must Be Crazy IV'],
+      'crazy safari': ['The Gods Must Be Crazy','The Gods Must Be Crazy II','Crazy Safari','Crazy Hong Kong','The Gods Must Be Funny in China'],
+      'crazy hong kong': ['The Gods Must Be Crazy','The Gods Must Be Crazy II','Crazy Safari','Crazy Hong Kong','The Gods Must Be Funny in China'],
+      'the gods must be funny in china': ['The Gods Must Be Crazy','The Gods Must Be Crazy II','Crazy Safari','Crazy Hong Kong','The Gods Must Be Funny in China']
+    };
+    const SIMILAR_CLUSTERS = {
+      'disaster movie': ['Disaster Movie','Epic Movie','Date Movie','Meet the Spartans','Dance Flick','Vampires Suck','Superhero Movie','Scary Movie','Not Another Teen Movie','The Starving Games','Meet the Spartans'],
+      'epic movie': ['Epic Movie','Disaster Movie','Date Movie','Meet the Spartans','Dance Flick','Superhero Movie','Scary Movie'],
+      'date movie': ['Date Movie','Epic Movie','Disaster Movie','Meet the Spartans','Dance Flick','Scary Movie'],
+      'dance flick': ['Dance Flick','Disaster Movie','Epic Movie','Date Movie','Meet the Spartans'],
+      'scary movie': ['Scary Movie','Scary Movie 2','Date Movie','Epic Movie','Disaster Movie','Meet the Spartans','Dance Flick','Vampires Suck'],
+      'meet the spartans': ['Meet the Spartans','Epic Movie','Disaster Movie','Date Movie','Scary Movie'],
+      'vampires suck': ['Vampires Suck','Scary Movie','Disaster Movie','Epic Movie','Dance Flick']
+    };
+    function normTitleKey(t) {
+      return String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    }
+    function clusterTitlesFor(item) {
+      const key = normTitleKey(item && (item.title || item.name));
+      if (!key) return [];
+      if (SIMILAR_CLUSTERS[key]) return SIMILAR_CLUSTERS[key];
+      for (const k of Object.keys(SIMILAR_CLUSTERS)) {
+        if (key.includes(k) || k.includes(key)) return SIMILAR_CLUSTERS[k];
+      }
+      return [];
+    }
+    function franchiseQueriesFor(item) {
+      const key = normTitleKey(item && (item.title || item.name));
+      if (!key) return [];
+      if (FRANCHISE_PARTS[key]) return FRANCHISE_PARTS[key];
+      for (const k of Object.keys(FRANCHISE_PARTS)) {
+        if (key === k || key.includes(k) || k.includes(key)) return FRANCHISE_PARTS[k];
+      }
+      return [];
+    }
+    async function tmdbSearchMovie(query) {
+      try {
+        const data = await cachedFetch(`${TMDB_BASE}/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`);
+        return (data.results || []).filter(isCleanCinemaContent);
+      } catch (_) { return []; }
+    }
+
+        const todayStr = new Date().toISOString().slice(0, 10);
 
     const GENRES = [
       { id: null, name: 'All Genres' },
@@ -8145,7 +8248,7 @@
         const warm = new Image();
         warm.src = `${IMAGE_MID}${item.backdrop_path}`;
       }
-      heroTitle.textContent = item.title || item.name;
+      heroTitle.textContent = titleWithYear(item) || item.title || item.name;
       heroRating.textContent = item.vote_average ? item.vote_average.toFixed(1) : '8.5';
       const release = item.release_date || item.first_air_date || '';
       heroYear.textContent = release ? release.split('-')[0] : '2026';
@@ -8258,6 +8361,7 @@
       collapseSidebarAfterNav();
       bumpCatalogView();
       currentType = type;
+      document.body.classList.toggle('catalog-findsimilar', type === 'findsimilar');
       if (type !== 'all' && type !== 'trending') {
         hideHeroSpotlight();
         clearInterval(heroCarouselInterval);
@@ -9658,7 +9762,7 @@
             </button>
           </div>
           <div class="card-body">
-            <div class="card-title">${title}</div>
+            <div class="card-title">${year ? title + ' (' + year + ')' : title}</div>
             <div class="card-footer">
               <span>${year}</span>
               <span class="play-link"><i class="fa-solid fa-circle-play"></i> Watch</span>
@@ -10109,6 +10213,55 @@
       document.querySelectorAll('#findSimilarFilters .filter-chip').forEach(chip => {
         chip.classList.toggle('active', chip.getAttribute('data-fs-filter') === findSimilarFilter);
       });
+      populateFindSimilarDropdowns();
+    }
+
+    function populateFindSimilarDropdowns() {
+      const gSel = document.getElementById('fsGenreSelect');
+      const ySel = document.getElementById('fsYearSelect');
+      if (gSel && gSel.options.length <= 1 && typeof GENRES !== 'undefined') {
+        GENRES.filter(g => g.id).forEach(g => {
+          const o = document.createElement('option');
+          o.value = String(g.id);
+          o.textContent = g.name;
+          gSel.appendChild(o);
+        });
+      }
+      if (ySel && ySel.options.length <= 1) {
+        const yNow = new Date().getFullYear();
+        for (let y = yNow; y >= 1950; y--) {
+          const o = document.createElement('option');
+          o.value = String(y);
+          o.textContent = String(y);
+          ySel.appendChild(o);
+        }
+      }
+      const tSel = document.getElementById('fsTypeSelect');
+      if (tSel) tSel.value = findSimilarType || 'all';
+      if (gSel) gSel.value = findSimilarGenreId || '';
+      if (ySel) ySel.value = findSimilarYear || '';
+      const sSel = document.getElementById('fsSortSelect');
+      if (sSel) sSel.value = findSimilarSort || 'popularity';
+    }
+    function setFindSimilarType(v) {
+      findSimilarType = v || 'all';
+      findSimilarFilter = findSimilarType;
+      document.querySelectorAll('#findSimilarFilters .filter-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.getAttribute('data-fs-filter') === findSimilarFilter);
+      });
+      if (findSimilarSeed) loadFindSimilarResults(1, true);
+    }
+    function setFindSimilarGenre(v) {
+      findSimilarGenreId = v || '';
+      if (findSimilarSeed) loadFindSimilarResults(1, true);
+    }
+    function setFindSimilarYear(v) {
+      findSimilarYear = v || '';
+      if (findSimilarSeed) loadFindSimilarResults(1, true);
+    }
+    function setFindSimilarSort(v) {
+      findSimilarSort = v || 'popularity';
+      if (findSimilarSeed) loadFindSimilarResults(1, true);
     }
 
     async function previewFindSimilarSuggestions(q) {
@@ -10242,11 +10395,20 @@
 
         let items = [...(rec.results || []), ...(sim.results || [])];
 
+        if (page === 1) {
+          const cluster = clusterTitlesFor(findSimilarSeed);
+          if (cluster.length) {
+            const extra = await Promise.all(cluster.slice(0, 10).map(q => tmdbSearchMovie(q)));
+            extra.flat().forEach(hit => items.push(hit));
+          }
+        }
+
         // Fallback genre discover for endless scroll when recommendations run dry
         if (items.length < 4 && findSimilarSeed.genre_ids && findSimilarSeed.genre_ids.length) {
-          const g = findSimilarSeed.genre_ids[0];
-          const discType = type === 'tv' ? 'tv' : 'movie';
-          const disc = await cachedFetch(`${TMDB_BASE}/discover/${discType}?api_key=${apiKey}&with_genres=${g}&sort_by=popularity.desc&page=${page}`);
+          const g = findSimilarGenreId || findSimilarSeed.genre_ids[0];
+          const discType = (findSimilarType === 'tv' || type === 'tv') ? 'tv' : 'movie';
+          const yearQ = findSimilarYear ? (discType === 'tv' ? `&first_air_date_year=${findSimilarYear}` : `&primary_release_year=${findSimilarYear}`) : '';
+          const disc = await cachedFetch(`${TMDB_BASE}/discover/${discType}?api_key=${apiKey}&with_genres=${g}&sort_by=popularity.desc&page=${page}${yearQ}`);
           items = items.concat(disc.results || []);
         }
 
@@ -10258,6 +10420,11 @@
           const genres = item.genre_ids || [];
           const isAnim = genres.includes(16);
           const isEng = item.original_language === 'en';
+          const y = mediaYearOf(item);
+          if (findSimilarType === 'movie' && mt !== 'movie' && !item.title) return false;
+          if (findSimilarType === 'tv' && mt !== 'tv' && !item.name) return false;
+          if (findSimilarGenreId && !genres.includes(Number(findSimilarGenreId))) return false;
+          if (findSimilarYear && y !== String(findSimilarYear)) return false;
           if (findSimilarFilter === 'all') return true;
           if (findSimilarFilter === 'movie') return mt === 'movie' || (!!item.title && !item.name);
           if (findSimilarFilter === 'tv') return mt === 'tv' || (!!item.name && !item.title);
@@ -10265,6 +10432,17 @@
           if (findSimilarFilter === 'cartoon') return (mt === 'tv' || item.name) && isAnim && isEng;
           return true;
         });
+
+        const seenFs = new Set();
+        items = items.filter(i => {
+          if (seenFs.has(i.id)) return false;
+          seenFs.add(i.id);
+          return true;
+        });
+        if (findSimilarSort === 'rating') items.sort((a,b) => (b.vote_average||0) - (a.vote_average||0));
+        else if (findSimilarSort === 'latest') items.sort((a,b) => String(b.release_date||b.first_air_date||'').localeCompare(String(a.release_date||a.first_air_date||'')));
+        else if (findSimilarSort === 'title') items.sort((a,b) => String(a.title||a.name||'').localeCompare(String(b.title||b.name||'')));
+        else items.sort((a,b) => (b.popularity||0) - (a.popularity||0));
 
         const total = Math.max(rec.total_pages || 1, sim.total_pages || 1, 1);
         findSimilarHasMore = page < Math.min(total + 5, 500);
@@ -10698,7 +10876,7 @@
         desktopRightPanel.classList.add('player-hidden');
       }
 
-      const mediaTitle = item.title || item.name || 'Media Player';
+      const mediaTitle = titleWithYear(item) || item.title || item.name || 'Media Player';
       playerPageTitle.textContent = mediaTitle;
       playerOverview.textContent = item.overview || 'No synopsis available for this title.';
 
@@ -10739,7 +10917,7 @@
       cachedFetch(`${TMDB_BASE}/${type}/${item.id}?api_key=${apiKey}`).then((full) => {
         if (loadId !== mediaSessionId || !full || !full.id) return;
         activeMedia = { ...item, ...full, computedType: type };
-        const mediaTitle = activeMedia.title || activeMedia.name || 'Media Player';
+        const mediaTitle = titleWithYear(activeMedia) || activeMedia.title || activeMedia.name || 'Media Player';
         playerPageTitle.textContent = mediaTitle;
         playerOverview.textContent = activeMedia.overview || 'No synopsis available for this title.';
         setPlayerTrailersFilmName(activeMedia);
@@ -10819,6 +10997,33 @@
       maybePeekContinueWatching();
     }
 
+    function renderPartsCards(parts, id, heading) {
+      if (!parts || parts.length < 2) return false;
+      partsTitle.textContent = heading || 'All Parts';
+      partsSection.style.display = 'block';
+      partsContainer.innerHTML = '';
+      parts.forEach((part, index) => {
+        if (!part.poster_path) return;
+        const poster = `${IMAGE_BASE}${part.poster_path}`;
+        const year = part.release_date ? `(${part.release_date.split('-')[0]})` : '';
+        const isCurrent = Number(part.id) === Number(id);
+        const card = document.createElement('div');
+        card.className = 'shelf-card';
+        card.innerHTML = `
+          <div class="shelf-poster" style="${isCurrent ? 'outline: 2px solid var(--primary);' : ''}">
+            <img src="${poster}" alt="${part.title}" loading="lazy" decoding="async" />
+            <span class="badge-pill tag" style="left:6px; top:6px;">Part ${index + 1}</span>
+          </div>
+          <div class="shelf-card-title">${part.title}${year ? ' ' + year : ''}</div>
+          <div class="shelf-sub" style="color:var(--primary);">${year}</div>
+        `;
+        attachCardInteractions(card, part, 'movie');
+        partsContainer.appendChild(card);
+      });
+      setupRowSliderListener('partsContainer', 'sliderPartsThumb', 'sliderParts');
+      return true;
+    }
+
     async function loadFranchiseParts(id, type, loadId = mediaSessionId) {
       partsSection.style.display = 'none';
       partsContainer.innerHTML = '';
@@ -10827,43 +11032,34 @@
       try {
         const movieDetails = await cachedFetch(`${TMDB_BASE}/movie/${id}?api_key=${apiKey}`);
         if (loadId !== mediaSessionId) return;
+        let parts = [];
+        let heading = 'Related Parts';
 
         if (movieDetails.belongs_to_collection) {
           const colId = movieDetails.belongs_to_collection.id;
           const colData = await cachedFetch(`${TMDB_BASE}/collection/${colId}?api_key=${apiKey}`);
           if (loadId !== mediaSessionId) return;
-          const parts = (colData.parts || [])
-            .filter(isCleanCinemaContent)
-            .sort((a, b) => (a.release_date || '').localeCompare(b.release_date || ''));
+          parts = (colData.parts || []).filter(isCleanCinemaContent);
+          heading = `${colData.name} (All Parts)`;
+        }
 
-          if (parts.length > 1) {
-            partsTitle.textContent = `${colData.name} (All Parts)`;
-            partsSection.style.display = 'block';
-
-            parts.forEach((part, index) => {
-              if (!part.poster_path) return;
-              const poster = `${IMAGE_BASE}${part.poster_path}`;
-              const year = part.release_date ? `(${part.release_date.split('-')[0]})` : '';
-              const isCurrent = part.id === id;
-
-              const card = document.createElement('div');
-              card.className = 'shelf-card';
-              card.innerHTML = `
-                <div class="shelf-poster" style="${isCurrent ? 'outline: 2px solid var(--primary);' : ''}">
-                  <img src="${poster}" alt="${part.title}" loading="lazy" decoding="async" />
-                  <span class="badge-pill tag" style="left:6px; top:6px;">Part ${index + 1}</span>
-                </div>
-                <div class="shelf-card-title">${part.title}</div>
-                <div class="shelf-sub" style="color:var(--primary);">${year}</div>
-              `;
-
-              attachCardInteractions(card, part, 'movie');
-              partsContainer.appendChild(card);
-            });
-
-            setupRowSliderListener('partsContainer', 'sliderPartsThumb', 'sliderParts');
+        const extraQueries = franchiseQueriesFor(movieDetails);
+        if (extraQueries.length) {
+          const extraHits = await Promise.all(extraQueries.map(q => tmdbSearchMovie(q)));
+          extraHits.flat().forEach(hit => {
+            if (hit && hit.id && !parts.some(p => p.id === hit.id)) parts.push(hit);
+          });
+          if (!movieDetails.belongs_to_collection && extraQueries.length) {
+            heading = `${movieDetails.title || 'Franchise'} (All Parts)`;
           }
         }
+
+        parts = parts.filter(isCleanCinemaContent)
+          .sort((a, b) => (a.release_date || '').localeCompare(b.release_date || ''));
+        const uniq = [];
+        const seen = new Set();
+        parts.forEach(p => { if (!seen.has(p.id)) { seen.add(p.id); uniq.push(p); } });
+        renderPartsCards(uniq, id, heading);
       } catch (err) {
       }
     }
@@ -11153,7 +11349,18 @@
         ]);
         if (loadId !== mediaSessionId) return;
 
-        let items = [...(p1.results || []), ...(p2.results || [])].filter(isCleanCinemaContent);
+        let items = [...(p1.results || []), ...(p2.results || []), ...(p3.results || [])].filter(isCleanCinemaContent);
+        const cluster = clusterTitlesFor(activeMedia || {});
+        if (cluster.length) {
+          const extra = await Promise.all(cluster.slice(0, 8).map(q => tmdbSearchMovie(q)));
+          extra.flat().forEach(hit => items.push(hit));
+        }
+        const seenSide = new Set();
+        items = items.filter(i => {
+          if (!i || !i.id || i.id === id || seenSide.has(i.id)) return false;
+          seenSide.add(i.id);
+          return isCleanCinemaContent(i);
+        });
 
         sidebarRecList.innerHTML = '';
         if (items.length === 0) {
@@ -11788,35 +11995,38 @@
     let fsChromeTimer = null;
     function showFsChrome() {
       const vp = document.getElementById('videoViewport');
-      document.body.classList.add('fs-chrome-on');
-      if (vp) vp.classList.add('fs-chrome-on');
+      if (!document.body.classList.contains('fs-chrome-on')) {
+        document.body.classList.add('fs-chrome-on');
+        if (vp) vp.classList.add('fs-chrome-on');
+      }
       clearTimeout(fsChromeTimer);
       fsChromeTimer = setTimeout(() => {
         document.body.classList.remove('fs-chrome-on');
         if (vp) vp.classList.remove('fs-chrome-on');
-      }, 2600);
+      }, 2200);
     }
     function bindFsChromeHover() {
       const vp = document.getElementById('videoViewport');
       if (!vp || vp._fsChromeBound) return;
       vp._fsChromeBound = true;
+      let lastKick = 0;
       const kick = () => {
+        const now = performance.now();
+        if (now - lastKick < 280) return;
+        lastKick = now;
         if (document.fullscreenElement || document.webkitFullscreenElement || document.body.classList.contains('player-fs-active')) {
-          showFsChrome();
+          requestAnimationFrame(showFsChrome);
         }
       };
-      ['mousemove', 'mousedown', 'touchstart', 'pointerdown', 'keydown'].forEach(ev => {
-        document.addEventListener(ev, kick, { passive: true });
-        vp.addEventListener(ev, kick, { passive: true });
-      });
-      ['fsHotTop', 'fsHotBottom', 'fsCornerBtn', 'fsExitOverlay'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.addEventListener('mousemove', kick, { passive: true });
-          el.addEventListener('mouseenter', kick, { passive: true });
-          el.addEventListener('touchstart', kick, { passive: true });
-        }
-      });
+      // Do not bind document mousemove — that fights the embed and stutters video.
+      vp.addEventListener('mousemove', kick, { passive: true });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.key === 'f' || e.key === 'F') kick();
+      }, { passive: true });
+      const exitBtn = document.getElementById('fsExitOverlay');
+      const corner = document.getElementById('fsCornerBtn');
+      if (exitBtn) exitBtn.addEventListener('mouseenter', kick, { passive: true });
+      if (corner) corner.addEventListener('mouseenter', kick, { passive: true });
     }
 
     function initTvAutoPrefs() {
@@ -12105,6 +12315,8 @@
       playerFrame.setAttribute('mozallowfullscreen', 'true');
       playerFrame.setAttribute('referrerpolicy', 'origin-when-cross-origin');
       playerFrame.removeAttribute('sandbox');
+      playerFrame.style.pointerEvents = 'auto';
+      playerFrame.style.zIndex = '5';
 
       const shield = document.getElementById('playerClickShield');
       if (shield) shield.classList.remove('active');
@@ -12138,7 +12350,7 @@
         if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active')) {
           autoFailoverPlayer();
         }
-      }, 45000);
+      }, 90000);
     }
 
     function autoFailoverPlayer() {
