@@ -7,6 +7,7 @@
   <link rel="manifest" href="./site.webmanifest">
 
   <meta charset="UTF-8" />
+  <meta name="referrer" content="origin">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>BWHS - Binge Watch Humble Streams</title>
   <meta name="description" content="BWHS — binge popular movies and shows with a cinematic player, trending catalogs, and instant playback." />
@@ -4650,6 +4651,133 @@
     .trend-shot img { width: 100%; height: 100%; object-fit: cover; }
     .trend-shot .art-download-badge { position: absolute; right: 6px; bottom: 6px; }
 
+    .trend-trailers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .trend-trailer-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .trend-trailer-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #000;
+    }
+    .trend-trailer-frame img,
+    .trend-trailer-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      object-fit: cover;
+    }
+    .trend-trailer-frame iframe {
+      z-index: 1;
+      opacity: 0;
+      pointer-events: none;
+      background: #000;
+    }
+    .trend-trailer-frame.is-playing iframe {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .trend-trailer-frame.is-playing img,
+    .trend-trailer-frame.is-playing .trend-trailer-play {
+      display: none;
+    }
+    .trend-trailer-play {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      border: none;
+      background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.55));
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.68rem;
+    }
+    .trend-trailer-play i {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      box-shadow: 0 6px 14px rgba(79,70,229,0.4);
+    }
+    .trend-trailer-label {
+      font-size: 0.66rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .trend-pip-spacer {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 14px;
+      background: #000;
+    }
+    .trend-viewport.is-floating-dock {
+      position: fixed !important;
+      right: 16px !important;
+      bottom: 88px !important;
+      left: auto !important;
+      top: auto !important;
+      width: min(420px, calc(100vw - 28px)) !important;
+      max-width: 92vw !important;
+      aspect-ratio: 16 / 9 !important;
+      z-index: 85 !important;
+      border-radius: 14px !important;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.45), 0 0 0 1.5px var(--primary) !important;
+      cursor: pointer;
+    }
+    @media (min-width: 900px) {
+      .trend-viewport.is-floating-dock { bottom: 24px !important; }
+    }
+    .trend-pip-actions {
+      display: none;
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 12;
+      gap: 6px;
+    }
+    .trend-viewport.is-floating-dock .trend-pip-actions { display: flex; }
+    .trend-pip-actions button {
+      width: 32px; height: 32px; border: none; border-radius: 50%;
+      background: rgba(15,23,42,0.82); color: #fff; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    .trend-lane.is-playing-now {
+      outline: 2px solid var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.18), var(--shadow-md);
+    }
+    @media (max-width: 640px) {
+      .trend-trailers { grid-template-columns: 1fr; }
+    }
+
+
+
   /* BMC SUPPORT WIDGET */
 .bmc-support-banner{
   display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
@@ -5096,7 +5224,7 @@
                       webkitallowfullscreen="true" 
                       mozallowfullscreen="true" 
                       allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *; clipboard-read *; clipboard-write *"
-                      referrerpolicy="origin-when-cross-origin"
+                      referrerpolicy="origin"
                       importance="high"
                       fetchpriority="high"
                       frameborder="0"
@@ -8192,6 +8320,24 @@
             <button class="art-toggle-btn" onclick="setTrendShotMode(${item.id}, 'posters', this)">Portrait</button>
           </div>
           <div class="trend-shots" id="trendShots_${item.id}"><span style="font-size:0.72rem;color:var(--text-muted);">Loading stills…</span></div>
+          <div class="trend-trailers" id="trendTrailers_${item.id}">
+            <div class="trend-trailer-slot">
+              <div class="trend-trailer-frame" id="trendTrFrameA_${item.id}">
+                <img id="trendTrThumbA_${item.id}" alt="Trailer" />
+                <iframe id="trendTrIframeA_${item.id}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                <button type="button" class="trend-trailer-play" onclick="playTrendTrailer(${item.id}, 0)"><i class="fa-solid fa-play"></i> Trailer</button>
+              </div>
+              <p class="trend-trailer-label" id="trendTrLabelA_${item.id}">Official Trailer</p>
+            </div>
+            <div class="trend-trailer-slot">
+              <div class="trend-trailer-frame" id="trendTrFrameB_${item.id}">
+                <img id="trendTrThumbB_${item.id}" alt="Teaser" />
+                <iframe id="trendTrIframeB_${item.id}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                <button type="button" class="trend-trailer-play" onclick="playTrendTrailer(${item.id}, 1)"><i class="fa-solid fa-play"></i> Trailer</button>
+              </div>
+              <p class="trend-trailer-label" id="trendTrLabelB_${item.id}">Second Trailer</p>
+            </div>
+          </div>
         </div>`;
       wrap.querySelectorAll('[data-trend-open]').forEach(el => {
         el.addEventListener('click', (e) => {
@@ -8297,6 +8443,10 @@
         renderTrendShots(item.id, imgs);
       } catch (_) {}
       try {
+        const vids = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/videos?api_key=${apiKey}`);
+        renderTrendTrailers(item, vids);
+      } catch (_) {}
+      try {
         const cred = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/credits?api_key=${apiKey}`);
         const row = document.getElementById(`trendCast_${item.id}`);
         if (row) {
@@ -8399,15 +8549,29 @@
       iframe.src = url;
       iframe.allow = 'autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *';
       iframe.setAttribute('allowfullscreen', 'true');
-      iframe.setAttribute('referrerpolicy', 'origin-when-cross-origin');
+      iframe.setAttribute('referrerpolicy', 'origin');
       iframe.setAttribute('loading', 'eager');
       vp.appendChild(iframe);
+      if (!vp.querySelector('.trend-pip-actions')) {
+        const acts = document.createElement('div');
+        acts.className = 'trend-pip-actions';
+        acts.innerHTML = '<button type="button" title="Fullscreen" onclick="event.stopPropagation(); fullscreenTrendPlayer()"><i class="fa-solid fa-expand"></i></button><button type="button" title="Jump back" onclick="event.stopPropagation(); jumpToPlayingTrend()"><i class="fa-solid fa-location-crosshairs"></i></button>';
+        vp.appendChild(acts);
+      }
       activeTrendPlayer = vp;
+      bindTrendPip(vp);
       const bar = document.getElementById(`trendSrv_${id}`);
       if (bar) {
         bar.querySelectorAll('.srv-btn').forEach(b => {
           b.classList.toggle('active', b.getAttribute('data-prv') === (PROVIDERS[currentProviderIndex] || PROVIDERS[0]));
         });
+      }
+      document.querySelectorAll('.trend-lane.is-playing-now').forEach(el => el.classList.remove('is-playing-now'));
+      const lane = vp.closest('.trend-lane');
+      if (lane) {
+        lane.classList.add('is-playing-now');
+        window._playingTrendLane = lane;
+        window._scrollArrowMode = 'idle';
       }
     }
 
@@ -11134,16 +11298,143 @@
 
     function setupScrollToTop() {
       window.addEventListener('scroll', () => {
-        if (window.scrollY > 400) {
-          btnScrollTop.style.display = 'flex';
-        } else {
-          btnScrollTop.style.display = 'none';
-        }
+        updateTrendPip();
+        const away = window.scrollY > 400 || (activeTrendPlayer && !isTrendPlayerInView());
+        if (btnScrollTop) btnScrollTop.style.display = away ? 'flex' : 'none';
       }, { passive: true });
     }
 
+    window._playingTrendLane = null;
+    let trendPipObserver = null;
+
+    function isTrendPlayerInView() {
+      const vp = activeTrendPlayer;
+      if (!vp) return false;
+      if (vp.classList.contains('is-floating-dock')) return false;
+      const r = vp.getBoundingClientRect();
+      const vis = Math.min(r.bottom, window.innerHeight - 40) - Math.max(r.top, 56);
+      return vis > Math.min(120, r.height * 0.28);
+    }
+
+    function bindTrendPip(vp) {
+      if (!vp) return;
+      if (trendPipObserver) {
+        try { trendPipObserver.disconnect(); } catch (_) {}
+      }
+      if (typeof IntersectionObserver !== 'undefined') {
+        trendPipObserver = new IntersectionObserver(() => updateTrendPip(), {
+          root: null,
+          threshold: [0, 0.12, 0.35, 0.7, 1],
+          rootMargin: '-56px 0px -40px 0px'
+        });
+        trendPipObserver.observe(vp);
+      }
+      updateTrendPip();
+    }
+
+    function enterTrendPip() {
+      const vp = activeTrendPlayer;
+      if (!vp) return;
+      if (document.fullscreenElement || document.webkitFullscreenElement) return;
+      if (vp.classList.contains('is-floating-dock')) return;
+      let sp = document.getElementById('trendPipSpacer');
+      if (!sp) {
+        sp = document.createElement('div');
+        sp.id = 'trendPipSpacer';
+        sp.className = 'trend-pip-spacer';
+      }
+      if (vp.parentNode && vp.previousElementSibling !== sp) {
+        vp.parentNode.insertBefore(sp, vp);
+      }
+      vp.classList.add('is-floating-dock', 'float-visible');
+    }
+
+    function exitTrendPip() {
+      const vp = activeTrendPlayer;
+      const sp = document.getElementById('trendPipSpacer');
+      if (sp) sp.remove();
+      if (vp) {
+        vp.classList.remove('is-floating-dock', 'float-visible');
+        vp.style.transform = '';
+      }
+    }
+
+    function updateTrendPip() {
+      const vp = activeTrendPlayer;
+      if (!vp || !vp.querySelector('iframe')) {
+        exitTrendPip();
+        return;
+      }
+      if (document.fullscreenElement || document.webkitFullscreenElement) return;
+      const lane = vp.closest('.trend-lane') || window._playingTrendLane;
+      const probe = document.getElementById('trendPipSpacer') || vp;
+      const r = (vp.classList.contains('is-floating-dock') ? probe : vp).getBoundingClientRect();
+      const vis = Math.min(r.bottom, window.innerHeight - 40) - Math.max(r.top, 56);
+      const inFrame = vis > Math.min(110, (r.height || 180) * 0.28);
+      if (!inFrame) enterTrendPip();
+      else exitTrendPip();
+    }
+
+    function jumpToPlayingTrend() {
+      const playing = document.querySelector('.trend-lane.is-playing-now') || window._playingTrendLane;
+      if (!playing) return;
+      exitTrendPip();
+      const top = playing.getBoundingClientRect().top + window.scrollY - 72;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+
+    function fullscreenTrendPlayer() {
+      const vp = activeTrendPlayer;
+      if (!vp) return;
+      const req = vp.requestFullscreen || vp.webkitRequestFullscreen || vp.mozRequestFullScreen || vp.msRequestFullscreen;
+      if (req) {
+        const p = req.call(vp);
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      }
+    }
+
+    function renderTrendTrailers(item, data) {
+      const picks = (typeof pickBestVideos === 'function' ? pickBestVideos(data && data.results) : []).slice(0, 2);
+      window._trendTrailers = window._trendTrailers || {};
+      window._trendTrailers[item.id] = picks;
+      const posterFallback = item.backdrop_path
+        ? `${IMAGE_MID}${item.backdrop_path}`
+        : (item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '');
+      [['A', 0], ['B', 1]].forEach(([letter, i]) => {
+        const vid = picks[i] || picks[0];
+        const thumb = document.getElementById(`trendTrThumb${letter}_${item.id}`);
+        const label = document.getElementById(`trendTrLabel${letter}_${item.id}`);
+        if (thumb) {
+          thumb.src = vid && typeof youtubeThumb === 'function' ? youtubeThumb(vid.key) : posterFallback;
+          thumb.onerror = () => { if (posterFallback) thumb.src = posterFallback; };
+        }
+        if (label) label.textContent = (vid && vid.name) || (i === 0 ? 'Official Trailer' : 'Second Trailer');
+      });
+    }
+
+    function playTrendTrailer(id, index) {
+      const picks = (window._trendTrailers && window._trendTrailers[id]) || [];
+      const vid = picks[index] || picks[0];
+      if (!vid || typeof youtubeEmbedUrl !== 'function') return;
+      const letter = index === 1 ? 'B' : 'A';
+      const frame = document.getElementById(`trendTrIframe${letter}_${id}`);
+      const wrap = document.getElementById(`trendTrFrame${letter}_${id}`);
+      if (!frame || !wrap) return;
+      wrap.classList.add('is-playing');
+      frame.src = youtubeEmbedUrl(vid.key, true);
+    }
+
     function scrollToTop() {
+      const playing = document.querySelector('.trend-lane.is-playing-now') || window._playingTrendLane;
+      const trendExp = document.getElementById('trendingExperience');
+      const onTrending = (typeof currentType !== 'undefined' && currentType === 'trending') && trendExp && trendExp.classList.contains('active');
+      if (onTrending && playing && !isTrendPlayerInView()) {
+        jumpToPlayingTrend();
+        if (btnScrollTop) btnScrollTop.title = 'Back to top';
+        return;
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (btnScrollTop) btnScrollTop.title = playing ? 'Jump to now playing' : 'Back to top';
     }
 
     async function openMediaPage(item, type, prefSeason = 1, prefEpisode = 1, pushHistory = true) {
@@ -12834,7 +13125,7 @@
       playerFrame.setAttribute('allowfullscreen', 'true');
       playerFrame.setAttribute('webkitallowfullscreen', 'true');
       playerFrame.setAttribute('mozallowfullscreen', 'true');
-      playerFrame.setAttribute('referrerpolicy', 'origin-when-cross-origin');
+      playerFrame.setAttribute('referrerpolicy', 'origin');
       playerFrame.removeAttribute('sandbox');
       playerFrame.style.pointerEvents = 'auto';
       playerFrame.style.zIndex = '5';
