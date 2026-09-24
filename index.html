@@ -4651,6 +4651,24 @@
     .trend-shot img { width: 100%; height: 100%; object-fit: cover; }
     .trend-shot .art-download-badge { position: absolute; right: 6px; bottom: 6px; }
 
+    .trend-view-trailer-btn {
+      margin-top: 8px;
+      align-self: flex-start;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--accent-pink));
+      box-shadow: 0 6px 16px rgba(79,70,229,0.32);
+    }
+    .trend-view-trailer-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+
     .trend-trailers {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -5007,7 +5025,7 @@
         <i class="fa-solid fa-house" style="color: #f59e0b;"></i>
         <span>Home</span>
       </button>
-      <button class="sidebar-btn" id="sideTrending" onclick="selectType('trending')">
+      <button class="sidebar-btn" id="sideTrending" onclick="selectType('trending')" onpointerenter="warmCoreCatalog()">
         <i class="fa-solid fa-fire" style="color: #f97316;"></i>
         <span>Trending</span>
       </button>
@@ -6132,18 +6150,55 @@
 
 
     const sessionCache = {};
+    const TMDB_LS_TTL = 12 * 60 * 60 * 1000;
+    function tmdbLsKey(url) {
+      return 'bwhs_c:' + url.replace('https://api.themoviedb.org/3/', '');
+    }
+    function readTmdbDisk(url) {
+      try {
+        const raw = localStorage.getItem(tmdbLsKey(url));
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.t || (Date.now() - parsed.t) > TMDB_LS_TTL) {
+          localStorage.removeItem(tmdbLsKey(url));
+          return null;
+        }
+        return parsed.d;
+      } catch (_) { return null; }
+    }
+    function writeTmdbDisk(url, data) {
+      try {
+        if (!data || typeof data !== 'object') return;
+        localStorage.setItem(tmdbLsKey(url), JSON.stringify({ t: Date.now(), d: data }));
+      } catch (_) {
+        try {
+          const keys = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.indexOf('bwhs_c:') === 0) keys.push(k);
+          }
+          keys.slice(0, Math.ceil(keys.length / 3)).forEach(k => localStorage.removeItem(k));
+        } catch (__) {}
+      }
+    }
     async function cachedFetch(url) {
       if (sessionCache[url]) return sessionCache[url];
+      const disk = readTmdbDisk(url);
+      if (disk) {
+        sessionCache[url] = disk;
+        return disk;
+      }
       if (sessionCache._pend && sessionCache._pend[url]) return sessionCache._pend[url];
       sessionCache._pend = sessionCache._pend || {};
       const job = (async () => {
         try {
-          const res = await fetch(url, { cache: 'default', credentials: 'omit' });
+          const res = await fetch(url, { cache: 'force-cache', credentials: 'omit', mode: 'cors' });
           const data = await res.json();
           sessionCache[url] = data;
+          writeTmdbDisk(url, data);
           return data;
         } catch (err) {
-          return sessionCache[url] || {};
+          return sessionCache[url] || readTmdbDisk(url) || {};
         } finally {
           try { delete sessionCache._pend[url]; } catch (_) {}
         }
@@ -6151,6 +6206,21 @@
       sessionCache._pend[url] = job;
       return job;
     }
+    function prefetchTmdb(url) {
+      if (!url || sessionCache[url] || (sessionCache._pend && sessionCache._pend[url])) return;
+      cachedFetch(url);
+    }
+    function warmCoreCatalog() {
+      prefetchTmdb(`${TMDB_BASE}/trending/all/week?api_key=${apiKey}&page=1`);
+      prefetchTmdb(`${TMDB_BASE}/trending/all/day?api_key=${apiKey}&page=1`);
+      prefetchTmdb(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=1`);
+      prefetchTmdb(`${TMDB_BASE}/trending/tv/week?api_key=${apiKey}&page=1`);
+      prefetchTmdb(`${TMDB_BASE}/trending/tv/day?api_key=${apiKey}&page=1`);
+      prefetchTmdb(`${TMDB_BASE}/movie/popular?api_key=${apiKey}&page=1`);
+      prefetchTmdb(`${TMDB_BASE}/tv/popular?api_key=${apiKey}&page=1`);
+      prefetchTmdb(`${TMDB_BASE}/movie/now_playing?api_key=${apiKey}&page=1`);
+    }
+    warmCoreCatalog();
 
     const DISALLOWED_GENRE_IDS = [10763, 10764, 10767, 10766];
     const DISALLOWED_KEYWORDS = [
@@ -6382,6 +6452,7 @@
     let lastAutoNextAt = 0;
     let activeTrendPlayer = null;
     let trendingPool = [];
+    let lastTrendSnap = [];
     let trendingShotMode = {};
     let trendingPage = 1;
     let trendingLoading = false;
@@ -8107,11 +8178,11 @@
         heroSpotlight.style.display = 'flex';
         heroSpotlight.style.opacity = '1';
       }
-      await loadHeroFeatured();
-      if (viewId !== catalogViewId || currentType !== 'trending') return;
-      startHeroInterval();
-      trendingPage = 1;
       loadTrendingLanes(true);
+      loadHeroFeatured().then(() => {
+        if (viewId !== catalogViewId || currentType !== 'trending') return;
+        startHeroInterval();
+      });
     }
 
     function initTrendingFilters() {
@@ -8160,7 +8231,14 @@
       const viewId = catalogViewId;
       const box = document.getElementById('trendingLanes');
       if (!box) return;
+      const typeSel = (document.getElementById('trendType') || {}).value || 'all';
+      const genre = (document.getElementById('trendGenre') || {}).value || '';
+      const yearId = (document.getElementById('trendYear') || {}).value || '';
+      const sortKey = (document.getElementById('trendSort') || {}).value || 'popularity.desc';
+      const studioSel = document.getElementById('trendStudio');
+      const studioOpt = studioSel && studioSel.selectedOptions && studioSel.selectedOptions[0];
       if (reset) {
+        const reuse = !genre && !yearId && !(studioOpt && studioOpt.value) && typeSel === 'all' && lastTrendSnap.length;
         box.innerHTML = '';
         trendingPage = 1;
         trendingPool = [];
@@ -8168,16 +8246,26 @@
         midRailReserve = [];
         midRailUsedIds = new Set();
         midRailCursor = 0;
+        _trendHydrated.clear();
+        if (reuse) {
+          trendingPool = lastTrendSnap.slice();
+          const snapFrag = document.createDocumentFragment();
+          trendingPool.slice(0, 6).forEach((item, i) => {
+            snapFrag.appendChild(buildTrendLane(item, i));
+            snapFrag.appendChild(buildTrendMidRail(i));
+          });
+          box.appendChild(snapFrag);
+          trendingPool.slice(0, 2).forEach(item => scheduleTrendHydrate(item, true));
+          trendingPool.slice(2, 6).forEach(item => scheduleTrendHydrate(item, false));
+          trendingLoading = false;
+          isLoading = false;
+          hasMorePages = true;
+          return;
+        }
       }
       if (trendingLoading) return;
       trendingLoading = true;
       const pg = reset ? 1 : (trendingPage + 1);
-      const typeSel = (document.getElementById('trendType') || {}).value || 'all';
-      const genre = (document.getElementById('trendGenre') || {}).value || '';
-      const yearId = (document.getElementById('trendYear') || {}).value || '';
-      const sortKey = (document.getElementById('trendSort') || {}).value || 'popularity.desc';
-      const studioSel = document.getElementById('trendStudio');
-      const studioOpt = studioSel && studioSel.selectedOptions && studioSel.selectedOptions[0];
 
       let mediaKind = 'all';
       if (typeSel === 'movie' || typeSel === 'animation') mediaKind = 'movie';
@@ -8213,10 +8301,10 @@
         { gte: '2017-01-01', lte: '2022-12-31' },
         { gte: `${Math.max(2020, thisYear - 4)}-01-01`, lte: `${thisYear}-12-31` }
       ];
-      const pickWindow = decadeWindows[randInt(0, decadeWindows.length - 1)];
-      const randPageA = randInt(1, 18);
-      const randPageB = randInt(1, 14);
-      const randPageC = randInt(1, 10);
+      const pickWindow = decadeWindows[reset ? 3 : randInt(0, decadeWindows.length - 1)];
+      const randPageA = reset ? 1 : randInt(1, 8);
+      const randPageB = reset ? 1 : randInt(1, 6);
+      const randPageC = reset ? 1 : randInt(1, 5);
 
       const urls = [];
       if (studioOpt && studioOpt.value) {
@@ -8273,23 +8361,40 @@
       shuffleInPlace(midRailReserve);
       const frag = document.createDocumentFragment();
       const fresh = trendingPool.slice(startIdx);
-      fresh.forEach((item, i) => {
+      const firstPaint = reset ? fresh.slice(0, 5) : fresh;
+      const restPaint = reset ? fresh.slice(5) : [];
+      firstPaint.forEach((item, i) => {
         frag.appendChild(buildTrendLane(item, startIdx + i));
         frag.appendChild(buildTrendMidRail(startIdx + i));
       });
       box.appendChild(frag);
-      fresh.forEach(item => hydrateTrendLane(item));
+      firstPaint.forEach((item, i) => scheduleTrendHydrate(item, i < 2));
+      if (restPaint.length) {
+        requestAnimationFrame(() => {
+          if (viewId !== catalogViewId || currentType !== 'trending') return;
+          const more = document.createDocumentFragment();
+          restPaint.forEach((item, i) => {
+            more.appendChild(buildTrendLane(item, startIdx + firstPaint.length + i));
+            more.appendChild(buildTrendMidRail(startIdx + firstPaint.length + i));
+          });
+          box.appendChild(more);
+          restPaint.forEach(item => scheduleTrendHydrate(item, false));
+        });
+      }
       trendingPage = pg;
       hasMorePages = true;
       trendingLoading = false;
       isLoading = false;
+      if (reset && !genre && !yearId && !(studioOpt && studioOpt.value) && typeSel === 'all') {
+        lastTrendSnap = trendingPool.slice(0, 24);
+      }
     }
 
     function buildTrendLane(item, idx) {
       const type = item.media_type || (item.title ? 'movie' : 'tv');
       const title = item.title || item.name || 'Untitled';
       const poster = item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '';
-      const back = item.backdrop_path ? `${IMAGE_MID}${item.backdrop_path}` : poster;
+      const back = item.backdrop_path ? `${IMAGE_BASE}${item.backdrop_path}` : poster;
       const wrap = document.createElement('article');
       wrap.className = 'trend-lane' + ((idx % 2) ? ' flip' : '');
       wrap.dataset.mediaId = String(item.id);
@@ -8320,24 +8425,9 @@
             <button class="art-toggle-btn" onclick="setTrendShotMode(${item.id}, 'posters', this)">Portrait</button>
           </div>
           <div class="trend-shots" id="trendShots_${item.id}"><span style="font-size:0.72rem;color:var(--text-muted);">Loading stills…</span></div>
-          <div class="trend-trailers" id="trendTrailers_${item.id}">
-            <div class="trend-trailer-slot">
-              <div class="trend-trailer-frame" id="trendTrFrameA_${item.id}">
-                <img id="trendTrThumbA_${item.id}" alt="Trailer" />
-                <iframe id="trendTrIframeA_${item.id}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-                <button type="button" class="trend-trailer-play" onclick="playTrendTrailer(${item.id}, 0)"><i class="fa-solid fa-play"></i> Trailer</button>
-              </div>
-              <p class="trend-trailer-label" id="trendTrLabelA_${item.id}">Official Trailer</p>
-            </div>
-            <div class="trend-trailer-slot">
-              <div class="trend-trailer-frame" id="trendTrFrameB_${item.id}">
-                <img id="trendTrThumbB_${item.id}" alt="Teaser" />
-                <iframe id="trendTrIframeB_${item.id}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-                <button type="button" class="trend-trailer-play" onclick="playTrendTrailer(${item.id}, 1)"><i class="fa-solid fa-play"></i> Trailer</button>
-              </div>
-              <p class="trend-trailer-label" id="trendTrLabelB_${item.id}">Second Trailer</p>
-            </div>
-          </div>
+          <button type="button" class="trend-view-trailer-btn" data-trailer-id="${item.id}" data-trailer-type="${type}">
+            <i class="fa-solid fa-play"></i> View Trailer
+          </button>
         </div>`;
       wrap.querySelectorAll('[data-trend-open]').forEach(el => {
         el.addEventListener('click', (e) => {
@@ -8350,6 +8440,16 @@
       if (portrait) {
         portrait.style.cursor = 'pointer';
         portrait.addEventListener('click', () => openTrendFull(item.id));
+      }
+      const trailBtn = wrap.querySelector('.trend-view-trailer-btn');
+      if (trailBtn) {
+        trailBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const tid = Number(trailBtn.getAttribute('data-trailer-id') || item.id);
+          const ttype = trailBtn.getAttribute('data-trailer-type') || type;
+          openTrailerModal(tid, ttype, title);
+        });
       }
       return wrap;
     }
@@ -8436,50 +8536,68 @@
       openMediaPage(item, type);
     }
 
+    let _trendHydrateObs = null;
+    const _trendHydrated = new Set();
+    function getTrendHydrateObserver() {
+      if (_trendHydrateObs) return _trendHydrateObs;
+      if (typeof IntersectionObserver === 'undefined') return null;
+      _trendHydrateObs = new IntersectionObserver((entries) => {
+        entries.forEach(ent => {
+          if (!ent.isIntersecting) return;
+          const id = Number(ent.target.dataset.mediaId);
+          const item = (trendingPool || []).find(p => Number(p.id) === id);
+          _trendHydrateObs.unobserve(ent.target);
+          if (item) hydrateTrendLane(item);
+        });
+      }, { rootMargin: '240px 0px', threshold: 0.01 });
+      return _trendHydrateObs;
+    }
+    function scheduleTrendHydrate(item, immediate) {
+      if (!item || !item.id) return;
+      if (immediate) {
+        hydrateTrendLane(item);
+        return;
+      }
+      const lane = document.querySelector(`.trend-lane[data-media-id="${item.id}"]`);
+      const obs = getTrendHydrateObserver();
+      if (lane && obs) obs.observe(lane);
+      else hydrateTrendLane(item);
+    }
     async function hydrateTrendLane(item) {
+      if (!item || !item.id) return;
+      if (_trendHydrated.has(item.id)) return;
+      _trendHydrated.add(item.id);
       const type = item.media_type || (item.title ? 'movie' : 'tv');
       try {
-        const imgs = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/images?api_key=${apiKey}`);
-        renderTrendShots(item.id, imgs);
-      } catch (_) {}
-      try {
-        const vids = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/videos?api_key=${apiKey}`);
-        renderTrendTrailers(item, vids);
-      } catch (_) {}
-      try {
-        const cred = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}/credits?api_key=${apiKey}`);
+        const pack = await cachedFetch(`${TMDB_BASE}/${type}/${item.id}?api_key=${apiKey}&append_to_response=images,credits`);
+        if (pack && pack.images) renderTrendShots(item.id, pack.images);
         const row = document.getElementById(`trendCast_${item.id}`);
-        if (row) {
+        if (row && pack && pack.credits) {
           row.innerHTML = '';
-          (cred.cast || []).filter(p => p.profile_path).slice(0, 4).forEach(p => {
+          (pack.credits.cast || []).filter(p => p.profile_path).slice(0, 4).forEach(p => {
             const chip = document.createElement('div');
             chip.className = 'trend-cast-chip';
-            chip.innerHTML = `<img src="${IMAGE_BASE}${p.profile_path}" alt="" loading="lazy" decoding="async" /><span>${p.name}</span>`;
+            chip.innerHTML = `<img src="${IMAGE_THUMB}${p.profile_path}" alt="" loading="lazy" decoding="async" /><span>${p.name}</span>`;
             chip.onclick = (e) => { e.stopPropagation(); filterByActor(p.id, p.name); };
             row.appendChild(chip);
           });
         }
-      } catch (_) {}
-      if (type === 'movie') {
-        try {
-          const det = await cachedFetch(`${TMDB_BASE}/movie/${item.id}?api_key=${apiKey}`);
-          if (det && det.belongs_to_collection) {
-            const col = await cachedFetch(`${TMDB_BASE}/collection/${det.belongs_to_collection.id}?api_key=${apiKey}`);
-            const row = document.getElementById(`trendParts_${item.id}`);
-            if (row && col.parts) {
-              row.innerHTML = '';
-              col.parts.filter(p => p.poster_path).slice(0, 12).forEach(part => {
-                const d = document.createElement('div');
-                d.className = 'trend-part-card';
-                d.title = part.title;
-                d.innerHTML = `<img src="${IMAGE_BASE}${part.poster_path}" alt="" loading="lazy" decoding="async" />`;
-                d.onclick = () => openMediaPage(part, 'movie');
-                row.appendChild(d);
-              });
-            }
+        if (type === 'movie' && pack && pack.belongs_to_collection) {
+          const col = await cachedFetch(`${TMDB_BASE}/collection/${pack.belongs_to_collection.id}?api_key=${apiKey}`);
+          const prow = document.getElementById(`trendParts_${item.id}`);
+          if (prow && col.parts) {
+            prow.innerHTML = '';
+            col.parts.filter(p => p.poster_path).slice(0, 8).forEach(part => {
+              const d = document.createElement('div');
+              d.className = 'trend-part-card';
+              d.title = part.title;
+              d.innerHTML = `<img src="${IMAGE_THUMB}${part.poster_path}" alt="" loading="lazy" decoding="async" />`;
+              d.onclick = () => openMediaPage(part, 'movie');
+              prow.appendChild(d);
+            });
           }
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
     }
 
     function setTrendShotMode(id, mode, btn) {
@@ -8497,7 +8615,7 @@
       const box = document.getElementById(`trendShots_${id}`);
       if (!box) return;
       const mode = trendingShotMode[id] || 'backdrops';
-      const list = ((data && data[mode]) || []).slice(0, 14);
+      const list = ((data && data[mode]) || []).slice(0, 8);
       if (!list.length) {
         box.innerHTML = '<span style="font-size:0.72rem;color:var(--text-muted);">No official stills yet.</span>';
         return;
@@ -8505,7 +8623,7 @@
       box.innerHTML = '';
       list.forEach((art, idx) => {
         const full = `${IMAGE_ORIGINAL}${art.file_path}`;
-        const thumb = `${IMAGE_BASE}${art.file_path}`;
+        const thumb = `${IMAGE_THUMB}${art.file_path}`;
         const card = document.createElement('div');
         card.className = `trend-shot ${mode === 'posters' ? 'portrait' : 'landscape'}`;
         card.innerHTML = `<img src="${thumb}" alt="" loading="lazy" decoding="async" /><div class="art-download-badge"><i class="fa-solid fa-download"></i></div>`;
@@ -10558,31 +10676,57 @@
       const backdrop = document.getElementById('trailerModalBackdrop');
       const frame = document.getElementById('trailerModalFrame');
       const titleEl = document.getElementById('trailerModalTitle');
-      if (!backdrop || !frame) return;
-      if (titleEl) titleEl.textContent = title ? `${title} — Trailer` : 'Official Trailer';
-      frame.src = '';
+      if (!backdrop || !frame) {
+        showToast('Trailer player missing');
+        return;
+      }
+      const known = (trendingPool || []).find(p => Number(p.id) === Number(id))
+        || (heroItems || []).find(p => Number(p.id) === Number(id));
+      const kind = type || (known && (known.media_type || (known.title ? 'movie' : 'tv'))) || 'movie';
+      const label = title || (known && (known.title || known.name)) || 'Official Trailer';
+      if (titleEl) titleEl.textContent = `${label} — Trailer`;
+      frame.removeAttribute('src');
+      frame.src = 'about:blank';
       backdrop.classList.add('active');
-      try {
-        const vData = await cachedFetch(`${TMDB_BASE}/${type || 'movie'}/${id}/videos?api_key=${apiKey}`);
-        let picks = pickBestVideos(vData.results);
+      document.body.style.overflow = 'hidden';
+      const tryVideos = async (mediaType) => {
+        const vData = await cachedFetch(`${TMDB_BASE}/${mediaType}/${id}/videos?api_key=${apiKey}&language=en-US`);
+        let picks = pickBestVideos(vData && vData.results);
         if (!picks.length) {
-          showToast('No trailer available');
+          const anyLang = await cachedFetch(`${TMDB_BASE}/${mediaType}/${id}/videos?api_key=${apiKey}`);
+          picks = pickBestVideos(anyLang && anyLang.results);
+        }
+        return picks;
+      };
+      try {
+        let picks = await tryVideos(kind);
+        if (!picks.length) {
+          const other = kind === 'tv' ? 'movie' : 'tv';
+          picks = await tryVideos(other);
+        }
+        if (!picks.length) {
+          showToast('No trailer available for this title');
           closeTrailerModal();
           return;
         }
-        frame.src = youtubeEmbedUrl(picks[0].key, true);
-      } catch (_) {
+        const key = picks[0].key;
+        frame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+        frame.src = `https://www.youtube.com/embed/${key}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+      } catch (err) {
         showToast('Trailer failed to load');
         closeTrailerModal();
       }
     }
+    window.openTrailerModal = openTrailerModal;
 
     function closeTrailerModal() {
       const backdrop = document.getElementById('trailerModalBackdrop');
       const frame = document.getElementById('trailerModalFrame');
-      if (frame) frame.src = '';
+      if (frame) frame.src = 'about:blank';
       if (backdrop) backdrop.classList.remove('active');
+      document.body.style.overflow = '';
     }
+    window.closeTrailerModal = closeTrailerModal;
 
     function ctxActionWatch() {
       if (!ctxMenuItem) return;
@@ -11413,15 +11557,10 @@
     }
 
     function playTrendTrailer(id, index) {
-      const picks = (window._trendTrailers && window._trendTrailers[id]) || [];
-      const vid = picks[index] || picks[0];
-      if (!vid || typeof youtubeEmbedUrl !== 'function') return;
-      const letter = index === 1 ? 'B' : 'A';
-      const frame = document.getElementById(`trendTrIframe${letter}_${id}`);
-      const wrap = document.getElementById(`trendTrFrame${letter}_${id}`);
-      if (!frame || !wrap) return;
-      wrap.classList.add('is-playing');
-      frame.src = youtubeEmbedUrl(vid.key, true);
+      const item = (trendingPool || []).find(p => Number(p.id) === Number(id));
+      const type = (item && (item.media_type || (item.title ? 'movie' : 'tv'))) || 'movie';
+      const title = item ? (item.title || item.name || 'Trailer') : 'Trailer';
+      openTrailerModal(id, type, title);
     }
 
     function scrollToTop() {
