@@ -6491,6 +6491,12 @@
     let userExitedFullscreen = false;
     let episodeWatchTimer = null;
     let lastAutoNextAt = 0;
+    let screenWakeLock = null;
+    let wakeLockWanted = false;
+    let ignoreNextFsExit = false;
+    let lastAutoNextWasSilent = false;
+    const DEV_AUTONEXT = /(?:^|[?&#])devautonext(?:=1)?(?:&|$)/i.test(location.search + location.hash)
+      || localStorage.getItem('humble_dev_autonext') === '1';
     let activeTrendPlayer = null;
     let trendingPool = [];
     let lastTrendSnap = [];
@@ -11667,7 +11673,8 @@
       }
 
       userExitedFullscreen = false;
-      scheduleAutoFullscreen(true);
+      keepScreenAwake();
+      scheduleAutoFullscreen(true, 4000);
       snapToPlayerView();
       addToHistory(item, activeSeason, activeEpisode);
 
@@ -11735,6 +11742,7 @@
       playerPageView.classList.remove('active');
       catalogBrowserView.style.display = 'block';
       document.body.classList.remove('player-page-live');
+      if (typeof releaseScreenAwake === 'function') releaseScreenAwake();
       activeMedia = null;
       stopPlayerAudio();
       resetPlayerTrailers();
@@ -12970,7 +12978,10 @@
       executeStreamLoad();
       scheduleEpisodeWatchFallback();
       updateLeftOffBanner();
-      scheduleAutoFullscreen(true);
+      keepScreenAwake();
+      const delay = lastAutoNextWasSilent ? 7000 : 4000;
+      scheduleAutoFullscreen(true, delay);
+      if (lastAutoNextWasSilent) lastAutoNextWasSilent = false;
     }
 
     let fsChromeTimer = null;
@@ -13016,6 +13027,24 @@
       syncAutoPlayButton();
       bindFsChromeHover();
       window.addEventListener('message', handleEmbedPlayerMessage);
+      window.testAutoNext = function() {
+        showToast(DEV_AUTONEXT ? 'Dev auto-next (12s fallback also on)' : 'Forcing auto-next now');
+        maybeAutoNextEpisode();
+      };
+      window.enableDevAutoNext = function(on) {
+        localStorage.setItem('humble_dev_autonext', on === false ? '0' : '1');
+        showToast('Reload page — then auto-next fires ~12s after play (or press Shift+N)');
+      };
+      document.addEventListener('keydown', (e) => {
+        if (!e.shiftKey || (e.key !== 'N' && e.key !== 'n')) return;
+        if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+        e.preventDefault();
+        if (typeof showToast === 'function') showToast('Dev: simulating episode end');
+        maybeAutoNextEpisode();
+      });
+      if (DEV_AUTONEXT && typeof showToast === 'function') {
+        setTimeout(() => showToast('Dev auto-next: skip fires ~12s after an episode starts. Shift+N anytime.'), 900);
+      }
     }
 
     function syncAutoNextButton() {
@@ -13080,7 +13109,8 @@
       if (!autoNextOn || !activeMedia || activeMedia.computedType !== 'tv') return;
       const ep = (currentSeasonEpisodes || []).find(e => Number(e.episode_number) === Number(activeEpisode));
       const mins = (ep && ep.runtime) || (activeMedia.episode_run_time && activeMedia.episode_run_time[0]) || 45;
-      episodeWatchTimer = setTimeout(() => { maybeAutoNextEpisode(); }, Math.max(8, mins) * 60 * 1000 + 8000);
+      const delay = DEV_AUTONEXT ? 12000 : (Math.max(8, mins) * 60 * 1000 + 8000);
+      episodeWatchTimer = setTimeout(() => { maybeAutoNextEpisode(); }, delay);
     }
 
     async function maybeAutoNextEpisode() {
@@ -13089,6 +13119,10 @@
       if (!isTv) return;
       if (Date.now() - lastAutoNextAt < 2500) return;
       lastAutoNextAt = Date.now();
+      lastAutoNextWasSilent = true;
+      userExitedFullscreen = false;
+      ignoreNextFsExit = true;
+      setTimeout(() => { ignoreNextFsExit = false; }, 2500);
       let eps = currentSeasonEpisodes || [];
       if (!eps.length && activeMedia.id) {
         try {
@@ -13131,10 +13165,40 @@
       autoFullscreenOn = !autoFullscreenOn;
       localStorage.setItem('humble_auto_fs', autoFullscreenOn ? '1' : '0');
       syncAutoFsButton();
-      showToast(autoFullscreenOn ? 'Auto fullscreen on — F after 4s' : 'Auto fullscreen off');
+      showToast(autoFullscreenOn ? 'Auto fullscreen on — 7s after auto-next, 4s after play' : 'Auto fullscreen off');
       if (autoFullscreenOn) scheduleAutoFullscreen();
       else clearAutoFsTimer();
     }
+
+    async function keepScreenAwake() {
+      wakeLockWanted = true;
+      try {
+        if (!('wakeLock' in navigator) || !navigator.wakeLock || !navigator.wakeLock.request) return;
+        if (screenWakeLock && !screenWakeLock.released) return;
+        screenWakeLock = await navigator.wakeLock.request('screen');
+        screenWakeLock.addEventListener('release', () => {
+          screenWakeLock = null;
+          if (wakeLockWanted && document.visibilityState === 'visible') {
+            setTimeout(keepScreenAwake, 400);
+          }
+        });
+      } catch (_) {}
+    }
+    async function releaseScreenAwake() {
+      wakeLockWanted = false;
+      try {
+        if (screenWakeLock) {
+          await screenWakeLock.release();
+          screenWakeLock = null;
+        }
+      } catch (_) {}
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && wakeLockWanted) keepScreenAwake();
+    });
+    window.addEventListener('focus', () => {
+      if (wakeLockWanted) keepScreenAwake();
+    });
 
     function clearAutoFsTimer() {
       if (autoFsTimer) {
@@ -13143,19 +13207,20 @@
       }
     }
 
-    function scheduleAutoFullscreen(fromUserClick) {
+    function scheduleAutoFullscreen(fromUserClick, delayMs) {
       clearAutoFsTimer();
       if (!autoFullscreenOn) return;
       if (userExitedFullscreen) return;
       if (isPlayerFullscreen()) return;
       if (!playerPageView || !playerPageView.classList.contains('active')) return;
+      const wait = typeof delayMs === 'number' ? delayMs : (lastAutoNextWasSilent ? 7000 : 4000);
       const tryFs = () => {
         if (!autoFullscreenOn || userExitedFullscreen || isPlayerFullscreen()) return;
         if (!playerPageView || !playerPageView.classList.contains('active')) return;
         requestPlayerFullscreen();
       };
-      autoFsTimer = setTimeout(tryFs, 4000);
-      setTimeout(tryFs, 4600);
+      autoFsTimer = setTimeout(tryFs, wait);
+      setTimeout(tryFs, wait + 700);
     }
 
     function isPlayerFullscreen() {
@@ -13184,10 +13249,36 @@
       const req = vp.requestFullscreen || vp.webkitRequestFullscreen || vp.mozRequestFullScreen || vp.msRequestFullscreen;
       if (req) {
         const p = req.call(vp);
-        if (p && typeof p.catch === 'function') p.catch(() => {});
+        if (p && typeof p.catch === 'function') {
+          p.catch(() => { showFsNudge(); });
+        }
+      } else {
+        showFsNudge();
       }
-      // Do not postMessage into the embed — that steals FS and hides our exit control.
       setTimeout(syncFullscreenChrome, 80);
+      setTimeout(() => { if (!isPlayerFullscreen()) showFsNudge(); }, 400);
+    }
+
+    function showFsNudge() {
+      if (!autoFullscreenOn || isPlayerFullscreen()) return;
+      if (!playerPageView || !playerPageView.classList.contains('active')) return;
+      let n = document.getElementById('fsAutoNudge');
+      if (!n) {
+        n = document.createElement('button');
+        n.id = 'fsAutoNudge';
+        n.type = 'button';
+        n.textContent = 'Tap for fullscreen';
+        n.style.cssText = 'position:fixed;z-index:9800;left:50%;bottom:18px;transform:translateX(-50%);border:0;border-radius:9999px;padding:12px 18px;font-weight:800;font-size:0.82rem;background:linear-gradient(135deg,#4f46e5,#ec4899);color:#fff;box-shadow:0 10px 24px rgba(79,70,229,.45);cursor:pointer;';
+        n.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          n.remove();
+          userExitedFullscreen = false;
+          requestPlayerFullscreen();
+        });
+        document.body.appendChild(n);
+        setTimeout(() => { try { n.remove(); } catch(_){} }, 12000);
+      }
     }
 
     function exitPlayerFullscreen(fromUser) {
@@ -13224,11 +13315,16 @@
       document.addEventListener(ev, () => {
         const fs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
         if (!fs) {
-          userExitedFullscreen = true;
-          clearAutoFsTimer();
+          if (!ignoreNextFsExit) {
+            userExitedFullscreen = true;
+            clearAutoFsTimer();
+          }
           document.body.classList.remove('fs-chrome-on');
         } else {
+          userExitedFullscreen = false;
           showFsChrome();
+          const n = document.getElementById('fsAutoNudge');
+          if (n) n.remove();
         }
         syncFullscreenChrome();
       });
@@ -13247,6 +13343,12 @@
     function playEpisode(epNum, opts) {
       if (!activeMedia) return;
       const silent = !!(opts && opts.silent);
+      if (silent) {
+        lastAutoNextWasSilent = true;
+        userExitedFullscreen = false;
+        ignoreNextFsExit = true;
+        setTimeout(() => { ignoreNextFsExit = false; }, 2500);
+      }
       activeEpisode = Number(epNum);
       document.querySelectorAll('.ep-named-card').forEach(b => {
         const n = parseInt(b.getAttribute('data-ep'), 10);
