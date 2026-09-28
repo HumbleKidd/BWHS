@@ -6129,13 +6129,30 @@
     let currentProviderIndex = 0;
     const warmedEmbeds = new Set();
 
+    const VIXSRC_PRIMARY = '4f46e5';
+    const VIXSRC_SECONDARY = '0f172a';
+
+    function buildVixsrcParams() {
+      return [
+        'autoplay=1',
+        'autoPlay=true',
+        'startAt=0',
+        'lang=en',
+        'primaryColor=' + VIXSRC_PRIMARY,
+        'secondaryColor=' + VIXSRC_SECONDARY,
+        'skin=vixsrc',
+        'canPlayFHD=1'
+      ].join('&');
+    }
+
     function vixsrcUrlFor(id, type, season, episode) {
       const isTv = type === 'tv';
       const s = season || 1;
       const e = episode || 1;
+      const qs = buildVixsrcParams();
       return isTv
-        ? `https://vixsrc.to/tv/${id}/${s}/${e}?autoplay=1&autoPlay=true&startAt=0`
-        : `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&startAt=0`;
+        ? `https://vixsrc.to/tv/${id}/${s}/${e}?${qs}`
+        : `https://vixsrc.to/movie/${id}?${qs}`;
     }
 
     function prefetchEmbed(id, type, season, episode) {
@@ -12721,8 +12738,8 @@
 
         case 'vixsrc':
           return isTv
-            ? `https://vixsrc.to/tv/${id}/${s}/${e}?autoplay=1&autoPlay=true&startAt=0`
-            : `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&startAt=0`;
+            ? `https://vixsrc.to/tv/${id}/${s}/${e}?${buildVixsrcParams()}`
+            : `https://vixsrc.to/movie/${id}?${buildVixsrcParams()}`;
 
         case 'vidcore':
           return isTv
