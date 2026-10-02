@@ -15,13 +15,13 @@
   <meta property="og:site_name" content="BWHS" />
   <meta property="og:title" content="BWHS - Binge Watch Humble Streams" />
   <meta property="og:description" content="Stream trending movies and TV in a fast cinematic player. Popular titles, instant playback." />
-  <meta property="og:image" content="https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" />
+  <meta property="og:image" content="./apple-touch-icon.png" />
   <meta property="og:image:width" content="1280" />
   <meta property="og:image:height" content="720" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="BWHS - Binge Watch Humble Streams" />
   <meta name="twitter:description" content="Stream trending movies and TV in a fast cinematic player." />
-  <meta name="twitter:image" content="https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" />
+  <meta name="twitter:image" content="./apple-touch-icon.png" />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -5080,10 +5080,6 @@
         <i class="fa-solid fa-bolt" style="color:#f59e0b;"></i>
         <span>BWReels <em>Featured</em></span>
       </a>
-      <a class="sidebar-btn" id="sideFilmTalks" href="./film-talks.html">
-        <i class="fa-solid fa-comments" style="color:#4f46e5;"></i>
-        <span>Film Talks</span>
-      </a>
       <button class="sidebar-btn" id="sideAnimation" onclick="selectType('animation')">
         <i class="fa-solid fa-wand-magic-sparkles" style="color: #d946ef;"></i>
         <span>Animation</span>
@@ -5154,7 +5150,6 @@
         </div>
 
         <div class="header-actions">
-          <a class="btn-action" href="./film-talks.html" title="Film Talks" style="display:inline-flex"><i class="fa-solid fa-comments" style="color:#4f46e5"></i> Film Talks</a>
           <button class="btn-circle mobile-header-share" id="mobileHeaderShareBtn" onclick="shareCurrentTitle(event)" title="Share this title" aria-label="Share">
             <i class="fa-solid fa-share-nodes"></i>
           </button>
@@ -5873,10 +5868,6 @@
       <a class="sheet-nav-item featured-link" href="https://bwreels.online" target="_blank" rel="noopener noreferrer" onclick="closeMoreSheet(null)">
         <i class="fa-solid fa-bolt" style="color:#f59e0b;"></i>
         <span>BWReels <em>Featured</em></span>
-      </a>
-      <a class="sheet-nav-item" href="./film-talks.html">
-        <i class="fa-solid fa-comments" style="color:#4f46e5;"></i>
-        <span>Film Talks</span>
       </a>
       <button class="sheet-nav-item" onclick="selectType('animation'); closeMoreSheet(null);">
         <i class="fa-solid fa-wand-magic-sparkles" style="color:#d946ef;"></i>
@@ -7022,7 +7013,7 @@
     let auraReminderTimer = null;
     let homeBootstrapPromise = null;
     let playerFailoverTimer = null;
-    const SITE_SHARE_IMAGE = 'https://image.tmdb.org/t/p/original/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg';
+    const SITE_SHARE_IMAGE = new URL('./apple-touch-icon.png', window.location.href).href;
 
     document.addEventListener('DOMContentLoaded', () => {
       applyAccentColor(savedAccentColor);
@@ -8962,6 +8953,7 @@
       collapseSidebarAfterNav();
       bumpCatalogView();
       currentType = type;
+      if (type !== 'latest') currentSort = 'popularity.desc';
       if (typeof renderReleaseCalendar === 'function') {
         if (type !== 'all' && type !== 'latest') {
           const rh = document.getElementById('releasesHub');
@@ -12865,8 +12857,9 @@
       const overview = isPage
         ? 'Stream trending movies and TV in a fast cinematic player.'
         : (item && item.id ? `Watch ${title} now at BWHS` : (item.overview || 'Stream trending movies and TV in a fast cinematic player.')).slice(0, 180);
-      const img = item && (item.backdrop_path || item.poster_path || item.profile_path)
-        ? `${IMAGE_ORIGINAL}${item.backdrop_path || item.poster_path || item.profile_path}`
+      const artPath = item && (item.poster_path || item.backdrop_path || item.profile_path);
+      const img = (!isPage && artPath)
+        ? `${IMAGE_ORIGINAL}${artPath}`
         : SITE_SHARE_IMAGE;
       const pageTitle = (item && item.id)
         ? `Watch ${title} now at BWHS`
@@ -12909,15 +12902,12 @@
           url: `${window.location.origin}${window.location.pathname}#/actor/${currentPersonId}/${name}`
         };
       }
-      if (!currentType || currentType === 'all') {
-        const pool = (heroItems && heroItems.length ? heroItems : trendingPool) || [];
-        const pick = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+      if (!currentType || currentType === 'all' || currentType === 'upcoming' || currentType === 'latest') {
+        const pageName = currentType === 'upcoming' ? 'Upcoming on BWHS' : currentType === 'latest' ? 'Release Calendar on BWHS' : 'BWHS - Binge Watch Humble Streams';
         return {
           item: {
-            title: 'BWHS - Binge Watch Humble Streams',
+            title: pageName,
             overview: 'Stream trending movies and TV in a fast cinematic player.',
-            backdrop_path: pick && pick.backdrop_path,
-            poster_path: pick && pick.poster_path,
             _shareKind: 'page'
           },
           url: `${window.location.origin}${window.location.pathname}`
@@ -12970,9 +12960,10 @@
     async function shareMediaItem(item, shareUrl) {
       const ctxItem = item || getShareablePageContext().item;
       const { title, url, text, message } = buildShareCopy(ctxItem, shareUrl || window.location.href);
-      const imgPath = ctxItem && (ctxItem.poster_path || ctxItem.backdrop_path);
+      const isPageShare = !ctxItem || ctxItem._shareKind === 'page' || (!ctxItem.id && ctxItem._shareKind !== 'actor');
+      const imgPath = !isPageShare && ctxItem && (ctxItem.poster_path || ctxItem.backdrop_path || ctxItem.profile_path);
       const imgUrl = imgPath ? `${IMAGE_ORIGINAL}${imgPath}` : SITE_SHARE_IMAGE;
-      syncSocialPreview(ctxItem && ctxItem.id ? ctxItem : null);
+      syncSocialPreview(isPageShare ? { ...ctxItem, _shareKind: 'page' } : ctxItem);
 
       const tryShareFile = async () => {
         try {
@@ -13687,15 +13678,6 @@
 })();
 </script>
 
-
-    <a href="./film-talks.html" id="filmTalksFab" title="Film Talks" aria-label="Open Film Talks" style="position:fixed;z-index:80;right:18px;bottom:108px;display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:999px;background:linear-gradient(135deg,#6366f1,#4f46e5 55%,#ec4899);color:#fff;font-weight:800;font-size:0.86rem;text-decoration:none;box-shadow:0 12px 28px rgba(79,70,229,.38);">
-      <i class="fa-solid fa-comments"></i> Film Talks
-    </a>
-    <style>
-      @media (min-width: 900px) {
-        #filmTalksFab { bottom: 24px; }
-      }
-    </style>
 
 </body>
 </html>
