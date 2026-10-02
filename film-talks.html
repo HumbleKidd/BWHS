@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Film Talks — BWHS</title>
+<meta name="description" content="Film Talks is the public BWHS wall. Drop a take on a movie or show and anyone who opens this page can read it." />
+<link rel="icon" href="./favicon-32x32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --accent: #f59e0b;
+    --pink: #ec4899;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --subtle: #f1f5f9;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(800px 420px at -8% -10%, #e0e7ff 0%, transparent 60%),
+      radial-gradient(700px 420px at 110% 0%, #fce7f3 0%, transparent 55%),
+      var(--bg);
+    min-height: 100vh;
+  }
+  a { color: var(--primary); text-decoration: none; }
+  .wrap { width: min(1080px, calc(100% - 28px)); margin: 0 auto; }
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 18px 0 8px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .mark {
+    width: 46px; height: 46px; border-radius: 16px;
+    background: linear-gradient(145deg, #6366f1, #4f46e5 45%, #ec4899);
+    color: white; display: grid; place-items: center; font-size: 18px;
+    box-shadow: 0 10px 24px rgba(79, 70, 229, 0.32);
+  }
+  h1 { margin: 0; font-size: 1.25rem; letter-spacing: -0.03em; }
+  .sub { margin: 2px 0 0; color: var(--muted); font-size: 0.82rem; font-weight: 600; }
+  .back, .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: white; border: 1px solid var(--line); border-radius: 999px;
+    padding: 8px 14px; font-weight: 800; font-size: 0.82rem; color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 0 rgba(16,185,129,.55); animation: pulse 1.8s infinite; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); } }
+  .hero { padding: 14px 0 6px; display: grid; grid-template-columns: 1.4fr .6fr; gap: 16px; align-items: end; }
+  .hero h2 { margin: 0 0 8px; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: -0.04em; line-height: 1; }
+  .hero h2 span { color: var(--primary); }
+  .lede { margin: 0; color: var(--muted); font-weight: 600; max-width: 58ch; }
+  .stats { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+  .stat { background: white; border-radius: 16px; padding: 12px 14px; min-width: 108px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .stat b { display: block; font-size: 1.35rem; }
+  .stat span { color: var(--muted); font-size: 0.75rem; font-weight: 700; }
+  .layout { display: grid; grid-template-columns: 330px 1fr; gap: 16px; padding: 16px 0 48px; align-items: start; }
+  .card, .setup { background: white; border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); }
+  .composer { padding: 16px; position: sticky; top: 14px; }
+  h3 { margin: 0 0 10px; font-size: 0.98rem; }
+  label { display: block; margin: 10px 0 6px; font-size: 0.72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  input, textarea, select {
+    width: 100%; border: 1.5px solid var(--line); background: #f8fafc; border-radius: 14px;
+    padding: 12px 13px; font: inherit; font-weight: 600; color: var(--ink); outline: none;
+  }
+  input:focus, textarea:focus, select:focus { border-color: #c7d2fe; box-shadow: 0 0 0 4px rgba(79,70,229,.12); background: white; }
+  textarea { min-height: 110px; resize: vertical; }
+  .row { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.78rem; font-weight: 700; margin-top: 6px; }
+  button.primary {
+    width: 100%; margin-top: 12px; border: 0; cursor: pointer; color: white; font: inherit; font-weight: 800;
+    border-radius: 14px; padding: 12px 14px;
+    background: linear-gradient(180deg, #6366f1, #4f46e5);
+    box-shadow: 0 10px 20px rgba(79, 70, 229, .28);
+  }
+  button.primary:disabled { opacity: .55; cursor: not-allowed; }
+  button.ghost { border: 1px solid var(--line); background: white; border-radius: 999px; padding: 8px 12px; font: inherit; font-weight: 800; cursor: pointer; }
+  .honeypot { position: absolute; left: -9999px; height: 0; opacity: 0; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .toolbar input { max-width: 260px; }
+  .toolbar select { max-width: 180px; }
+  .feed { display: flex; flex-direction: column; gap: 12px; }
+  .note { padding: 15px; animation: rise .3s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  .who { display: flex; gap: 10px; align-items: center; }
+  .who img { width: 42px; height: 42px; border-radius: 14px; background: #eef2ff; }
+  .who strong { display: block; }
+  .who time, .film { color: var(--muted); font-size: 0.78rem; font-weight: 700; }
+  .film { color: var(--primary); margin-top: 8px; }
+  .msg { margin: 8px 0; white-space: pre-wrap; word-break: break-word; line-height: 1.45; font-weight: 600; }
+  .heart { border: 1px solid var(--line); background: white; border-radius: 999px; padding: 6px 10px; font: inherit; font-weight: 800; cursor: pointer; }
+  .heart.on { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+  .empty { text-align: center; padding: 42px 16px; color: var(--muted); background: white; border-radius: 22px; border: 1px dashed #c7d2fe; font-weight: 700; }
+  .setup { padding: 20px; margin: 14px 0 40px; }
+  pre { background: #0f172a; color: #f8fafc; border-radius: 14px; padding: 12px; overflow: auto; font-size: .78rem; }
+  .toast {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%) translateY(12px);
+    background: #0f172a; color: white; padding: 12px 14px; border-radius: 14px; opacity: 0; pointer-events: none; transition: .2s; z-index: 9;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+  footer { color: var(--muted); font-size: .78rem; font-weight: 700; padding-bottom: 24px; }
+  @media (max-width: 860px) {
+    .hero, .layout { grid-template-columns: 1fr; }
+    .composer { position: static; }
+    .stats { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="mark"><i class="fa-solid fa-comments"></i></div>
+        <div>
+          <h1>Film Talks</h1>
+          <p class="sub">BWHS public wall · no account</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <a class="back" href="./index.html"><i class="fa-solid fa-arrow-left"></i> Back to BWHS</a>
+        <span class="pill"><span class="dot"></span><span id="status">Waiting</span></span>
+      </div>
+    </header>
+    <section class="hero">
+      <div>
+        <h2>Talk the film.<br><span>Everyone can read it.</span></h2>
+        <p class="lede">Name the title, drop the take. The next person who opens Film Talks — anywhere — sees the same wall.</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="statCount">—</b><span>talks</span></div>
+        <div class="stat"><b id="statHearts">—</b><span>hearts</span></div>
+      </div>
+    </section>
+
+    <section id="setup" class="setup" hidden>
+      <h2>One connection left</h2>
+      <p class="lede">The table is already created if you ran the SQL. Paste the Project URL and the anon public key from Supabase → Project Settings → API. Then download this page and replace the file in the repo.</p>
+      <label>Project URL</label>
+      <input id="cfgUrl" placeholder="https://xxxxxxxx.supabase.co" />
+      <label>Anon public key</label>
+      <input id="cfgKey" placeholder="eyJhbGciOi..." />
+      <button class="primary" id="saveCfg" type="button">Download connected Film Talks page</button>
+    </section>
+
+    <section id="app" class="layout" hidden>
+      <form class="card composer" id="form">
+        <h3>Start a talk</h3>
+        <label for="name">Your name</label>
+        <input id="name" maxlength="40" placeholder="What should the wall call you?" required />
+        <label for="title">Film or show</label>
+        <input id="title" maxlength="80" placeholder="Sinners, The Bear, One Piece…" required />
+        <label for="message">The take</label>
+        <textarea id="message" maxlength="500" placeholder="No spoilers in the first line if you can help it." required></textarea>
+        <input class="honeypot" id="company" tabindex="-1" autocomplete="off" />
+        <div class="row"><span><span id="chars">0</span>/500</span><span>Public the moment you post</span></div>
+        <button class="primary" id="postBtn" type="submit"><i class="fa-solid fa-paper-plane"></i> Post to Film Talks</button>
+      </form>
+      <div>
+        <div class="toolbar">
+          <input id="search" placeholder="Search a title or a name" />
+          <select id="sort">
+            <option value="new">Newest</option>
+            <option value="old">Oldest</option>
+            <option value="top">Most hearts</option>
+          </select>
+          <button class="ghost" id="refresh" type="button"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+        <div class="feed" id="feed"></div>
+      </div>
+    </section>
+    <footer>Film Talks is public. Skip passwords, addresses, and anything you would not say in a cinema lobby.</footer>
+  </div>
+  <div class="toast" id="toast"></div>
+<script>
+const CONFIG = {
+  url: "https://kvgrrbfmsjuclppgbuut.supabase.co",
+  key: "sb_publishable_hK-Pm71rWpAeWz5_BZpqqw_qAUW34qw"
+};
+const state = { notes: [], lastPost: 0, liked: JSON.parse(localStorage.getItem("ft-liked") || "{}") };
+const $ = (id) => document.getElementById(id);
+let client = null;
+function toast(text) {
+  const el = $("toast");
+  el.textContent = text;
+  el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove("show"), 2600);
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&":"&","<":"<",">":">","\"":""","'":"&#39;" }[c]));
+}
+function ago(iso) {
+  const s = Math.max(1, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return Math.floor(s / 60) + "m ago";
+  if (s < 86400) return Math.floor(s / 3600) + "h ago";
+  return Math.floor(s / 86400) + "d ago";
+}
+function boot() {
+  if (!CONFIG.url || !CONFIG.key) {
+    $("setup").hidden = false;
+    $("status").textContent = "Needs API key";
+    return;
+  }
+  client = supabase.createClient(CONFIG.url, CONFIG.key);
+  $("app").hidden = false;
+  $("status").textContent = "Live";
+  const saved = localStorage.getItem("ft-name");
+  if (saved) $("name").value = saved;
+  load();
+  setInterval(load, 12000);
+}
+async function load() {
+  const { data, error } = await client.from("wall_notes").select("id,name,message,hearts,created_at").order("created_at", { ascending: false }).limit(200);
+  if (error) { $("status").textContent = "Offline"; toast(error.message); return; }
+  state.notes = (data || []).map((n) => {
+    const parts = String(n.message).split("\n");
+    const film = parts[0].startsWith("🎬 ") ? parts[0].slice(2) : "";
+    return { ...n, film, body: film ? parts.slice(1).join("\n").trim() : n.message };
+  });
+  $("status").textContent = "Live · " + state.notes.length;
+  render();
+}
+function render() {
+  const q = $("search").value.trim().toLowerCase();
+  const sort = $("sort").value;
+  let list = state.notes.filter((n) => !q || (n.name + " " + n.film + " " + n.body).toLowerCase().includes(q));
+  if (sort === "old") list = [...list].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  if (sort === "top") list = [...list].sort((a, b) => b.hearts - a.hearts);
+  if (sort === "new") list = [...list].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  $("statCount").textContent = state.notes.length;
+  $("statHearts").textContent = state.notes.reduce((s, n) => s + (n.hearts || 0), 0);
+  const feed = $("feed");
+  if (!list.length) {
+    feed.innerHTML = '<div class="empty"><i class="fa-solid fa-clapperboard" style="color:#4f46e5;font-size:26px"></i><p>No talks yet. Name a film and post the first take.</p></div>';
+    return;
+  }
+  feed.innerHTML = list.map((n) => `
+    <article class="card note">
+      <div class="who">
+        <img alt="" src="https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${encodeURIComponent(n.name)}" />
+        <div><strong>${esc(n.name)}</strong><time>${ago(n.created_at)}</time></div>
+      </div>
+      ${n.film ? `<div class="film"><i class="fa-solid fa-film"></i> ${esc(n.film)}</div>` : ""}
+      <p class="msg">${esc(n.body)}</p>
+      <button class="heart ${state.liked[n.id] ? "on" : ""}" data-heart="${n.id}"><i class="fa-${state.liked[n.id] ? "solid" : "regular"} fa-heart"></i> ${n.hearts || 0}</button>
+    </article>`).join("");
+}
+$("message").addEventListener("input", () => { $("chars").textContent = $("message").value.length; });
+$("search").addEventListener("input", render);
+$("sort").addEventListener("change", render);
+$("refresh").addEventListener("click", load);
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if ($("company").value) return;
+  if (Date.now() - state.lastPost < 15000) { toast("Give it a few seconds."); return; }
+  const name = $("name").value.trim();
+  const title = $("title").value.trim();
+  const message = $("message").value.trim();
+  if (!name || !title || !message) return;
+  $("postBtn").disabled = true;
+  const packed = "🎬 " + title + "\n" + message;
+  const { error } = await client.from("wall_notes").insert({ name, message: packed });
+  $("postBtn").disabled = false;
+  if (error) { toast(error.message); return; }
+  state.lastPost = Date.now();
+  localStorage.setItem("ft-name", name);
+  $("message").value = "";
+  $("chars").textContent = "0";
+  toast("Posted. Anyone on Film Talks can read it.");
+  load();
+});
+$("feed").addEventListener("click", async (e) => {
+  const heart = e.target.closest("[data-heart]");
+  if (!heart) return;
+  const id = heart.dataset.heart;
+  if (state.liked[id]) { toast("Already hearted."); return; }
+  const note = state.notes.find((n) => n.id === id);
+  const { error } = await client.from("wall_notes").update({ hearts: (note?.hearts || 0) + 1 }).eq("id", id);
+  if (error) { toast(error.message); return; }
+  state.liked[id] = true;
+  localStorage.setItem("ft-liked", JSON.stringify(state.liked));
+  load();
+});
+$("saveCfg").addEventListener("click", () => {
+  const url = $("cfgUrl").value.trim();
+  const key = $("cfgKey").value.trim();
+  if (!url.startsWith("https://") || !key) { toast("Paste the project URL and the anon key."); return; }
+  const html = document.documentElement.outerHTML.replace(
+    /const CONFIG = \{[\s\S]*?\};/,
+    `const CONFIG = {\n  url: ${JSON.stringify(url)},\n  key: ${JSON.stringify(key)}\n};`
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["<!DOCTYPE html>\n" + html], { type: "text/html" }));
+  a.download = "film-talks.html";
+  a.click();
+  toast("Download ready. Put that file next to index.html.");
+});
+boot();
+</script>
+</body>
+</html>
