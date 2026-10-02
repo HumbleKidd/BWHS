@@ -6378,6 +6378,14 @@
     }
 
 
+    function hasAlreadyDropped(item) {
+      const date = String((item && (item.release_date || item.first_air_date)) || '').slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      return date <= today;
+    }
+
     function isTalkedAboutDrop(item) {
       if (!item || !item.id || !item.poster_path) return false;
       if (!isCleanCinemaContent(item)) return false;
@@ -6401,7 +6409,6 @@
         `${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=${page}`,
         `${TMDB_BASE}/trending/tv/week?api_key=${apiKey}&page=${page}`,
         `${TMDB_BASE}/movie/now_playing?api_key=${apiKey}&page=${page}`,
-        `${TMDB_BASE}/movie/upcoming?api_key=${apiKey}&page=${page}`,
         `${TMDB_BASE}/movie/popular?api_key=${apiKey}&page=${page}`,
         `${TMDB_BASE}/tv/popular?api_key=${apiKey}&page=${page}`,
         `${TMDB_BASE}/tv/on_the_air?api_key=${apiKey}&page=${page}`
@@ -6419,6 +6426,7 @@
           const key = kind + '_' + item.id;
           if (seen.has(key)) return;
           if (!isTalkedAboutDrop(item)) return;
+          if (!hasAlreadyDropped(item)) return;
           if (currentGenre && !(item.genre_ids || []).includes(currentGenre)) return;
           if (currentYearFilter && typeof itemMatchesYearFilter === 'function' && !itemMatchesYearFilter(item, currentYearFilter)) return;
           seen.add(key);
@@ -9678,6 +9686,7 @@
     function buildHomeShelves() {
       const pinned = [
         { id: 'latest', title: 'Latest Release', icon: 'fa-bolt', color: '#06b6d4', type: 'all', kind: 'latest_lane', endpoint: `${TMDB_BASE}/movie/now_playing?api_key=${apiKey}` },
+        { id: 'upcoming', title: 'Upcoming', icon: 'fa-calendar-days', color: '#10b981', type: 'movie', kind: 'upcoming_lane', endpoint: `${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=${todayStr}&with_original_language=en&sort_by=popularity.desc` },
         { id: 'nowmovies', title: 'Most Popular Movies Right Now', icon: 'fa-film', color: '#ec4899', type: 'movie', kind: 'popular_lane', endpoint: `${TMDB_BASE}/movie/popular?api_key=${apiKey}` },
         { id: 'nowtv', title: "Shows People Won't Shut Up About", icon: 'fa-tv', color: '#3b82f6', type: 'tv', kind: 'popular_lane', endpoint: `${TMDB_BASE}/tv/popular?api_key=${apiKey}` },
         { id: 'certifiedhits', title: 'Certified Hits — Everybody Knows These', icon: 'fa-star', color: '#f59e0b', type: 'movie', kind: 'endpoint', endpoint: `${TMDB_BASE}/movie/top_rated?api_key=${apiKey}` }
@@ -9851,6 +9860,7 @@
         if (titleEl) {
           titleEl.style.cursor = 'pointer';
           titleEl.addEventListener('click', () => {
+            if (shelf.kind === 'upcoming_lane' || shelf.id === 'upcoming') { selectType('upcoming'); return; }
             if (shelf.kind === 'latest_lane' || shelf.id === 'latest') { selectType('latest'); return; }
             if (shelf.kind === 'theme') openThemeCategory(shelf.id);
             else openDedicatedCategory(shelf.title, shelf.endpoint, shelf.type);
@@ -9863,6 +9873,11 @@
             ? fetchTypedPopular(shelf.type).then(list => ({ results: list }))
           : shelf.kind === 'latest_lane'
             ? fetchLatestLaneItems().then(list => ({ results: list }))
+          : shelf.kind === 'upcoming_lane'
+            ? Promise.all([
+                cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=${todayStr}&with_original_language=en&sort_by=popularity.desc&page=1`),
+                cachedFetch(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=${todayStr}&with_original_language=en&sort_by=popularity.desc&page=2`)
+              ]).then(([a, b]) => ({ results: [...(a.results || []), ...(b.results || [])] }))
             : cachedFetch(shelf.endpoint);
 
         const job = shelfPromise
@@ -9874,9 +9889,13 @@
               if (want && mediaKindOf(i) !== want) return false;
               if (shelf.kind === 'theme' && !isWorldwideHit(i, seedSet)) return false;
               const date = i.release_date || i.first_air_date;
-              if (shelf.kind === 'latest_lane') return true;
+              if (shelf.kind === 'upcoming_lane') return !!(date && date >= todayStr);
+              if (shelf.kind === 'latest_lane') return hasAlreadyDropped(i);
               return !date || date <= todayStr;
             }).sort((a, b) => {
+              if (shelf.kind === 'upcoming_lane') {
+                return String(a.release_date || '').localeCompare(String(b.release_date || '')) || (b.popularity || 0) - (a.popularity || 0);
+              }
               if (shelf.kind === 'latest_lane') {
                 return String(b.release_date || b.first_air_date || '').localeCompare(String(a.release_date || a.first_air_date || ''));
               }
@@ -9912,12 +9931,20 @@
                 </div>
                 <div class="shelf-card-title">${title}</div>
                 <div class="shelf-sub">
-                  <span>${year}</span>
+                  <span>${shelf.kind === 'upcoming_lane' && date ? date : year}</span>
                   <span class="rating-star"><i class="fa-solid fa-star"></i> ${rating}</span>
                 </div>
               `;
 
               attachCardInteractions(card, item, itemType);
+              if (shelf.kind === 'upcoming_lane') {
+                card.addEventListener('click', (ev) => {
+                  if (ev.target.closest('.fav-heart-btn')) return;
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                  selectType('upcoming');
+                }, true);
+              }
               scrollContainer.appendChild(card);
             });
 
@@ -12508,20 +12535,24 @@
       const urls = [];
       const genreQ = currentGenre ? `&with_genres=${currentGenre}` : '';
       if (typePref !== 'tv') {
-        urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=${start}&primary_release_date.lte=${end}&sort_by=popularity.desc&vote_count.gte=40&page=1${genreQ}`);
+        for (let page = 1; page <= 5; page++) {
+          urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=${start}&primary_release_date.lte=${end}&sort_by=popularity.desc&page=${page}${genreQ}&include_adult=false`);
+          urls.push(`${TMDB_BASE}/discover/movie?api_key=${apiKey}&primary_release_date.gte=${start}&primary_release_date.lte=${end}&sort_by=primary_release_date.asc&page=${page}${genreQ}&include_adult=false`);
+        }
         urls.push(`${TMDB_BASE}/movie/upcoming?api_key=${apiKey}&page=1`);
-        urls.push(`${TMDB_BASE}/trending/movie/week?api_key=${apiKey}&page=1`);
+        urls.push(`${TMDB_BASE}/movie/now_playing?api_key=${apiKey}&page=1`);
       }
       if (typePref !== 'movie') {
-        urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&first_air_date.gte=${start}&first_air_date.lte=${end}&sort_by=popularity.desc&vote_count.gte=40&without_genres=10763,10764,10767&page=1${genreQ}`);
-        urls.push(`${TMDB_BASE}/tv/on_the_air?api_key=${apiKey}&page=1`);
-        urls.push(`${TMDB_BASE}/trending/tv/week?api_key=${apiKey}&page=1`);
+        for (let page = 1; page <= 3; page++) {
+          urls.push(`${TMDB_BASE}/discover/tv?api_key=${apiKey}&first_air_date.gte=${start}&first_air_date.lte=${end}&sort_by=popularity.desc&without_genres=10763,10764,10767,10766&page=${page}${genreQ}&include_adult=false`);
+        }
       }
       const packs = await Promise.all(urls.map(u => cachedFetch(u).catch(()=>({results:[]}))));
       const map = {};
       packs.forEach(pack => {
         (pack.results || []).forEach(item => {
-          if (!item || !item.id || !isTalkedAboutDrop(item)) return;
+          if (!item || !item.id || !item.poster_path) return;
+          if (!isCleanCinemaContent(item)) return;
           const date = itemReleaseDate(item);
           if (!date || date < start || date > end) return;
           if (currentYearFilter && typeof itemMatchesYearFilter === 'function' && !itemMatchesYearFilter(item, currentYearFilter)) return;
@@ -12529,7 +12560,10 @@
           if (!map[date].some(x => x.id === item.id)) map[date].push(item);
         });
       });
-      Object.values(map).forEach(list => list.sort((a,b)=>(b.popularity||0)-(a.popularity||0)));
+      Object.values(map).forEach(list => {
+        list.sort((a,b)=>(b.popularity||0)-(a.popularity||0) || (b.vote_count||0)-(a.vote_count||0));
+        if (list.length > 12) list.length = 12;
+      });
       calCache[key] = map;
       return map;
     }
