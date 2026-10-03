@@ -35,6 +35,14 @@
   <link rel="dns-prefetch" href="https://moviesapi.club" />
   <link rel="dns-prefetch" href="https://vidcore.org" />
   <link rel="dns-prefetch" href="https://vidlink.pro" />
+  <link rel="preconnect" href="https://vixsrc.to" crossorigin />
+  <link rel="preconnect" href="https://vidlink.pro" crossorigin />
+  <link rel="preconnect" href="https://vidsrc.xyz" crossorigin />
+  <link rel="preconnect" href="https://vidcore.org" crossorigin />
+  <link rel="preconnect" href="https://vidapi.ru" crossorigin />
+  <link rel="preconnect" href="https://moviesapi.club" crossorigin />
+  <link rel="preconnect" href="https://vidbolt.xyz" crossorigin />
+  <link rel="preconnect" href="https://vidsrc.cc" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
@@ -2422,8 +2430,9 @@
       background: #000000;
       flex-shrink: 0;
       overflow: hidden;
-      transform: translate3d(0, 0, 0);
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: none;
+      transition: none;
+      contain: none;
     }
 
     .video-viewport iframe {
@@ -2435,14 +2444,36 @@
       border: none;
       z-index: 5;
       pointer-events: auto !important;
-      transform: translateZ(0);
-      backface-visibility: hidden;
-      will-change: transform;
-      contain: strict;
+      transform: none;
+      backface-visibility: visible;
+      will-change: auto;
+      contain: none;
+      filter: none;
+      background: #000;
     }
-    .video-viewport {
-      isolation: isolate;
-      contain: layout paint;
+    /* Playback lock: page chrome yields the GPU and the network to the film. */
+    body.playback-locked .video-viewport:not(.is-floating-dock) {
+      transform: none !important;
+      transition: none !important;
+      filter: none !important;
+      animation: none !important;
+    }
+    body.playback-locked .video-viewport iframe {
+      transform: none !important;
+      filter: none !important;
+      will-change: auto !important;
+      contain: none !important;
+    }
+    body.playback-locked .hero-spotlight,
+    body.playback-locked .shelf-section,
+    body.playback-locked .reels-rift,
+    body.playback-locked .featured-link,
+    body.playback-locked .ep-named-card.active {
+      animation: none !important;
+    }
+    body.playback-locked .desktop-right-panel,
+    body.playback-locked .mobile-cw-block {
+      transition: none !important;
     }
 
     .fs-exit-overlay {
@@ -2496,11 +2527,11 @@
         z-index: 45 !important;
         border-radius: 14px !important;
         box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 0 1.5px var(--primary) !important;
-        will-change: transform, opacity;
+        will-change: auto;
         margin: 0 !important;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.35s ease !important;
+        transition: opacity 0.18s linear !important;
       }
       .video-viewport.is-floating-dock.float-visible {
         opacity: 1 !important;
@@ -5282,7 +5313,7 @@
                 <div class="player-dock">
                   <div class="server-helper-tip">
                     <i class="fa-solid fa-circle-info"></i>
-                    <span id="serverNowPlayingTip">Now playing from: VixSrc — switch below if this source stalls.</span>
+                    <span id="serverNowPlayingTip">Cinema HD · highest source this server has. Switch below only if it stalls.</span>
                   </div>
 
                   <!-- Desktop Server Bar with Stylized Interactive Slider -->
@@ -6136,13 +6167,20 @@
       return [
         'autoplay=1',
         'autoPlay=true',
-        'startAt=0',
         'lang=en',
         'primaryColor=' + VIXSRC_PRIMARY,
         'secondaryColor=' + VIXSRC_SECONDARY,
         'skin=vixsrc',
-        'canPlayFHD=1'
+        'canPlayFHD=1',
+        'quality=1080',
+        'res=1080'
       ].join('&');
+    }
+
+    function hdQuery(extra) {
+      const base = ['autoplay=1', 'autoPlay=true', 'quality=1080', 'maxQuality=1080', 'res=1080', 'q=1080'];
+      if (extra) base.push(extra);
+      return base.join('&');
     }
 
     function vixsrcUrlFor(id, type, season, episode) {
@@ -6847,7 +6885,12 @@
       forceExitFloatingDock();
     }
 
+    let floatMoveTimer = null;
     function updateFloatProgressive() {
+      clearTimeout(floatMoveTimer);
+      floatMoveTimer = setTimeout(applyFloatProgressive, 360);
+    }
+    function applyFloatProgressive() {
       if (!videoViewport || !playerPageView) return;
       if (window.innerWidth < 1080 || !playerPageView.classList.contains('active') || isTheaterMode) {
         forceExitFloatingDock();
@@ -11691,7 +11734,7 @@
       const isFav = favoritesList.some(f => f.id === item.id);
       playerFavBtn.classList.toggle('active', isFav);
 
-      const auraImgUrl = item.backdrop_path ? `${IMAGE_ORIGINAL}${item.backdrop_path}` : (item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '');
+      const auraImgUrl = item.backdrop_path ? `${IMAGE_MID}${item.backdrop_path}` : (item.poster_path ? `${IMAGE_BASE}${item.poster_path}` : '');
       if (auraImgUrl) {
         theaterBackdropAura.style.backgroundImage = `url(${auraImgUrl})`;
       } else {
@@ -11732,18 +11775,23 @@
         playerOverview.textContent = activeMedia.overview || 'No synopsis available for this title.';
         setPlayerTrailersFilmName(activeMedia);
         const auraImgUrl = activeMedia.backdrop_path
-          ? `${IMAGE_ORIGINAL}${activeMedia.backdrop_path}`
+          ? `${IMAGE_MID}${activeMedia.backdrop_path}`
           : (activeMedia.poster_path ? `${IMAGE_BASE}${activeMedia.poster_path}` : '');
         if (auraImgUrl) theaterBackdropAura.style.backgroundImage = `url(${auraImgUrl})`;
         syncSocialPreview(activeMedia);
       }).catch(() => {});
 
       syncSocialPreview(activeMedia);
-      loadCastData(item.id, type, loadId);
-      loadMediaArtworks(item.id, type, loadId);
-      loadFranchiseParts(item.id, type, loadId);
-      loadSidebarAlsoWatch(item.id, type, loadId);
-      loadPlayerTrailers(item.id, type, loadId);
+      document.body.classList.add('playback-locked');
+      // Posters, art and trailers wait until the film has the connection.
+      setTimeout(() => {
+        if (loadId !== mediaSessionId) return;
+        loadCastData(item.id, type, loadId);
+        loadMediaArtworks(item.id, type, loadId);
+        loadFranchiseParts(item.id, type, loadId);
+        loadSidebarAlsoWatch(item.id, type, loadId);
+        loadPlayerTrailers(item.id, type, loadId);
+      }, 4200);
 
       if (type === 'tv') {
         tvControlSuite.style.display = 'flex';
@@ -11786,7 +11834,7 @@
       floatDockPos = null;
       playerPageView.classList.remove('active');
       catalogBrowserView.style.display = 'block';
-      document.body.classList.remove('player-page-live');
+      document.body.classList.remove('player-page-live', 'playback-locked');
       if (typeof releaseScreenAwake === 'function') releaseScreenAwake();
       activeMedia = null;
       stopPlayerAudio();
@@ -12743,13 +12791,13 @@
       switch (providerName) {
         case 'vidapi':
           return isTv
-            ? `https://vidapi.ru/embed/tv/${id}/${s}/${e}?autoplay=1&quality=1080`
-            : `https://vidapi.ru/embed/movie/${id}?autoplay=1&quality=1080`;
+            ? `https://vidapi.ru/embed/tv/${id}/${s}/${e}?${hdQuery('ds_lang=en')}`
+            : `https://vidapi.ru/embed/movie/${id}?${hdQuery('ds_lang=en')}`;
 
         case 'vidsrc':
           return isTv
-            ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}&autoplay=1&ds_lang=en`
-            : `https://vidsrc.xyz/embed/movie?tmdb=${id}&autoplay=1&ds_lang=en`;
+            ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}&${hdQuery('ds_lang=en&color=4f46e5')}`
+            : `https://vidsrc.xyz/embed/movie?tmdb=${id}&${hdQuery('ds_lang=en&color=4f46e5')}`;
 
         case 'embedsu':
           return isTv
@@ -12758,18 +12806,18 @@
 
         case 'autoembed':
           return isTv
-            ? `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}?autoplay=true`
-            : `https://player.autoembed.cc/embed/movie/${id}?autoplay=true`;
+            ? `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}?${hdQuery()}`
+            : `https://player.autoembed.cc/embed/movie/${id}?${hdQuery()}`;
 
         case 'vidbolt':
           return isTv
-            ? `https://vidbolt.xyz/embed/tv/${id}/${s}/${e}?autoplay=1`
-            : `https://vidbolt.xyz/embed/movie/${id}?autoplay=1`;
+            ? `https://vidbolt.xyz/embed/tv/${id}/${s}/${e}?${hdQuery()}`
+            : `https://vidbolt.xyz/embed/movie/${id}?${hdQuery()}`;
 
         case 'vidlink':
           return isTv
-            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1`
-            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1`;
+            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=1080`
+            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=1080`;
 
         case 'vixsrc':
           return isTv
@@ -12778,8 +12826,8 @@
 
         case 'vidcore':
           return isTv
-            ? `https://vidcore.org/embed/tv/${id}/${s}/${e}?autoplay=true&theme=4f46e5`
-            : `https://vidcore.org/embed/movie/${id}?autoplay=true&theme=4f46e5`;
+            ? `https://vidcore.org/embed/tv/${id}/${s}/${e}?${hdQuery('theme=4f46e5')}`
+            : `https://vidcore.org/embed/movie/${id}?${hdQuery('theme=4f46e5')}`;
 
         case 'twoembed':
           return isTv
@@ -12788,26 +12836,28 @@
 
         case 'moviesapi':
           return isTv
-            ? `https://moviesapi.club/tv/${id}-${s}-${e}`
-            : `https://moviesapi.club/movie/${id}`;
+            ? `https://moviesapi.club/tv/${id}-${s}-${e}?${hdQuery()}`
+            : `https://moviesapi.club/movie/${id}?${hdQuery()}`;
 
         case 'upcloud':
           return isTv
-            ? `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}?autoPlay=true`
-            : `https://vidsrc.cc/v2/embed/movie/${id}?autoPlay=true`;
+            ? `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}?${hdQuery()}`
+            : `https://vidsrc.cc/v2/embed/movie/${id}?${hdQuery()}`;
 
         default:
           return isTv
-            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&muted=false&mute=0&volume=1`
-            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&muted=false&mute=0&volume=1`;
+            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&muted=false&mute=0&volume=1&quality=1080`
+            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&muted=false&mute=0&volume=1&quality=1080`;
       }
     }
 
     function manualSwitchServer(provider) {
       const idx = PROVIDERS.indexOf(provider);
       currentProviderIndex = idx >= 0 ? idx : 0;
+      streamPinned = false;
+      activeStreamKey = '';
       updateServerButtons();
-      executeStreamLoad();
+      executeStreamLoad(true);
     }
 
     function updateServerButtons() {
@@ -12822,7 +12872,7 @@
       }
       const tip = document.getElementById('serverNowPlayingTip');
       if (tip) {
-        tip.textContent = `Now playing from: ${PROVIDER_NAMES[activeName] || activeName} — switch below if this source stalls.`;
+        tip.textContent = `Cinema HD · ${PROVIDER_NAMES[activeName] || activeName}. Stream stays locked so it won't restart mid-film.`;
       }
       document.querySelectorAll('#serverSheetBackdrop .sheet-nav-item').forEach(el => el.classList.remove('active'));
       const sheetItem = document.getElementById(`sheet-${activeName}`);
@@ -13271,7 +13321,6 @@
         requestPlayerFullscreen();
       };
       autoFsTimer = setTimeout(tryFs, wait);
-      setTimeout(tryFs, wait + 700);
     }
 
     function isPlayerFullscreen() {
@@ -13428,11 +13477,29 @@
       updateLeftOffBanner();
     }
 
-    function executeStreamLoad() {
+    let activeStreamKey = '';
+    let streamPinned = false;
+    function lockPlaybackPipeline() {
+      document.body.classList.add('playback-locked', 'player-page-live');
+      if (!playerFrame) return;
+      playerFrame.style.transform = 'none';
+      playerFrame.style.willChange = 'auto';
+      playerFrame.style.contain = 'none';
+      playerFrame.style.filter = 'none';
+    }
+    function executeStreamLoad(force) {
       if (!playerFrame || !activeMedia) return;
       const currentProvider = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
       const url = getProviderUrl(currentProvider);
       if (!url) return;
+      const streamKey = currentProvider + ':' + activeMedia.id + ':' + (activeSeason || 1) + ':' + (activeEpisode || 1);
+      const liveSrc = playerFrame.getAttribute('src') || '';
+      if (!force && streamKey === activeStreamKey && liveSrc && liveSrc !== 'about:blank') {
+        lockPlaybackPipeline();
+        return;
+      }
+      activeStreamKey = streamKey;
+      streamPinned = false;
 
       if (playerFailoverTimer) {
         clearTimeout(playerFailoverTimer);
@@ -13468,12 +13535,13 @@
         return;
       }
       playerFrame.src = url;
-      setTimeout(unmuteVidLinkIfNeeded, 900);
-      setTimeout(unmuteVidLinkIfNeeded, 2200);
+      setTimeout(unmuteVidLinkIfNeeded, 1400);
 
       let markedReady = false;
       const markReady = () => {
         markedReady = true;
+        streamPinned = true;
+        lockPlaybackPipeline();
         if (playerFailoverTimer) {
           clearTimeout(playerFailoverTimer);
           playerFailoverTimer = null;
@@ -13481,19 +13549,20 @@
       };
       playerFrame.onload = markReady;
       playerFrame.onerror = () => {
-        if (!markedReady) autoFailoverPlayer();
+        if (!markedReady && !streamPinned) autoFailoverPlayer();
       };
 
-      // Only swap sources on a hard load failure, not mid-buffer.
+      // Hard-fail only. A playing film is never swapped out from under you.
       playerFailoverTimer = setTimeout(() => {
-        if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active')) {
+        if (!markedReady && !streamPinned && document.getElementById('playerPageView')?.classList.contains('active')) {
           autoFailoverPlayer();
         }
-      }, 90000);
+      }, 28000);
+      lockPlaybackPipeline();
     }
 
     function autoFailoverPlayer() {
-      if (!activeMedia) return;
+      if (!activeMedia || streamPinned) return;
       const current = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
       // Do not yank VixSrc mid-buffer — that is what made playback stick and restart.
       if (current === 'vixsrc') return;
