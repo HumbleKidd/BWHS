@@ -176,6 +176,25 @@
   .card-top, .sheet-top { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; }
   iframe { width:100%; height:min(62dvh,480px); border:0; background:#0f172a; }
   .person-card { width:min(420px,100%); padding:8px 16px 18px; }
+  
+  .tag-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+  .tag-btn { border:0; border-radius:999px; padding:7px 12px; font-weight:800; cursor:pointer; background:#eef2ff; color:#4f46e5; }
+  .tag-btn.hash { background:#fff7ed; color:#b45309; }
+  .draft-chip { display:inline-flex; align-items:center; gap:6px; background:#fff; border-radius:999px; padding:4px 8px 4px 4px; box-shadow:0 6px 16px rgba(15,23,42,.08); font-size:12px; font-weight:800; }
+  .draft-chip img { width:22px; height:32px; object-fit:cover; border-radius:6px; }
+  .vn-bar { display:none; align-items:center; gap:10px; background:linear-gradient(90deg,#fff1f2,#eef2ff); border-radius:16px; padding:8px 10px; margin-bottom:8px; }
+  .vn-bar.on { display:flex; }
+  .vn-pulse { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; color:#fff; background:#ec4899; animation:pulse 1s infinite; }
+  .vn-waves { display:flex; align-items:flex-end; gap:3px; height:22px; flex:1; }
+  .vn-waves span { width:3px; border-radius:99px; background:#4f46e5; animation:wave 0.8s ease-in-out infinite; }
+  .vn-waves span:nth-child(2){ animation-delay:.1s } .vn-waves span:nth-child(3){ animation-delay:.2s } .vn-waves span:nth-child(4){ animation-delay:.3s } .vn-waves span:nth-child(5){ animation-delay:.15s }
+  @keyframes wave { 0%,100%{ height:6px } 50%{ height:20px } }
+  .vn-time { font-weight:800; color:#be123c; min-width:42px; }
+  .pending-vn { display:flex; align-items:center; gap:8px; font-weight:800; color:#4f46e5; }
+  .spin { width:16px; height:16px; border:2px solid #c7d2fe; border-top-color:#4f46e5; border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg) } }
+  .room-toast { position:fixed; left:50%; bottom:84px; transform:translateX(-50%); background:#0f172a; color:#fff; border-radius:999px; padding:10px 14px; font-weight:800; z-index:40; box-shadow:0 10px 24px rgba(15,23,42,.25); }
+
   .tabs { display:none; }
   .film-hero { display:flex; gap:12px; padding:0 14px 12px; }
   .film-hero img { width:72px; border-radius:10px; }
@@ -246,6 +265,18 @@
     <div class="typing" id="typing"></div>
     <div class="composer-wrap">
       <div class="replybar" id="replyBar"></div>
+      <div class="vn-bar" id="vnBar">
+        <div class="vn-pulse"><i class="fa-solid fa-microphone"></i></div>
+        <div class="vn-waves"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="vn-time" id="vnTime">0:00</div>
+        <button type="button" class="tag-btn" id="vnCancel">Cancel</button>
+        <button type="button" class="tag-btn hash" id="vnSend">Send</button>
+      </div>
+      <div class="tag-row">
+        <button type="button" class="tag-btn hash" id="hashBtn"># Film</button>
+        <button type="button" class="tag-btn" id="atBtn">@ Tag</button>
+        <div id="draftFilmChip"></div>
+      </div>
       <form class="composer" id="composer">
         <button type="button" class="icon" id="picBtn" title="Photo"><i class="fa-solid fa-image"></i></button>
         <button type="button" class="icon" id="micBtn" title="Voice note"><i class="fa-solid fa-microphone"></i></button>
@@ -396,17 +427,37 @@ document.getElementById("newRoom").onclick = () => {
   const title = (prompt("Room name") || "").trim().slice(0,32);
   if (!title) return;
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,28) || "room";
-  upsertRoom({id, title});
+  upsertRoom({id, title, preview: "New room"}, true);
   openRoom(id);
 };
 
-function upsertRoom(info){
+function cleanFilm(film){
+  if (!film) return null;
+  return { id: film.id || "", type: film.type || "movie", title: film.title || "Film", year: film.year || "", rating: film.rating || "", poster: film.poster || "" };
+}
+function upsertRoom(info, publish){
   const hit = rooms.find(r => r.id === info.id);
   if (hit) Object.assign(hit, info);
   else rooms.unshift(info);
   saveRooms();
   renderRooms();
-  if (live) db.ref("catalog/"+info.id).update({ title: info.title || info.id, film: info.film || null, ts: Date.now() });
+  if (publish && live) {
+    const payload = { title: info.title || info.id, film: cleanFilm(info.film), ts: Date.now(), preview: info.preview || "New room", by: (me && me.name) || "" };
+    db.ref("catalog/" + info.id).set(payload).catch(function(){ toast("Room saved here. Database blocked the live list."); });
+  }
+}
+function announceRoom(info){
+  const old = document.getElementById("roomToast");
+  if (old) old.remove();
+  const el = document.createElement("button");
+  el.id = "roomToast";
+  el.className = "room-toast";
+  el.textContent = "New room · " + (info.title || info.id);
+  el.onclick = function(){ openRoom(info.id); el.remove(); };
+  document.body.appendChild(el);
+  setTimeout(function(){ if (el.parentNode) el.remove(); }, 5000);
+  const tab = document.querySelector('.tab[data-tab="rooms"]');
+  if (tab) tab.classList.add("on");
 }
 
 function paintMessage(msg, mine){
@@ -540,6 +591,7 @@ async function send(extra){
   if (extra && extra.audio) msg.audio = extra.audio;
   box.value = "";
   draftFilm = null;
+  paintDraftFilm();
   spoilerOn = false;
   clearReply();
   hideInline();
@@ -598,23 +650,50 @@ document.getElementById("file").onchange = () => {
   };
   img.src = URL.createObjectURL(file);
 };
+let vnTick = null, vnStarted = 0, vnCancel = false;
+function paintVn(on){
+  document.getElementById("vnBar").classList.toggle("on", on);
+  document.getElementById("micBtn").classList.toggle("on", on);
+}
+function stopVn(sendIt){
+  vnCancel = !sendIt;
+  if (rec && rec.state === "recording") rec.stop();
+  paintVn(false);
+  clearInterval(vnTick);
+}
+document.getElementById("vnCancel").onclick = () => stopVn(false);
+document.getElementById("vnSend").onclick = () => stopVn(true);
 document.getElementById("micBtn").onclick = async () => {
-  if (rec && rec.state === "recording") { rec.stop(); return; }
+  if (rec && rec.state === "recording") { stopVn(true); return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio:true});
     chunks = [];
+    vnCancel = false;
     rec = new MediaRecorder(stream);
-    rec.ondataavailable = e => chunks.push(e.data);
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
     rec.onstop = () => {
-      stream.getTracks().forEach(t => t.stop());
+      stream.getTracks().forEach(track => track.stop());
+      paintVn(false);
+      clearInterval(vnTick);
+      if (vnCancel || !chunks.length) { toast("Voice note discarded."); return; }
+      const hold = document.createElement("article");
+      hold.className = "msg mine";
+      hold.innerHTML = '<div class="pending-vn"><i class="spin"></i> Sending voice note…</div>';
+      feed.appendChild(hold);
+      feed.scrollTop = feed.scrollHeight;
       const blob = new Blob(chunks, {type: rec.mimeType || "audio/webm"});
       const reader = new FileReader();
-      reader.onload = () => send({ text: "sent a voice note", audio: reader.result });
+      reader.onload = () => { hold.remove(); send({ text: "sent a voice note", audio: reader.result }); };
       reader.readAsDataURL(blob);
     };
     rec.start();
-    toast("Recording… tap the mic again to send.");
-    setTimeout(() => { if (rec && rec.state === "recording") rec.stop(); }, 20000);
+    vnStarted = Date.now();
+    paintVn(true);
+    vnTick = setInterval(() => {
+      const s = Math.floor((Date.now() - vnStarted) / 1000);
+      document.getElementById("vnTime").textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+    }, 250);
+    setTimeout(() => { if (rec && rec.state === "recording") stopVn(true); }, 20000);
   } catch (err) { toast("Mic permission is needed for voice notes."); }
 };
 
@@ -642,7 +721,13 @@ function searchFilms(q, target){
   }, 220);
 }
 document.getElementById("movieQ").oninput = () => searchFilms(document.getElementById("movieQ").value.trim(), document.getElementById("hits"));
+document.getElementById("hashBtn").onclick = () => {
+  document.getElementById("inlineHits").classList.remove("hidden");
+  searchFilms(box.value.replace(/^#/, "") || "now playing", document.getElementById("inlineHits"));
+};
+document.getElementById("atBtn").onclick = () => showMentions("");
 document.getElementById("filmBtn").onclick = () => {
+
   document.getElementById("inlineHits").classList.remove("hidden");
   searchFilms(box.value.replace(/^#/, "") || "dune", document.getElementById("inlineHits"));
 };
@@ -660,7 +745,7 @@ function showMentions(q){
   const boxEl = document.getElementById("inlineHits");
   boxEl.innerHTML = "";
   boxEl.classList.remove("hidden");
-  peopleHere.filter(p => p.name && p.name.toLowerCase().includes(q.toLowerCase())).forEach(p => {
+  peopleHere.filter(p => p.name && (!q || p.name.toLowerCase().includes(q.toLowerCase()))).forEach(p => {
     const b = document.createElement("button");
     b.className = "mention";
     b.type = "button";
@@ -683,17 +768,40 @@ function filmFrom(item){
     poster:item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : ""
   };
 }
-function pickFilm(item){
+function paintDraftFilm(){
+  const slot = document.getElementById("draftFilmChip");
+  slot.innerHTML = "";
+  if (!draftFilm) return;
+  const chip = document.createElement("div");
+  chip.className = "draft-chip";
+  if (draftFilm.poster) chip.innerHTML = '<img src="' + draftFilm.poster + '" alt="">';
+  const label = document.createElement("span");
+  label.textContent = "# " + draftFilm.title;
+  chip.appendChild(label);
+  const x = document.createElement("button");
+  x.type = "button";
+  x.textContent = "×";
+  x.style.border = "0";
+  x.style.background = "transparent";
+  x.style.fontWeight = "800";
+  x.onclick = () => { draftFilm = null; paintDraftFilm(); };
+  chip.appendChild(x);
+  slot.appendChild(chip);
+}
+function attachFilm(item, alsoRoom){
   const film = filmFrom(item);
   hideInline();
   document.getElementById("movieQ").value = "";
   draftFilm = film;
+  paintDraftFilm();
+  if (!box.value.includes("#")) box.value = (box.value ? box.value + " " : "") + "#" + film.title.replace(/\s+/g, "") + " ";
   const id = "film-" + film.type + "-" + film.id;
-  upsertRoom({id, title: film.title, film, preview: "Film room"});
-  openRoom(id);
-  send({ text: "opened a room for this", film });
+  upsertRoom({id: id, title: film.title, film: film, preview: "Film room"}, true);
   paintFilmCard(film);
+  if (alsoRoom) openRoom(id);
+  box.focus();
 }
+function pickFilm(item){ attachFilm(item, true); }
 async function searchAndOpen(name){
   const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${encodeURIComponent(name)}`);
   const data = await res.json();
@@ -721,7 +829,7 @@ document.getElementById("playTrailer").onclick = async () => {
 document.getElementById("openFilmRoom").onclick = () => {
   if (!currentFilm) return;
   const id = "film-" + currentFilm.type + "-" + currentFilm.id;
-  upsertRoom({id, title: currentFilm.title, film: currentFilm});
+  upsertRoom({id, title: currentFilm.title, film: currentFilm, preview: "Film room"}, true);
   document.getElementById("modal").classList.add("hidden");
   openRoom(id);
 };
@@ -795,11 +903,15 @@ function watchPresence(){
     snap.forEach(c => { const v = c.val(); if (v) peopleHere.push({ uid:c.key, ...v }); });
     renderPeople();
   });
-  db.ref("catalog").on("value", snap => {
-    snap.forEach(c => {
-      const v = c.val() || {};
-      upsertRoom({ id:c.key, title:v.title || c.key, film:v.film || null, lastTs:v.lastTs || 0, preview:v.preview || "" });
-    });
+  db.ref("catalog").on("child_added", snap => {
+    const v = snap.val() || {};
+    const known = rooms.some(r => r.id === snap.key);
+    upsertRoom({ id:snap.key, title:v.title || snap.key, film:v.film || null, lastTs:v.lastTs || v.ts || 0, preview:v.preview || "New room" }, false);
+    if (!known && snap.key !== room) announceRoom({ id:snap.key, title:v.title || snap.key });
+  });
+  db.ref("catalog").on("child_changed", snap => {
+    const v = snap.val() || {};
+    upsertRoom({ id:snap.key, title:v.title || snap.key, film:v.film || null, lastTs:v.lastTs || v.ts || 0, preview:v.preview || "" }, false);
   });
 }
 
