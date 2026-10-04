@@ -18,12 +18,11 @@
     :root {
       --ink: #14182b;
       --muted: #64708b;
-      --line: rgba(79, 70, 229, 0.12);
-      --card: rgba(255, 255, 255, 0.86);
       --indigo: #4f46e5;
       --rose: #e11d48;
-      --amber: #f59e0b;
-      --mint: #0f9f6e;
+      --green: #12c48b;
+      --green-2: #3dffb0;
+      --green-deep: #067a52;
       --bg: #f3f6ff;
       --shadow: 0 18px 40px rgba(79, 70, 229, 0.12);
     }
@@ -33,75 +32,43 @@
       font-family: "Plus Jakarta Sans", sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(900px 420px at -10% -10%, rgba(225, 29, 72, 0.16), transparent 55%),
-        radial-gradient(840px 420px at 110% -8%, rgba(79, 70, 229, 0.18), transparent 52%),
-        radial-gradient(700px 380px at 70% 110%, rgba(245, 158, 11, 0.14), transparent 50%),
-        linear-gradient(180deg, #fbfcff 0%, var(--bg) 40%, #eef3ff 100%);
+        radial-gradient(900px 420px at -10% -10%, rgba(18, 196, 139, 0.16), transparent 55%),
+        radial-gradient(840px 420px at 110% -8%, rgba(79, 70, 229, 0.16), transparent 52%),
+        radial-gradient(700px 380px at 70% 110%, rgba(61, 255, 176, 0.12), transparent 50%),
+        linear-gradient(180deg, #fbfcff 0%, var(--bg) 40%, #eef8f4 100%);
       overflow-x: hidden;
     }
     button, input { font-family: inherit; }
     button { cursor: pointer; }
-    .locked {
-      min-height: 100dvh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }
-    .locked-card {
-      width: min(440px, 100%);
-      background: #fff;
-      border-radius: 28px;
-      padding: 28px;
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
+    .locked { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+    .locked-card { width: min(440px, 100%); background: #fff; border-radius: 28px; padding: 28px; box-shadow: var(--shadow); text-align: center; }
     .locked-card h1 { font-family: Fraunces, serif; font-size: 2rem; letter-spacing: -0.04em; }
     .locked-card p { color: var(--muted); margin: 8px 0 16px; font-weight: 600; }
     .locked-card input, .search input {
-      width: 100%;
-      border: 1.5px solid #e5e9f7;
-      background: #f8faff;
-      border-radius: 16px;
-      padding: 14px 16px;
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--ink);
-      outline: none;
+      width: 100%; border: 1.5px solid #e5e9f7; background: #f8faff; border-radius: 16px;
+      padding: 14px 16px; font-size: 1rem; font-weight: 700; color: var(--ink); outline: none;
     }
-    .locked-card input:focus, .search input:focus { border-color: var(--indigo); background: #fff; }
+    .locked-card input:focus, .search input:focus { border-color: var(--green); background: #fff; }
     .go {
-      margin-top: 12px;
-      width: 100%;
-      border: 0;
-      border-radius: 16px;
-      padding: 14px;
-      font-weight: 800;
-      color: #fff;
-      background: linear-gradient(135deg, var(--indigo), var(--rose));
-      box-shadow: 0 12px 24px rgba(225, 29, 72, 0.25);
+      margin-top: 12px; width: 100%; border: 0; border-radius: 16px; padding: 14px; font-weight: 800; color: #06281c;
+      background: linear-gradient(135deg, var(--green-2), var(--green) 55%, #0ea571);
+      box-shadow: 0 12px 24px rgba(18, 196, 139, 0.28);
     }
     .app { display: none; }
     .app.on { display: block; }
     .shell { width: min(1280px, calc(100% - 28px)); margin: 0 auto; padding: 16px 0 48px; }
     .top {
       position: sticky; top: 10px; z-index: 20;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 12px;
-      align-items: center;
-      background: rgba(255,255,255,0.82);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.8);
-      border-radius: 22px;
-      padding: 10px;
+      display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+      background: rgba(255,255,255,0.82); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.8); border-radius: 22px; padding: 10px;
       box-shadow: 0 12px 30px rgba(20, 24, 43, 0.08);
     }
     .brand { display: flex; align-items: center; gap: 10px; min-width: 0; padding-left: 6px; }
     .mark {
-      width: 42px; height: 42px; border-radius: 14px;
-      display: grid; place-items: center; color: #fff; font-size: 1.05rem;
-      background: linear-gradient(145deg, #4f46e5, #e11d48 70%, #f59e0b);
-      box-shadow: 0 8px 16px rgba(79, 70, 229, 0.28);
+      width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; color: #06281c; font-size: 1.05rem;
+      background: linear-gradient(145deg, #d9ffe9, var(--green-2) 40%, var(--green));
+      box-shadow: 0 8px 16px rgba(18, 196, 139, 0.28);
     }
     .brand b { display: block; font-family: Fraunces, serif; font-size: 1.25rem; letter-spacing: -0.04em; line-height: 1; }
     .brand small { color: var(--muted); font-weight: 800; font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -110,125 +77,127 @@
     .search input { padding-left: 40px; }
     .tools { display: flex; gap: 8px; }
     .chip, .tool {
-      border: 0; border-radius: 999px; padding: 10px 12px;
-      font-weight: 800; font-size: 0.75rem; background: #fff; color: var(--ink);
-      box-shadow: 0 6px 14px rgba(20, 24, 43, 0.06);
+      border: 0; border-radius: 999px; padding: 10px 12px; font-weight: 800; font-size: 0.75rem;
+      background: #fff; color: var(--ink); box-shadow: 0 6px 14px rgba(20, 24, 43, 0.06);
       display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
     }
-    .chip.on, .tool.on { background: linear-gradient(135deg, var(--indigo), #7c3aed); color: #fff; }
-    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 0 rgba(34,197,94,.6); animation: pulse 1.4s infinite; }
-    @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } }
+    .chip.on, .tool.on { background: linear-gradient(135deg, var(--green-deep), var(--green)); color: #fff; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(18,196,139,.6); animation: pulse 1.4s infinite; }
+    @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(18,196,139,0); } }
     .rails { margin-top: 18px; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
     .rails::-webkit-scrollbar { display: none; }
-    .hero {
-      margin-top: 16px;
-      display: grid;
-      grid-template-columns: 1.4fr 0.8fr;
-      gap: 14px;
-    }
-    .spot, .side {
-      position: relative; overflow: hidden; border-radius: 28px; min-height: 280px;
-      background: #fff; box-shadow: var(--shadow);
-    }
+    .hero { margin-top: 16px; display: grid; grid-template-columns: 1.4fr 0.8fr; gap: 14px; }
+    .spot, .side { position: relative; overflow: hidden; border-radius: 28px; min-height: 280px; background: #fff; box-shadow: var(--shadow); }
     .spot { color: #fff; display: flex; align-items: flex-end; padding: 22px; }
     .spot .wash {
-      position: absolute; inset: 0;
-      background:
-        linear-gradient(180deg, rgba(15,18,36,0.05), rgba(15,18,36,0.78)),
-        var(--spot, #312e81) center/cover no-repeat;
-      transform: scale(1.04);
+      position: absolute; inset: 0; transform: scale(1.04);
+      background: linear-gradient(180deg, rgba(6,40,28,0.05), rgba(6,40,28,0.78)), var(--spot, #064e3b) center/cover no-repeat;
     }
     .spot .copy, .side { position: relative; z-index: 1; }
-    .kicker { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #fecdd3; }
+    .kicker { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #b6ffdf; }
     .spot h1 { font-family: Fraunces, serif; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: -0.045em; line-height: 0.95; max-width: 12ch; margin: 6px 0; }
     .spot p { max-width: 52ch; color: rgba(255,255,255,0.88); font-weight: 600; font-size: 0.92rem; }
     .row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-    .play {
-      border: 0; border-radius: 999px; padding: 12px 16px; font-weight: 800; color: #14182b; background: #fff;
-    }
+    .play { border: 0; border-radius: 999px; padding: 12px 16px; font-weight: 800; color: #06281c; background: linear-gradient(135deg, #eafff6, var(--green-2)); }
     .ghost { border: 0; border-radius: 999px; padding: 12px 16px; font-weight: 800; color: #fff; background: rgba(255,255,255,0.16); }
     .side { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
     .side h2 { font-size: 0.95rem; }
     .mini {
       display: grid; grid-template-columns: 46px 1fr auto; gap: 10px; align-items: center;
-      text-align: left; border: 0; background: #f7f8ff; border-radius: 16px; padding: 8px; color: inherit;
+      text-align: left; border: 0; background: #f4fbf7; border-radius: 16px; padding: 8px; color: inherit;
     }
     .mini img, .card img, .rel img { width: 100%; height: 100%; object-fit: cover; display: block; background: #e8edf8; }
     .mini img { width: 46px; height: 64px; border-radius: 10px; }
     .mini strong, .card strong { display: block; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .mini em, .card em { font-style: normal; color: var(--muted); font-size: 0.7rem; font-weight: 700; }
     .section { margin-top: 22px; }
-    .section head, .head { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-bottom: 10px; }
+    .head { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-bottom: 10px; }
     .section h2 { font-family: Fraunces, serif; font-size: 1.45rem; letter-spacing: -0.03em; }
     .section span, .count { color: var(--muted); font-size: 0.75rem; font-weight: 800; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-      gap: 12px;
-    }
-    .card {
-      border: 0; text-align: left; background: transparent; color: inherit; min-width: 0;
-    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; }
+    .card { border: 0; text-align: left; background: transparent; color: inherit; min-width: 0; }
     .poster {
       position: relative; aspect-ratio: 2/3; border-radius: 18px; overflow: hidden;
-      box-shadow: 0 12px 24px rgba(20, 24, 43, 0.12);
-      transform: translateY(0); transition: transform .25s ease, box-shadow .25s ease;
+      box-shadow: 0 12px 24px rgba(20, 24, 43, 0.12); transition: transform .25s ease, box-shadow .25s ease;
     }
-    .card:hover .poster { transform: translateY(-6px) scale(1.015); box-shadow: 0 18px 30px rgba(79, 70, 229, 0.2); }
+    .card:hover .poster { transform: translateY(-6px) scale(1.015); box-shadow: 0 18px 30px rgba(18, 196, 139, 0.22); }
     .badge {
-      position: absolute; left: 8px; top: 8px; z-index: 1;
-      background: rgba(255,255,255,0.92); color: var(--ink);
+      position: absolute; left: 8px; top: 8px; z-index: 1; background: rgba(255,255,255,0.92); color: var(--ink);
       border-radius: 999px; padding: 4px 8px; font-size: 0.66rem; font-weight: 800;
     }
     .card strong { margin-top: 8px; }
     .sentinel { height: 48px; display: grid; place-items: center; color: var(--muted); font-weight: 800; font-size: 0.78rem; }
     .theatre {
-      position: fixed; inset: 0; z-index: 40;
-      background: rgba(244, 247, 255, 0.72);
-      backdrop-filter: blur(10px);
-      display: none; padding: 14px;
+      position: fixed; inset: 0; z-index: 40; background: rgba(244, 251, 247, 0.72);
+      backdrop-filter: blur(10px); display: none; padding: 14px;
     }
     .theatre.on { display: grid; place-items: center; }
     .panel {
-      width: min(1100px, 100%);
-      max-height: calc(100dvh - 28px);
-      overflow: auto;
-      background: #fff;
-      border-radius: 28px;
-      box-shadow: 0 30px 80px rgba(20, 24, 43, 0.2);
-      padding: 12px;
+      width: min(1100px, 100%); max-height: calc(100dvh - 28px); overflow: auto;
+      background: #fff; border-radius: 28px; box-shadow: 0 30px 80px rgba(20, 24, 43, 0.2); padding: 12px;
     }
-    .stage {
-      position: relative; border-radius: 22px; overflow: hidden; background: #070b16;
-      aspect-ratio: 16/9;
-    }
-    .aura {
-      position: absolute; inset: 0; background-size: cover; background-position: center;
-      filter: blur(18px) saturate(1.2) brightness(.45); transform: scale(1.08);
-    }
-    .frame {
-      position: absolute; inset: 18px; border-radius: 16px; overflow: hidden; background: #000;
-    }
+    .stage { position: relative; border-radius: 22px; overflow: hidden; background: #04140e; aspect-ratio: 16/9; }
+    .aura { position: absolute; inset: 0; background-size: cover; background-position: center; filter: blur(18px) saturate(1.2) brightness(.45); transform: scale(1.08); }
+    .frame { position: absolute; inset: 0; overflow: hidden; background: #000; }
     .frame iframe {
-      position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000;
+      position: absolute; left: 0; top: 0; width: 100%; height: calc(100% + 78px); border: 0; background: #000;
       pointer-events: none;
     }
-    .shield {
-      position: absolute; inset: 0; z-index: 3; background: transparent;
+    .shield { position: absolute; inset: 0 0 54px 0; z-index: 3; background: transparent; touch-action: manipulation; }
+    .flash {
+      position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) scale(.86);
+      width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center;
+      color: #06281c; font-size: 1.4rem; z-index: 4; pointer-events: none; opacity: 0;
+      background: radial-gradient(circle, #eafff6, var(--green-2) 45%, var(--green));
+      box-shadow: 0 0 0 10px rgba(61,255,176,0.18), 0 16px 30px rgba(6,122,82,0.28);
     }
-    .pause-veil {
-      position: absolute; inset: 0; z-index: 2; display: none;
-      align-items: center; justify-content: center; flex-direction: column; gap: 8px;
-      color: #fff; font-weight: 800; background: rgba(7, 11, 22, 0.45);
+    .flash.on { animation: pop .42s ease; }
+    @keyframes pop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.7); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.08); } }
+    .seek-pop {
+      position: absolute; left: 14px; right: 14px; bottom: 12px; z-index: 5;
+      height: 28px; display: flex; align-items: center;
     }
-    .pause-veil.on { display: flex; }
-    .pause-veil i { font-size: 2rem; }
+    .dock {
+      margin-top: 10px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+      padding: 10px; border-radius: 18px;
+      background: linear-gradient(180deg, #f3fff9, #ffffff);
+      box-shadow: inset 0 0 0 1px rgba(18, 196, 139, 0.16), 0 10px 24px rgba(18, 196, 139, 0.08);
+    }
+    .dock-btns, .dock-end { display: flex; align-items: center; gap: 8px; }
+    .ibtn {
+      width: 40px; height: 40px; border: 0; border-radius: 14px; color: #06281c;
+      background: #fff; box-shadow: 0 6px 14px rgba(6, 122, 82, 0.08);
+      display: grid; place-items: center;
+    }
+    .ibtn.main {
+      width: 46px; height: 46px; color: #06281c;
+      background: radial-gradient(circle at 30% 20%, #f4fff9, var(--green-2) 42%, var(--green));
+      box-shadow: 0 10px 18px rgba(18, 196, 139, 0.32);
+    }
+    .seek {
+      position: relative; width: 100%; height: 8px; border-radius: 999px; background: rgba(6, 122, 82, 0.12); cursor: pointer;
+    }
+    .seek-pop .seek { height: 7px; background: rgba(255,255,255,0.28); box-shadow: 0 8px 18px rgba(0,0,0,0.25); }
+    .seek i {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: inherit; pointer-events: none;
+      background: linear-gradient(90deg, #b6ffdf, var(--green-2) 40%, var(--green));
+      box-shadow: 0 0 12px rgba(61, 255, 176, 0.85);
+    }
+    .seek b {
+      position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%);
+      background: #fff; box-shadow: 0 0 0 4px rgba(61,255,176,0.35); pointer-events: none;
+    }
+    .qpop {
+      position: absolute; right: 0; bottom: 48px; display: none; min-width: 132px; padding: 6px;
+      background: #fff; border-radius: 14px; box-shadow: 0 16px 30px rgba(20,24,43,0.16); z-index: 6;
+    }
+    .qpop.on { display: grid; gap: 4px; }
+    .qpop button { border: 0; background: #f4fbf7; border-radius: 10px; padding: 8px 10px; font-weight: 800; text-align: left; color: var(--ink); }
+    .qpop button.on { background: linear-gradient(135deg, var(--green-2), var(--green)); color: #06281c; }
     .meta { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 14px 8px 6px; align-items: start; }
     .meta h3 { font-family: Fraunces, serif; font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -0.04em; }
     .sub { color: var(--muted); font-weight: 700; font-size: 0.82rem; margin-top: 4px; }
     .overview { margin-top: 8px; font-weight: 600; line-height: 1.45; color: #334155; }
-    .bar { margin-top: 10px; height: 6px; border-radius: 999px; background: #eef2ff; overflow: hidden; }
-    .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--indigo), var(--rose), var(--amber)); }
     .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
     .rel { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 8px; }
     .rel button { border: 0; background: transparent; text-align: left; color: inherit; min-width: 0; }
@@ -236,8 +205,8 @@
     .rel strong { display: block; margin-top: 6px; font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .toast {
       position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(20px);
-      background: #14182b; color: #fff; border-radius: 999px; padding: 10px 14px;
-      font-weight: 800; font-size: 0.78rem; opacity: 0; pointer-events: none; transition: .25s ease; z-index: 50;
+      background: #06281c; color: #eafff6; border-radius: 999px; padding: 10px 14px;
+      font-weight: 800; font-size: 0.78rem; opacity: 0; pointer-events: none; transition: .2s ease; z-index: 50;
     }
     .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
     @media (max-width: 860px) {
@@ -245,9 +214,10 @@
       .search { grid-column: 1 / -1; }
       .hero { grid-template-columns: 1fr; }
       .rel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .frame { inset: 8px; }
       .shell { width: min(1280px, calc(100% - 16px)); }
       .hide-sm { display: none; }
+      .dock { grid-template-columns: 1fr; }
+      .dock-end { justify-content: space-between; }
     }
   </style>
 </head>
@@ -278,9 +248,7 @@
           <button class="tool" id="sortBtn" type="button"><i class="fa-solid fa-arrow-down-wide-short"></i> <span class="hide-sm">Popular</span></button>
         </div>
       </header>
-
       <div class="rails" id="genres"></div>
-
       <section class="hero">
         <article class="spot" id="spot">
           <div class="wash" id="spotWash"></div>
@@ -299,7 +267,6 @@
           <div id="continue"></div>
         </aside>
       </section>
-
       <section class="section">
         <div class="head">
           <h2 id="gridTitle">Unlimited films</h2>
@@ -317,8 +284,30 @@
         <div class="aura" id="aura"></div>
         <div class="frame">
           <iframe id="player" title="Instree player" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
-          <div class="pause-veil" id="veil"><i class="fa-solid fa-pause"></i><span>Paused · tap to resume</span></div>
-          <div class="shield" id="shield" title="Tap to pause or resume"></div>
+        </div>
+        <div class="shield" id="shield"></div>
+        <div class="flash" id="flash"><i class="fa-solid fa-pause" id="flashIcon"></i></div>
+        <div class="seek-pop"><div class="seek" id="seekTop" data-seek><i id="seekTopFill"></i><b id="seekTopKnob"></b></div></div>
+      </div>
+      <div class="dock">
+        <div class="dock-btns">
+          <button class="ibtn main" id="playBtn" type="button" aria-label="Pause"><i class="fa-solid fa-pause" id="playIcon"></i></button>
+          <button class="ibtn" id="backBtn" type="button" aria-label="Back 10"><i class="fa-solid fa-rotate-left"></i></button>
+          <button class="ibtn" id="fwdBtn" type="button" aria-label="Forward 10"><i class="fa-solid fa-rotate-right"></i></button>
+        </div>
+        <div class="seek" id="seekDock" data-seek><i id="seekDockFill"></i><b id="seekDockKnob"></b></div>
+        <div class="dock-end">
+          <button class="ibtn" id="muteBtn" type="button" aria-label="Mute"><i class="fa-solid fa-volume-high" id="muteIcon"></i></button>
+          <div style="position:relative">
+            <button class="ibtn" id="qualityBtn" type="button" aria-label="Quality"><i class="fa-solid fa-sliders"></i></button>
+            <div class="qpop" id="qpop">
+              <button type="button" data-q="1080" class="on">1080</button>
+              <button type="button" data-q="720">720</button>
+              <button type="button" data-q="480">480</button>
+              <button type="button" data-q="auto">Auto</button>
+            </div>
+          </div>
+          <button class="ibtn" id="fsBtn" type="button" aria-label="Fullscreen"><i class="fa-solid fa-expand"></i></button>
         </div>
       </div>
       <div class="meta">
@@ -326,11 +315,9 @@
           <h3 id="filmTitle">Film</h3>
           <div class="sub" id="filmSub"></div>
           <p class="overview" id="filmOverview"></p>
-          <div class="bar"><i id="filmBar"></i></div>
         </div>
         <div class="actions">
           <button class="tool" id="closeBtn" type="button"><i class="fa-solid fa-xmark"></i> Close</button>
-          <button class="tool" id="fsBtn" type="button"><i class="fa-solid fa-expand"></i> Fullscreen</button>
           <button class="tool" id="serverBtn" type="button">Server</button>
         </div>
       </div>
@@ -360,22 +347,22 @@
       { key: "revenue.desc", label: "Biggest" }
     ];
     const SERVERS = [
-      (id, at) => `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=4f46e5&secondaryColor=14182b&skin=vixsrc&canPlayFHD=1&quality=1080&startAt=${Math.max(0, Math.floor(at || 0))}`,
+      (id, at, q) => `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=12c48b&secondaryColor=04140e&skin=vixsrc&canPlayFHD=1&quality=${q || "1080"}&startAt=${Math.max(0, Math.floor(at || 0))}`,
       (id) => `https://vidfast.pro/movie/${id}?autoPlay=true`,
       (id) => `https://vidsrc.xyz/embed/movie/${id}?autoplay=1`
     ];
 
     let genre = 0, sort = 0, page = 1, query = "", loading = false, done = false;
     let films = new Map();
-    let current = null, playing = false, offset = 0, origin = 0, server = 0, timer = null;
-    let spotFilm = null;
+    let current = null, playing = false, muted = false, server = 0, quality = "1080";
+    let mediaTime = 0, duration = 0, tickAt = 0, scrubbing = false, spotFilm = null;
 
     function toast(msg) {
       const el = $("toast");
       el.textContent = msg;
       el.classList.add("on");
       clearTimeout(toast._t);
-      toast._t = setTimeout(() => el.classList.remove("on"), 1600);
+      toast._t = setTimeout(() => el.classList.remove("on"), 1100);
     }
     function poster(path) { return path ? IMG + path : ""; }
     function backdrop(path) { return path ? BACK + path : ""; }
@@ -383,6 +370,17 @@
       const res = await fetch(url);
       if (!res.ok) throw new Error("tmdb");
       return res.json();
+    }
+    function nowTime() {
+      if (!playing) return mediaTime;
+      return mediaTime + (Date.now() - tickAt) / 1000;
+    }
+    function paintSeek() {
+      const t = nowTime();
+      const dur = duration || ((current && current.runtime) ? current.runtime * 60 : 0);
+      const pct = dur ? Math.min(100, Math.max(0, (t / dur) * 100)) : 0;
+      ["seekTopFill", "seekDockFill"].forEach((id) => { $(id).style.width = pct + "%"; });
+      ["seekTopKnob", "seekDockKnob"].forEach((id) => { $(id).style.left = pct + "%"; });
     }
     function remember(film, at) {
       const list = JSON.parse(localStorage.getItem("instree-continue") || "[]").filter((x) => x.id !== film.id);
@@ -400,10 +398,10 @@
       box.innerHTML = list.slice(0, 3).map((f) => `
         <button class="mini" type="button" data-id="${f.id}">
           <img alt="" src="${poster(f.poster)}" />
-          <div><strong>${f.title}</strong><em>${f.year || "Film"}${f.at ? " · resume " + Math.floor(f.at / 60) + "m" : ""}</em></div>
+          <div><strong>${f.title}</strong><em>${f.year || "Film"}</em></div>
           <i class="fa-solid fa-play"></i>
         </button>`).join("");
-      box.querySelectorAll("[data-id]").forEach((btn) => btn.addEventListener("click", () => openFilm(Number(btn.dataset.id), true)));
+      box.querySelectorAll("[data-id]").forEach((btn) => btn.addEventListener("click", () => openFilm(Number(btn.dataset.id))));
     }
     function card(film) {
       films.set(film.id, film);
@@ -417,7 +415,7 @@
         </div>
         <strong>${film.title || "Untitled"}</strong>
         <em>${(film.release_date || "").slice(0, 4) || "Film"}</em>`;
-      el.addEventListener("click", () => openFilm(film.id, true));
+      el.addEventListener("click", () => openFilm(film.id));
       return el;
     }
     function paintSpot(film) {
@@ -427,7 +425,7 @@
       $("spotTitle").textContent = film.title;
       $("spotText").textContent = film.overview || "Tap play and it starts immediately.";
       $("spotKicker").textContent = (film.release_date || "").slice(0, 4) + " · " + (film.vote_average || 0).toFixed(1);
-      $("spotWash").style.backgroundImage = `linear-gradient(180deg, rgba(15,18,36,0.05), rgba(15,18,36,0.78)), url("${backdrop(film.backdrop_path) || poster(film.poster_path)}")`;
+      $("spotWash").style.backgroundImage = `linear-gradient(180deg, rgba(6,40,28,0.05), rgba(6,40,28,0.78)), url("${backdrop(film.backdrop_path) || poster(film.poster_path)}")`;
     }
     async function loadPage(reset) {
       if (loading || (done && !reset)) return;
@@ -456,38 +454,86 @@
       }
       loading = false;
     }
-    function vix(id, at) { return SERVERS[server](id, at); }
-    function elapsed() { return playing ? offset + (Date.now() - origin) / 1000 : offset; }
-    function paintProgress() {
-      if (!current) return;
-      const runtime = (current.runtime || 110) * 60;
-      $("filmBar").style.width = Math.min(100, (elapsed() / runtime) * 100).toFixed(2) + "%";
-    }
-    function setPlayer(at, auto) {
+    function command(name, value) {
       const frame = $("player");
-      frame.src = vix(current.id, at);
-      if (auto) {
-        playing = true;
-        origin = Date.now();
-        offset = at || 0;
-        $("veil").classList.remove("on");
-      }
+      if (!frame.contentWindow) return;
+      const packets = [
+        { type: "PLAYER_COMMAND", data: { event: name, currentTime: value, value } },
+        { type: "command", event: name, currentTime: value, value },
+        { method: name, value },
+        { api: name, set: value },
+        { event: name, currentTime: value, time: value },
+        { action: name, seconds: value },
+        name
+      ];
+      packets.forEach((packet) => {
+        try { frame.contentWindow.postMessage(packet, "*"); } catch (_) {}
+        try { frame.contentWindow.postMessage(JSON.stringify(packet), "*"); } catch (_) {}
+      });
+    }
+    function paintPlay() {
+      $("playIcon").className = playing ? "fa-solid fa-pause" : "fa-solid fa-play";
+      $("playBtn").setAttribute("aria-label", playing ? "Pause" : "Play");
+    }
+    function flash(icon) {
+      $("flashIcon").className = "fa-solid " + icon;
+      const el = $("flash");
+      el.classList.remove("on");
+      void el.offsetWidth;
+      el.classList.add("on");
     }
     function pause() {
-      if (!playing || !current) return;
-      offset = elapsed();
+      if (!playing) return;
+      mediaTime = nowTime();
       playing = false;
-      $("player").src = "about:blank";
-      $("veil").classList.add("on");
-      remember(current, offset);
-      toast("Paused");
+      paintPlay();
+      flash("fa-pause");
+      command("pause");
+      command("pause_player");
+      if (current) remember(current, mediaTime);
     }
     function resume() {
-      if (!current) return;
-      setPlayer(offset, true);
-      toast("Playing");
+      if (playing) return;
+      playing = true;
+      tickAt = Date.now();
+      paintPlay();
+      flash("fa-play");
+      command("play");
+      command("play_player");
     }
-    async function openFilm(id, autoplay) {
+    function toggle() { playing ? pause() : resume(); }
+    function seekTo(seconds) {
+      const dur = duration || ((current && current.runtime) ? current.runtime * 60 : seconds + 1);
+      mediaTime = Math.max(0, Math.min(dur - 0.2, seconds));
+      tickAt = Date.now();
+      paintSeek();
+      command("seek", mediaTime);
+      command("setCurrentTime", mediaTime);
+      command("seeked", mediaTime);
+    }
+    function bindSeek(el) {
+      const at = (event) => {
+        const rect = el.getBoundingClientRect();
+        const x = Math.min(Math.max(0, (event.clientX || (event.touches && event.touches[0].clientX) || 0) - rect.left), rect.width);
+        const dur = duration || ((current && current.runtime) ? current.runtime * 60 : 0);
+        if (!dur) return;
+        seekTo((x / rect.width) * dur);
+      };
+      el.addEventListener("pointerdown", (event) => { scrubbing = true; el.setPointerCapture(event.pointerId); at(event); });
+      el.addEventListener("pointermove", (event) => { if (scrubbing) at(event); });
+      el.addEventListener("pointerup", () => { scrubbing = false; });
+    }
+    function mount(at) {
+      const frame = $("player");
+      frame.src = SERVERS[server](current.id, at, quality);
+      playing = true;
+      mediaTime = at || 0;
+      tickAt = Date.now();
+      duration = (current.runtime || 0) * 60;
+      paintPlay();
+      paintSeek();
+    }
+    async function openFilm(id) {
       let film = films.get(id);
       try {
         const full = await getJSON(`${TMDB}/movie/${id}?api_key=${KEY}&language=en-US&append_to_response=recommendations`);
@@ -498,23 +544,22 @@
       current = film;
       server = 0;
       const saved = JSON.parse(localStorage.getItem("instree-continue") || "[]").find((x) => x.id === id);
-      offset = saved && saved.at > 20 ? saved.at : 0;
+      const at = saved && saved.at > 20 ? saved.at : 0;
       $("filmTitle").textContent = film.title;
-      $("filmSub").textContent = [ (film.release_date || "").slice(0, 4), film.runtime ? film.runtime + " min" : "", (film.vote_average || 0).toFixed(1) + " rating", (film.genres || []).slice(0, 2).map((g) => g.name).join(" · ") ].filter(Boolean).join(" · ");
+      $("filmSub").textContent = [(film.release_date || "").slice(0, 4), film.runtime ? film.runtime + " min" : "", (film.vote_average || 0).toFixed(1) + " rating", (film.genres || []).slice(0, 2).map((g) => g.name).join(" · ")].filter(Boolean).join(" · ");
       $("filmOverview").textContent = film.overview || "No synopsis on file.";
       $("aura").style.backgroundImage = `url("${backdrop(film.backdrop_path) || poster(film.poster_path)}")`;
       document.title = film.title + " · Instree";
       const recs = ((film.recommendations || {}).results || []).slice(0, 6);
       $("related").innerHTML = recs.map((r) => `<button type="button" data-id="${r.id}"><img alt="" src="${poster(r.poster_path)}" /><strong>${r.title}</strong></button>`).join("");
-      $("related").querySelectorAll("[data-id]").forEach((btn) => btn.addEventListener("click", () => openFilm(Number(btn.dataset.id), true)));
+      $("related").querySelectorAll("[data-id]").forEach((btn) => btn.addEventListener("click", () => openFilm(Number(btn.dataset.id))));
       $("theatre").classList.add("on");
       document.body.style.overflow = "hidden";
-      setPlayer(offset, autoplay);
-      remember(film, offset);
-      toast(offset > 20 ? "Resumed" : "Playing");
+      mount(at);
+      remember(film, at);
     }
     function closeTheatre() {
-      if (current) remember(current, elapsed());
+      if (current) remember(current, nowTime());
       playing = false;
       $("player").src = "about:blank";
       $("theatre").classList.remove("on");
@@ -529,16 +574,6 @@
       paintContinue();
       loadPage(true);
       getJSON(`${TMDB}/trending/movie/week?api_key=${KEY}`).then((d) => paintSpot((d.results || [])[0])).catch(() => {});
-    }
-    function bootGate() {
-      const params = new URLSearchParams(location.search);
-      const key = params.get("k") || "";
-      if (key === GATE || sessionStorage.getItem("instree-gate") === "1") unlock(true);
-      $("gateForm").addEventListener("submit", (e) => {
-        e.preventDefault();
-        if ($("gateInput").value.trim() === GATE) unlock(true);
-        else toast("Wrong key");
-      });
     }
     $("genres").innerHTML = GENRES.map((g) => `<button class="chip ${g.id === 0 ? "on" : ""}" type="button" data-id="${g.id}">${g.name}</button>`).join("");
     $("genres").addEventListener("click", (e) => {
@@ -560,9 +595,30 @@
       clearTimeout($("q")._t);
       $("q")._t = setTimeout(() => { query = $("q").value.trim(); loadPage(true); }, 280);
     });
-    $("spotPlay").addEventListener("click", () => { if (spotFilm) openFilm(spotFilm.id, true); });
-    $("spotInfo").addEventListener("click", () => { if (spotFilm) openFilm(spotFilm.id, true); });
-    $("shield").addEventListener("click", () => playing ? pause() : resume());
+    $("spotPlay").addEventListener("click", () => { if (spotFilm) openFilm(spotFilm.id); });
+    $("spotInfo").addEventListener("click", () => { if (spotFilm) openFilm(spotFilm.id); });
+    $("shield").addEventListener("pointerdown", (e) => { e.preventDefault(); toggle(); });
+    $("playBtn").addEventListener("pointerdown", (e) => { e.preventDefault(); toggle(); });
+    $("backBtn").addEventListener("pointerdown", (e) => { e.preventDefault(); seekTo(nowTime() - 10); });
+    $("fwdBtn").addEventListener("pointerdown", (e) => { e.preventDefault(); seekTo(nowTime() + 10); });
+    $("muteBtn").addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      muted = !muted;
+      $("muteIcon").className = muted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
+      command(muted ? "mute" : "unmute");
+      command("setVolume", muted ? 0 : 1);
+    });
+    $("qualityBtn").addEventListener("click", () => $("qpop").classList.toggle("on"));
+    $("qpop").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-q]");
+      if (!btn || !current) return;
+      quality = btn.dataset.q === "auto" ? "1080" : btn.dataset.q;
+      [...$("qpop").children].forEach((c) => c.classList.toggle("on", c === btn));
+      $("qpop").classList.remove("on");
+      const at = nowTime();
+      mount(at);
+      toast(btn.dataset.q === "auto" ? "Auto" : quality + "p");
+    });
     $("closeBtn").addEventListener("click", closeTheatre);
     $("fsBtn").addEventListener("click", () => {
       const node = $("stage");
@@ -571,20 +627,41 @@
     });
     $("serverBtn").addEventListener("click", () => {
       server = (server + 1) % SERVERS.length;
-      const at = elapsed();
-      offset = at;
-      setPlayer(at, true);
+      mount(nowTime());
       toast("Server " + (server + 1));
     });
     document.addEventListener("keydown", (e) => {
+      if (!$("theatre").classList.contains("on")) return;
       if (e.key === "Escape") closeTheatre();
-      if (e.key === " " && $("theatre").classList.contains("on")) { e.preventDefault(); playing ? pause() : resume(); }
+      if (e.key === " ") { e.preventDefault(); toggle(); }
+      if (e.key === "ArrowLeft") seekTo(nowTime() - 10);
+      if (e.key === "ArrowRight") seekTo(nowTime() + 10);
     });
+    window.addEventListener("message", (e) => {
+      const raw = typeof e.data === "string" ? (() => { try { return JSON.parse(e.data); } catch (_) { return null; } })() : e.data;
+      const data = raw && (raw.data || raw);
+      if (!data || !data.event) return;
+      if (typeof data.currentTime === "number" && !scrubbing) {
+        mediaTime = data.currentTime;
+        tickAt = Date.now();
+      }
+      if (typeof data.duration === "number" && data.duration > 0) duration = data.duration;
+      if (data.event === "play") { playing = true; paintPlay(); }
+      if (data.event === "pause") { playing = false; paintPlay(); }
+      if (data.event === "ended") { playing = false; paintPlay(); }
+    });
+    document.querySelectorAll("[data-seek]").forEach(bindSeek);
     new IntersectionObserver((entries) => {
       if (entries.some((x) => x.isIntersecting)) loadPage(false);
     }, { rootMargin: "600px" }).observe($("sentinel"));
-    timer = setInterval(paintProgress, 1000);
-    bootGate();
+    setInterval(() => { if (!scrubbing) paintSeek(); }, 200);
+    const params = new URLSearchParams(location.search);
+    if (params.get("k") === GATE || sessionStorage.getItem("instree-gate") === "1") unlock(true);
+    $("gateForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if ($("gateInput").value.trim() === GATE) unlock(true);
+      else toast("Wrong key");
+    });
   </script>
 </body>
 </html>
