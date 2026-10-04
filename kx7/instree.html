@@ -347,9 +347,9 @@
       { key: "revenue.desc", label: "Biggest" }
     ];
     const SERVERS = [
-      (id, at, q) => `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=12c48b&secondaryColor=04140e&skin=vixsrc&canPlayFHD=1&quality=${q || "1080"}&startAt=${Math.max(0, Math.floor(at || 0))}`,
-      (id) => `https://vidfast.pro/movie/${id}?autoPlay=true`,
-      (id) => `https://vidsrc.xyz/embed/movie/${id}?autoplay=1`
+      (id, at, q) => `https://vidfast.pro/movie/${id}?autoPlay=true&startAt=${Math.max(0, Math.floor(at || 0))}&title=false&poster=false&hideServer=true&fullscreenButton=false&chromecast=false&theme=12c48b&sub=en`,
+      (id, at, q) => `https://vidfast.vc/movie/${id}?autoPlay=true&startAt=${Math.max(0, Math.floor(at || 0))}&title=false&poster=false&hideServer=true&fullscreenButton=false&chromecast=false&theme=12c48b&sub=en`,
+      (id, at, q) => `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=12c48b&secondaryColor=04140e&skin=vixsrc&canPlayFHD=1&quality=${q || "1080"}&startAt=${Math.max(0, Math.floor(at || 0))}`
     ];
 
     let genre = 0, sort = 0, page = 1, query = "", loading = false, done = false;
@@ -454,22 +454,28 @@
       }
       loading = false;
     }
-    function command(name, value) {
+    function send(packet) {
       const frame = $("player");
-      if (!frame.contentWindow) return;
-      const packets = [
-        { type: "PLAYER_COMMAND", data: { event: name, currentTime: value, value } },
-        { type: "command", event: name, currentTime: value, value },
-        { method: name, value },
-        { api: name, set: value },
-        { event: name, currentTime: value, time: value },
-        { action: name, seconds: value },
-        name
-      ];
-      packets.forEach((packet) => {
-        try { frame.contentWindow.postMessage(packet, "*"); } catch (_) {}
+      if (!frame || !frame.contentWindow) return;
+      try { frame.contentWindow.postMessage(packet, "*"); } catch (_) {}
+      if (typeof packet !== "string") {
         try { frame.contentWindow.postMessage(JSON.stringify(packet), "*"); } catch (_) {}
-      });
+      }
+    }
+    function command(name, value) {
+      const time = typeof value === "number" ? value : nowTime();
+      if (name === "play" || name === "pause") {
+        send({ command: name });
+        send({ command: name, time });
+      } else if (name === "seek") {
+        send({ command: "seek", time });
+      } else if (name === "volume") {
+        send({ command: "volume", level: value });
+      } else if (name === "getStatus") {
+        send({ command: "getStatus" });
+      }
+      const method = name === "seek" ? "setCurrentTime" : name === "volume" ? "setVolume" : name;
+      send(JSON.stringify({ context: "player.js", version: "0.0.11", method, value: name === "volume" ? value : time }));
     }
     function paintPlay() {
       $("playIcon").className = playing ? "fa-solid fa-pause" : "fa-solid fa-play";
@@ -489,7 +495,6 @@
       paintPlay();
       flash("fa-pause");
       command("pause");
-      command("pause_player");
       if (current) remember(current, mediaTime);
     }
     function resume() {
@@ -499,17 +504,14 @@
       paintPlay();
       flash("fa-play");
       command("play");
-      command("play_player");
     }
     function toggle() { playing ? pause() : resume(); }
     function seekTo(seconds) {
       const dur = duration || ((current && current.runtime) ? current.runtime * 60 : seconds + 1);
-      mediaTime = Math.max(0, Math.min(dur - 0.2, seconds));
+      mediaTime = Math.max(0, Math.min(Math.max(dur - 0.2, 0), seconds));
       tickAt = Date.now();
       paintSeek();
       command("seek", mediaTime);
-      command("setCurrentTime", mediaTime);
-      command("seeked", mediaTime);
     }
     function bindSeek(el) {
       const at = (event) => {
@@ -605,8 +607,7 @@
       e.preventDefault();
       muted = !muted;
       $("muteIcon").className = muted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
-      command(muted ? "mute" : "unmute");
-      command("setVolume", muted ? 0 : 1);
+      command("volume", muted ? 0 : 1);
     });
     $("qualityBtn").addEventListener("click", () => $("qpop").classList.toggle("on"));
     $("qpop").addEventListener("click", (e) => {
@@ -639,17 +640,28 @@
     });
     window.addEventListener("message", (e) => {
       const raw = typeof e.data === "string" ? (() => { try { return JSON.parse(e.data); } catch (_) { return null; } })() : e.data;
-      const data = raw && (raw.data || raw);
-      if (!data || !data.event) return;
+      if (!raw || typeof raw !== "object") return;
+      const data = raw.type === "PLAYER_EVENT" || raw.type === "MEDIA_DATA" ? (raw.data || {}) : (raw.data || raw);
+      const eventName = data.event || raw.event;
+      const progress = data.progress || raw.progress;
+      if (progress && typeof progress.watched === "number" && !scrubbing) {
+        mediaTime = progress.watched;
+        tickAt = Date.now();
+        if (progress.duration) duration = progress.duration;
+      }
+      if (!eventName && typeof data.currentTime !== "number") return;
       if (typeof data.currentTime === "number" && !scrubbing) {
         mediaTime = data.currentTime;
         tickAt = Date.now();
       }
       if (typeof data.duration === "number" && data.duration > 0) duration = data.duration;
-      if (data.event === "play") { playing = true; paintPlay(); }
-      if (data.event === "pause") { playing = false; paintPlay(); }
-      if (data.event === "ended") { playing = false; paintPlay(); }
+      if (typeof data.playing === "boolean") { playing = data.playing; paintPlay(); }
+      if (eventName === "play") { playing = true; paintPlay(); }
+      if (eventName === "pause") { playing = false; paintPlay(); }
+      if (eventName === "ended") { playing = false; paintPlay(); }
+      paintSeek();
     });
+    $("player").addEventListener("load", () => command("getStatus"));
     document.querySelectorAll("[data-seek]").forEach(bindSeek);
     new IntersectionObserver((entries) => {
       if (entries.some((x) => x.isIntersecting)) loadPage(false);
