@@ -556,7 +556,7 @@
       el.addEventListener("pointerup", () => { scrubbing = false; scrubTime = null; paintSeek(); });
     }
     function mount(at) {
-      frames();
+      frame();
       playing = true;
       mediaTime = at || 0;
       tickAt = Date.now();
