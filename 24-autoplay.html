@@ -518,10 +518,27 @@
       showChrome();
     });
     document.addEventListener('fullscreenchange', showChrome);
+
+    let screenWakeLock = null;
+    let wakeWanted = true;
+    async function keepScreenAwake() {
+      wakeWanted = true;
+      try {
+        if (!navigator.wakeLock || !navigator.wakeLock.request) return;
+        if (screenWakeLock && !screenWakeLock.released) return;
+        screenWakeLock = await navigator.wakeLock.request("screen");
+        screenWakeLock.addEventListener("release", () => {
+          screenWakeLock = null;
+          if (wakeWanted && document.visibilityState === "visible") setTimeout(keepScreenAwake, 400);
+        });
+      } catch (_) {}
+    }
     setInterval(tick, 1000);
+    keepScreenAwake();
     restoreInstant();
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && playlist.length) loadLive(); });
-    window.addEventListener('pageshow', () => { if (playlist.length) loadLive(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepScreenAwake(); if (playlist.length) loadLive(); } });
+    window.addEventListener('pageshow', () => { keepScreenAwake(); if (playlist.length) loadLive(); });
+    window.addEventListener('focus', keepScreenAwake);
     boot();
   </script>
 </body>
