@@ -367,9 +367,9 @@
     function filmSrc(id, at, mute, play) {
       const start = Math.max(0, Math.floor(at || 0));
       const q = quality === "auto" ? "1080" : quality;
-      if (server === 1) return `https://vidfast.pro/movie/${id}?autoPlay=${play ? "true" : "false"}&startAt=${start}&title=false&poster=false&hideServer=true&fullscreenButton=false&chromecast=false&theme=12c48b&sub=en`;
-      if (server === 2) return `https://vidlink.pro/movie/${id}?autoplay=${play ? "true" : "false"}&startAt=${start}&title=false&poster=false&primaryColor=12c48b&secondaryColor=04140e&player=jw`;
-      return `https://vixsrc.to/movie/${id}?autoplay=${play ? 1 : 0}&autoPlay=${play ? "true" : "false"}&muted=${mute ? 1 : 0}&lang=en&primaryColor=12c48b&secondaryColor=04140e&skin=vixsrc&canPlayFHD=1&quality=${q}&startAt=${start}`;
+      if (server === 1) return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=12c48b&secondaryColor=04140e&skin=vixsrc&canPlayFHD=1&quality=${q}&startAt=${start}`;
+      if (server === 2) return `https://vidlink.pro/movie/${id}?autoplay=true&startAt=${start}&title=false&poster=false&primaryColor=12c48b&secondaryColor=04140e`;
+      return `https://vidfast.pro/movie/${id}?autoPlay=true&startAt=${start}&title=false&poster=false&hideServer=true&fullscreenButton=false&chromecast=false&theme=12c48b&sub=en`;
     }
 
     let genre = 0, sort = 0, page = 1, query = "", loading = false, done = false;
@@ -493,21 +493,12 @@
       const node = frame();
       if (!node || !node.contentWindow) return;
       const time = typeof value === "number" ? value : nowTime();
-      const packets = [];
-      if (name === "play" || name === "pause") packets.push({ command: name });
-      if (name === "seek") packets.push({ command: "seek", time });
-      if (name === "volume") packets.push({ command: "volume", level: value });
-      if (name === "mute") packets.push({ command: "volume", level: 0 });
-      if (name === "unmute") packets.push({ command: "volume", level: 1 });
-      const api = name === "seek" ? "seek" : name === "volume" ? "volume" : name;
-      packets.push({ api, set: name === "volume" ? value : time });
-      packets.forEach((packet) => {
-        try { node.contentWindow.postMessage(packet, "*"); } catch (_) {}
-      });
-      const method = name === "seek" ? "setCurrentTime" : name === "volume" ? "setVolume" : name;
-      try {
-        node.contentWindow.postMessage(JSON.stringify({ context: "player.js", version: "0.0.11", method, value: name === "volume" ? value : time }), "*");
-      } catch (_) {}
+      let packet = null;
+      if (name === "play" || name === "pause") packet = { command: name };
+      if (name === "seek") packet = { command: "seek", time };
+      if (name === "volume") packet = { command: "volume", level: value };
+      if (!packet) return;
+      try { node.contentWindow.postMessage(packet, "*"); } catch (_) {}
     }
     function paintPlay() {
       $("playIcon").className = playing ? "fa-solid fa-pause" : "fa-solid fa-play";
@@ -691,10 +682,12 @@
         tickAt = Date.now();
       }
       if (typeof data.duration === "number" && data.duration > 0) duration = data.duration;
-      if (typeof data.playing === "boolean") { playing = data.playing; paintPlay(); }
-      if (eventName === "play") { playing = true; paintPlay(); }
-      if (eventName === "pause") { playing = false; paintPlay(); }
-      if (eventName === "ended") { playing = false; paintPlay(); }
+      if (typeof data.playing === "boolean") playing = data.playing;
+      if (typeof data.muted === "boolean") muted = data.muted;
+      if (eventName === "play") playing = true;
+      if (eventName === "pause") playing = false;
+      if (eventName === "ended") playing = false;
+      paintPlay();
       paintSeek();
     });
     document.querySelectorAll("[data-seek]").forEach(bindSeek);
