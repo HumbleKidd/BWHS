@@ -458,21 +458,30 @@
       }
       loading = false;
     }
-    let live = null, next = null;
-    function frames() {
-      if (!live) { live = $("playerA"); next = $("playerB"); }
-      return [live, next];
+    let live = null;
+    function frame() {
+      if (!live) live = $("playerA");
+      return live;
     }
-    function tell(frame, name, value) {
-      if (!frame || !frame.contentWindow) return;
+    function tell(name, value) {
+      const node = frame();
+      if (!node || !node.contentWindow) return;
       const time = typeof value === "number" ? value : nowTime();
-      const packets = [
-        { command: name, time, level: value },
-        { command: name === "volume" ? "volume" : name, time, level: value },
-        { api: name === "volume" ? "volume" : name === "seek" ? "seek" : name, set: value },
-        { event: "command", func: name === "volume" ? "setVolume" : name, args: [value] }
-      ];
-      packets.forEach((packet) => { try { frame.contentWindow.postMessage(packet, "*"); } catch (_) {} });
+      const packets = [];
+      if (name === "play" || name === "pause") packets.push({ command: name });
+      if (name === "seek") packets.push({ command: "seek", time });
+      if (name === "volume") packets.push({ command: "volume", level: value });
+      if (name === "mute") packets.push({ command: "volume", level: 0 });
+      if (name === "unmute") packets.push({ command: "volume", level: 1 });
+      const api = name === "seek" ? "seek" : name === "volume" ? "volume" : name;
+      packets.push({ api, set: name === "volume" ? value : time });
+      packets.forEach((packet) => {
+        try { node.contentWindow.postMessage(packet, "*"); } catch (_) {}
+      });
+      const method = name === "seek" ? "setCurrentTime" : name === "volume" ? "setVolume" : name;
+      try {
+        node.contentWindow.postMessage(JSON.stringify({ context: "player.js", version: "0.0.11", method, value: name === "volume" ? value : time }), "*");
+      } catch (_) {}
     }
     function paintPlay() {
       $("playIcon").className = playing ? "fa-solid fa-pause" : "fa-solid fa-play";
@@ -486,26 +495,6 @@
       void el.offsetWidth;
       el.classList.add("on");
     }
-    function swapIn(at, play) {
-      frames();
-      const incoming = next;
-      incoming.src = filmSrc(current.id, at, muted, play);
-      const show = () => {
-        incoming.classList.add("live");
-        live.classList.remove("live");
-        if (live.src && live.src !== "about:blank") live.src = "about:blank";
-        const old = live;
-        live = incoming;
-        next = old;
-        incoming.removeEventListener("load", show);
-      };
-      incoming.addEventListener("load", show);
-    }
-    function stopLive() {
-      frames();
-      tell(live, "pause");
-      if (live.src && live.src !== "about:blank") live.src = "about:blank";
-    }
     function pause() {
       if (!playing) return;
       mediaTime = nowTime();
@@ -513,7 +502,7 @@
       tickAt = Date.now();
       paintPlay();
       flash("fa-pause");
-      stopLive();
+      tell("pause");
       if (current) remember(current, mediaTime);
     }
     function resume() {
@@ -522,7 +511,7 @@
       tickAt = Date.now();
       paintPlay();
       flash("fa-play");
-      swapIn(mediaTime, true);
+      tell("play");
     }
     function toggle() { playing ? pause() : resume(); }
     function seekTo(seconds) {
@@ -530,10 +519,9 @@
       mediaTime = Math.max(0, Math.min(Math.max(dur - 0.2, 0), seconds));
       tickAt = Date.now();
       paintSeek();
-      frames();
-      tell(live, "seek", mediaTime);
-      if (current) swapIn(mediaTime, playing);
+      tell("seek", mediaTime);
     }
+
     function bindSeek(el) {
       const at = (event) => {
         const rect = el.getBoundingClientRect();
@@ -587,7 +575,7 @@
     function closeTheatre() {
       if (current) remember(current, nowTime());
       playing = false;
-      ["playerA","playerB"].forEach((id) => { const f=$(id); if (f) f.src="about:blank"; });
+      ["playerA","playerB"].forEach((id) => { const f=$(id); if (f && f.src !== "about:blank") f.src="about:blank"; });
       $("theatre").classList.remove("on");
       document.body.style.overflow = "";
       document.title = "Instree";
@@ -631,10 +619,7 @@
       e.preventDefault();
       muted = !muted;
       paintPlay();
-      frames();
-      tell(live, "volume", muted ? 0 : 1);
-      tell(live, muted ? "mute" : "unmute");
-      if (current) swapIn(nowTime(), playing);
+      tell(muted ? "mute" : "unmute", muted ? 0 : 1);
     });
     $("qualityBtn").addEventListener("click", () => $("qpop").classList.toggle("on"));
     $("qpop").addEventListener("click", (e) => {
@@ -655,7 +640,7 @@
     });
     $("serverBtn").addEventListener("click", () => {
       server = (server + 1) % 3;
-      swapIn(nowTime(), playing);
+      mount(nowTime());
       toast("Server " + (server + 1));
     });
     document.addEventListener("keydown", (e) => {
