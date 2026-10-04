@@ -205,7 +205,6 @@
         <div class="aura" id="aura"></div>
         <div class="screen" id="screen">
           <iframe id="frame" title="BWHS player" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *" allowfullscreen referrerpolicy="origin"></iframe>
-          <iframe id="warm" title="" aria-hidden="true" tabindex="-1" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px" referrerpolicy="origin"></iframe>
           <div class="hold" id="hold"></div>
           <div class="shield" id="shield"></div>
           <button class="bigplay" id="bigplay" type="button" aria-label="Play"><i class="fa-solid fa-play"></i></button>
@@ -302,14 +301,7 @@ function vix(id, start){
   });
   return "https://vixsrc.to/movie/"+id+"?"+q.toString();
 }
-function warm(id){
-  if(!id) return;
-  const url = vix(id, 0);
-  const w = $("warm");
-  if(w.dataset.url === url) return;
-  w.dataset.url = url;
-  w.src = url;
-}
+function warm(){}
 function command(name, value){
   const frame = $("frame");
   if(!frame.contentWindow) return;
@@ -352,20 +344,25 @@ function stopFilm(){
   clearTimeout(state.seekWait);
   showHold(true);
   const frame = $("frame");
-  frame.removeAttribute("src");
   frame.src = "about:blank";
   setPlayIcon();
   paintTime();
 }
-function togglePlay(){
+let lastToggle = 0;
+function togglePlay(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  const now = Date.now();
+  if(now - lastToggle < 450) return;
+  lastToggle = now;
   if(!state.film){ toast("Pick a film first"); return; }
-  if(state.playing || (!state.userHold && $("frame").src.indexOf("vixsrc.to") !== -1)){
+  const live = $("frame").src.indexOf("vixsrc.to") !== -1;
+  if(state.playing || live){
     stopFilm();
     return;
   }
   state.userHold = false;
   showHold(false);
-  mount(state.current);
+  mount(state.current || 0);
   state.playing = true;
   setPlayIcon();
 }
@@ -610,7 +607,7 @@ $("fsBtn").addEventListener("click", ()=>{
   else (s.requestFullscreen||s.webkitRequestFullscreen).call(s);
 });
 $("liveBtn").addEventListener("click", startLive);
-$("screen").addEventListener("click", (e)=>{ if(e.target.closest(".ib, .scrub, .vol, .speed, #playBtn, #bigplay")) return; showVeil(); togglePlay(); });
+$("screen").addEventListener("click", (e)=>{ if(e.target.closest(".scrub, .vol, .speed, #muteBtn, #back10, #fwd10, #nextBtn, #fsBtn")) return; togglePlay(e); });
 $("shield").addEventListener("dblclick", ()=>{
   const s=$("screen");
   if(document.fullscreenElement) document.exitFullscreen();
@@ -639,20 +636,7 @@ document.addEventListener("keydown", e => {
 let qTimer;
 $("q").addEventListener("input", e => {
   clearTimeout(qTimer);
-  qTimer = setTimeout(()=>{ state.query = e.target.value.trim(); 
-state.anchor = 0;
-function tick(){
-  if(state.playing && state.heard && state.anchor){
-    const step = (performance.now() - state.anchor) / 1000;
-    if(step > 0 && step < 1.2) state.current += step;
-    state.anchor = performance.now();
-    paintTime();
-  }
-  requestAnimationFrame(tick);
-}
-requestAnimationFrame(tick);
-
-loadPage(true); }, 280);
+  qTimer = setTimeout(()=>{ state.query = e.target.value.trim(); loadPage(true); }, 280);
 });
 const chips = $("chips");
 GENRES.forEach(g => {
@@ -662,20 +646,7 @@ GENRES.forEach(g => {
   b.addEventListener("click", ()=>{
     document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
     b.classList.add("on");
-    state.genre = g.id; state.query=""; $("q").value=""; 
-state.anchor = 0;
-function tick(){
-  if(state.playing && state.heard && state.anchor){
-    const step = (performance.now() - state.anchor) / 1000;
-    if(step > 0 && step < 1.2) state.current += step;
-    state.anchor = performance.now();
-    paintTime();
-  }
-  requestAnimationFrame(tick);
-}
-requestAnimationFrame(tick);
-
-loadPage(true);
+    state.genre = g.id; state.query=""; $("q").value=""; loadPage(true);
   });
   chips.appendChild(b);
 });
