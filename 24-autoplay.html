@@ -209,6 +209,23 @@
       box-shadow: 0 8px 18px rgba(79,70,229,.35); z-index: 3; white-space: nowrap;
     }
     .go-home:hover { transform: translate(-50%, -50%) scale(1.04); }
+
+    .reload-live { display: none; }
+    @media (max-width: 900px) {
+      .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+      .go-home { position: static; left: auto; top: auto; transform: none; margin: 0 auto; flex: 1 0 100%; text-align: center; width: fit-content; }
+      .brand, .tools { position: relative; z-index: 1; }
+      .tools { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-start; }
+      .pill, .tool { flex: 0 1 auto; }
+      .reload-live {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+        z-index: 40; border: 0; border-radius: 999px; padding: 12px 18px;
+        font-weight: 800; color: #fff; background: #0f172a;
+        box-shadow: 0 10px 24px rgba(15,23,42,.28); cursor: pointer;
+      }
+      body { padding-bottom: 74px; }
+    }
     .note { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; color: var(--muted); padding: 0 6px 4px; }
     @media (max-width: 900px) {
       .rail { grid-template-columns: 1fr 1fr; }
@@ -275,6 +292,7 @@
     </section>
     <p class="note">Live 24/7 channel. Movies keep playing, even after a reload.</p>
   </div>
+    <button class="reload-live" id="reloadLive" type="button"><i class="fa-solid fa-rotate-right"></i> Reload</button>
   <script>
     const TMDB = 'https://api.themoviedb.org/3';
     const KEY = '129637a8869a61522af21b80f6eb5129';
@@ -564,6 +582,7 @@
       loadLive(true);
     }
     $('fsBtn').addEventListener('click', toggleFs);
+    $('reloadLive').addEventListener('click', () => location.reload());
     $('fsExit').addEventListener('click', toggleFs);
     $('shield').addEventListener('click', () => {
       const now = Date.now();
