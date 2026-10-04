@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="referrer" content="origin" />
-  <title>24 AUTOPLAY · BWHS</title>
-  <meta name="description" content="Live 24 hour channel. Movies on continuous autoplay." />
+  <title>24/7 PLAY · BWHS</title>
+  <meta name="description" content="Live 24/7 channel. Movies keep playing, even after a reload." />
   <link rel="icon" href="./apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -196,11 +196,23 @@
     .miss-card div { min-width: 0; }
     .miss-card strong { display: block; font-size: 0.68rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .miss-card em { font-style: normal; color: var(--muted); font-size: 0.6rem; font-weight: 700; }
+
+    .topbar { position: relative; }
+    .go-home {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #4f46e5, #ec4899); color: #fff; text-decoration: none;
+      font-weight: 800; font-size: 0.78rem; padding: 8px 16px; border-radius: 999px;
+      box-shadow: 0 8px 18px rgba(79,70,229,.35); z-index: 3; white-space: nowrap;
+    }
+    .go-home:hover { transform: translate(-50%, -50%) scale(1.04); }
     .note { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; color: var(--muted); padding: 0 6px 4px; }
     @media (max-width: 900px) {
-      .rail { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .rail { grid-template-columns: 1fr 1fr; }
       .missed { border-radius: 22px; }
-      .miss-card:nth-child(n+4) { display: none; }
+      .miss-card { border-radius: 16px; align-items: flex-start; padding: 8px; }
+      .miss-card strong { white-space: normal; line-height: 1.25; }
+      .miss-card:nth-child(n+4) { display: flex; }
+      .go-home { font-size: 0.72rem; padding: 7px 12px; }
     }
     @media (max-width: 760px) {
       .hide-sm { display: none; }
@@ -216,8 +228,9 @@
     <header class="topbar">
       <a class="brand" href="https://bwhs.online" title="BWHS home">
         <img src="./Gemini_Generated_Image_kg21fkkg21fkkg21__1_-removebg-preview.png" alt="BWHS" />
-        <span><b>BWHS</b><small>24 AUTOPLAY</small></span>
+        <span><b>BWHS</b><small>24/7 PLAY</small></span>
       </a>
+      <a class="go-home" href="https://bwhs.online" title="Go home">Go Home</a>
       <div class="tools">
         <span class="pill live"><i class="dot"></i> ON AIR</span>
         <span class="pill genre" id="genrePill">Today</span>
@@ -241,7 +254,7 @@
     <section class="theatre">
       <div class="aura" id="aura"></div>
       <div class="viewport" id="viewport">
-        <iframe id="player" title="BWHS 24 Autoplay" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
+        <iframe id="player" title="BWHS 24/7 PLAY" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
         <div class="shield" id="shield"></div>
         <button class="fs-exit" id="fsExit" type="button"><i class="fa-solid fa-compress"></i> Theatre</button>
         <div class="boot" id="boot">Catching the live film…</div>
@@ -255,7 +268,7 @@
       </div>
       <div class="rail" id="missedRail"></div>
     </section>
-    <p class="note">Live 24 hour channel. Movies on continuous autoplay.</p>
+    <p class="note">Live 24/7 channel. Movies keep playing, even after a reload.</p>
   </div>
   <script>
     const TMDB = 'https://api.themoviedb.org/3';
@@ -401,7 +414,7 @@
       const film = spot.film;
       $('nowKicker').textContent = 'Now playing';
       $('nowTitle').textContent = film.title;
-      document.title = film.title + ' · 24 AUTOPLAY';
+      document.title = film.title + ' · 24/7 PLAY';
       $('nowSub').textContent = [film.year, prettyDate(film.date)].filter(Boolean).join(' · ');
       $('nowSyn').textContent = shortSyn(film.overview);
       if (film.poster) $('nowPoster').src = film.poster;
@@ -427,18 +440,37 @@
       });
       rail.scrollLeft = rail.scrollWidth;
     }
+    function remember(film, startAt) {
+      try { sessionStorage.setItem('bwhs247-live', JSON.stringify({ id: film.id, title: film.title, startAt, saved: Date.now() })); } catch (_) {}
+    }
+    function restoreInstant() {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('bwhs247-live') || 'null');
+        if (!saved || !saved.id) return;
+        const elapsed = Math.max(0, Math.floor((Date.now() - (saved.saved || Date.now())) / 1000));
+        const startAt = (saved.startAt || 0) + elapsed;
+        $('player').src = vixUrl(saved.id, startAt);
+        $('nowTitle').textContent = saved.title || 'Back on air';
+        $('boot').classList.add('hidden');
+        loadedId = saved.id;
+      } catch (_) {}
+    }
     function loadLive() {
       if (!playlist.length) return;
       const spot = liveSpot();
       paint(spot);
       paintMissed(spot);
-      if (loadedId === spot.film.id) return;
-      loadedId = spot.film.id;
       const startAt = Math.min(Math.floor(spot.into), Math.max(0, spot.film.dur - 12));
+      if (loadedId === spot.film.id && $('player').src) {
+        remember(spot.film, startAt);
+        return;
+      }
+      loadedId = spot.film.id;
       $('player').src = vixUrl(spot.film.id, startAt);
+      remember(spot.film, startAt);
       $('boot').classList.add('hidden');
       clearTimeout(handoff);
-      handoff = setTimeout(() => { loadedId = 0; loadLive(); }, Math.max(0, (spot.film.dur - spot.into) * 1000));
+      handoff = setTimeout(() => { loadedId = 0; loadLive(); }, Math.max(8000, (spot.film.dur - spot.into) * 1000));
     }
     function tick() {
       $('clockPill').textContent = nowClock();
@@ -487,6 +519,9 @@
     });
     document.addEventListener('fullscreenchange', showChrome);
     setInterval(tick, 1000);
+    restoreInstant();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && playlist.length) loadLive(); });
+    window.addEventListener('pageshow', () => { if (playlist.length) loadLive(); });
     boot();
   </script>
 </body>
