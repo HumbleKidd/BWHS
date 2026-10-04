@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<title>BWHS Lounge</title>
+<link rel="icon" href="./favicon-32x32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@450;560;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<style>
+  :root {
+    --ink:#0f172a; --muted:#64748b; --primary:#4f46e5; --primary-2:#6366f1;
+    --pink:#ec4899; --amber:#f59e0b; --cyan:#06b6d4; --green:#10b981;
+    --bg:#f4f7ff; --card:#ffffff; --line:#e7ecff; --soft:#eef2ff;
+    --shadow:0 18px 40px rgba(79,70,229,.12);
+    --safe: env(safe-area-inset-bottom);
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; }
+  body {
+    font-family:"Plus Jakarta Sans", system-ui, sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(900px 420px at -8% -10%, #ffe7c2, transparent 52%),
+      radial-gradient(820px 460px at 110% -6%, #e0e7ff, transparent 48%),
+      radial-gradient(700px 380px at 80% 110%, #fce7f3, transparent 46%),
+      var(--bg);
+  }
+  button, input, textarea { font-family:inherit; }
+  button { cursor:pointer; }
+  .hidden { display:none !important; }
+  .gate {
+    min-height:100dvh; display:grid; place-items:center; padding:22px;
+  }
+  .gate-card {
+    width:min(540px,100%); background:#fff; border-radius:28px; padding:28px 24px;
+    box-shadow:var(--shadow); animation:rise .45s ease;
+  }
+  @keyframes rise { from { opacity:0; transform:translateY(12px); } }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .logo {
+    width:48px; height:48px; border-radius:16px; display:grid; place-items:center;
+    color:#fff; font-weight:800; background:linear-gradient(135deg,#4f46e5,#ec4899);
+    box-shadow:0 10px 24px rgba(79,70,229,.35); flex:0 0 auto;
+  }
+  h1 { font-size:clamp(1.6rem, 4vw, 2rem); margin:16px 0 6px; letter-spacing:-.04em; }
+  .lede { color:var(--muted); margin:0 0 16px; line-height:1.45; }
+  .choices { display:grid; gap:10px; }
+  .choice, .send, .icon, .tab, .react, .chip {
+    border:0; border-radius:14px;
+  }
+  .choice {
+    background:#fff; border:1px solid #e0e7ff; padding:12px 14px; text-align:left;
+    font-weight:750; display:flex; gap:10px; align-items:center; color:var(--ink);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .choice:hover { transform:translateY(-2px); box-shadow:0 10px 20px rgba(79,70,229,.12); }
+  .choice.hot { background:linear-gradient(90deg,#4f46e5,#7c3aed); color:#fff; border:0; }
+  input[type=text], input[type=search], textarea {
+    width:100%; border:1.5px solid #e0e7ff; border-radius:14px; padding:12px 14px;
+    font-size:16px; font-weight:650; color:var(--ink); background:#fff; outline:none;
+  }
+  input:focus, textarea:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(79,70,229,.12); }
+  .app {
+    height:100dvh; display:grid; grid-template-columns:300px minmax(0,1fr) 280px;
+    gap:12px; padding:12px;
+  }
+  .panel {
+    background:rgba(255,255,255,.94); border-radius:22px; box-shadow:0 16px 40px rgba(15,23,42,.06);
+    min-height:0; backdrop-filter:blur(10px);
+  }
+  .side, .people { padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .site { color:var(--primary); font-size:12px; font-weight:800; text-decoration:none; }
+  .kicker { font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--pink); }
+  .search { position:relative; }
+  .hits, .mentions {
+    position:absolute; z-index:8; left:0; right:0; top:calc(100% + 6px);
+    background:#fff; border-radius:16px; box-shadow:0 16px 40px rgba(15,23,42,.14);
+    max-height:320px; overflow:auto;
+  }
+  .hit, .room, .mention {
+    width:100%; border:0; background:transparent; display:flex; gap:10px; align-items:center;
+    text-align:left; padding:8px; border-radius:12px; color:var(--ink); font-weight:700;
+  }
+  .hit:hover, .room:hover, .mention:hover { background:#eef2ff; }
+  .room { position:relative; }
+  .room.active { background:#eef2ff; }
+  .room small { display:block; color:var(--muted); font-weight:650; font-size:11px; }
+  .dot {
+    width:8px; height:8px; border-radius:50%; background:var(--pink); margin-left:auto;
+    box-shadow:0 0 0 0 rgba(236,72,153,.6); animation:pulse 1.4s infinite;
+  }
+  @keyframes pulse { 70% { box-shadow:0 0 0 7px transparent; } }
+  .poster { width:42px; height:62px; border-radius:8px; object-fit:cover; background:#e2e8f0; }
+  .rooms { overflow:auto; display:flex; flex-direction:column; gap:4px; min-height:0; }
+  .stage { display:flex; flex-direction:column; overflow:hidden; }
+  .top {
+    display:flex; justify-content:space-between; gap:8px; align-items:center;
+    padding:12px 14px; border-bottom:1px solid var(--line);
+  }
+  .room-title { font-weight:800; font-size:1.02rem; }
+  .subline { font-size:12px; color:var(--muted); font-weight:700; }
+  .pin {
+    margin:10px 14px 0; background:linear-gradient(90deg,#fff7ed,#eef2ff);
+    border-radius:14px; padding:10px 12px; display:flex; gap:8px; align-items:flex-start;
+    font-size:13px; font-weight:700;
+  }
+  .pin i { color:var(--amber); margin-top:2px; }
+  .feed { flex:1; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:8px; }
+  .msg {
+    max-width:min(680px,92%); background:#fff; border-radius:18px 18px 18px 6px;
+    padding:8px 10px 6px; box-shadow:0 8px 18px rgba(15,23,42,.05);
+    animation:pop .28s ease; border:1px solid #f1f5f9;
+  }
+  .msg.mine { align-self:flex-end; background:#eef2ff; border-radius:18px 18px 6px 18px; }
+  @keyframes pop { from { opacity:0; transform:translateY(8px) scale(.98); } }
+  .who { font-size:12px; font-weight:800; color:var(--primary); background:none; border:0; padding:0; }
+  .who:hover { text-decoration:underline; }
+  .reply {
+    font-size:12px; color:var(--muted); border-left:3px solid var(--pink);
+    padding-left:8px; margin:4px 0; cursor:pointer;
+  }
+  .bubble { font-size:15px; line-height:1.45; white-space:pre-wrap; word-break:break-word; }
+  .bubble .at, .bubble .hash {
+    color:var(--primary); font-weight:800; background:none; border:0; padding:0; font-size:inherit;
+  }
+  .bubble .hash { color:#b45309; }
+  .spoiler { filter:blur(7px); cursor:pointer; user-select:none; }
+  .spoiler.open { filter:none; }
+  .film {
+    display:flex; gap:8px; align-items:center; background:#fff7ed; border-radius:12px;
+    padding:6px; cursor:pointer; margin-top:6px; border:0; width:100%; text-align:left; color:inherit;
+  }
+  .film:hover { transform:translateY(-1px); }
+  .shot, .voice { max-width:240px; border-radius:12px; margin-top:6px; }
+  .voice { width:220px; }
+  .reacts { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; }
+  .react {
+    background:#fff; border:1px solid var(--line); padding:3px 8px; font-size:12px; font-weight:800;
+  }
+  .react.on { background:#fff1f2; border-color:#fecdd3; }
+  .msg-tools { display:flex; gap:6px; margin-top:4px; }
+  .tool {
+    border:0; background:transparent; color:var(--muted); font-size:11px; font-weight:800; padding:2px 0;
+  }
+  .composer-wrap { border-top:1px solid var(--line); padding:8px 10px 10px; }
+  .replybar, .note, .typing { font-size:12px; color:var(--muted); font-weight:700; min-height:16px; }
+  .typing { color:var(--primary); padding:0 14px; }
+  .composer { display:grid; grid-template-columns:auto auto auto 1fr auto; gap:8px; align-items:end; }
+  .icon {
+    background:#fff; border:1px solid var(--line); width:42px; height:42px; color:var(--ink);
+    display:grid; place-items:center;
+  }
+  .icon.on { background:linear-gradient(135deg,#f59e0b,#ec4899); color:#fff; border:0; }
+  .send {
+    background:linear-gradient(180deg,#6366f1,#4f46e5); color:#fff; font-weight:800;
+    height:42px; padding:0 14px;
+  }
+  .send:hover { transform:translateY(-1px); }
+  .person { display:flex; gap:8px; align-items:center; padding:6px 0; font-size:14px; font-weight:700; width:100%; background:none; border:0; text-align:left; }
+  .avatar {
+    width:28px; height:28px; border-radius:50%; display:grid; place-items:center; color:#fff;
+    font-size:12px; font-weight:800; background:linear-gradient(135deg,#4f46e5,#06b6d4);
+  }
+  .live { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 0 4px rgba(16,185,129,.15); }
+  .sheet, .modal {
+    position:fixed; inset:0; background:rgba(15,23,42,.48); display:grid; place-items:center;
+    padding:16px; z-index:30;
+  }
+  .card {
+    width:min(860px,100%); background:#fff; border-radius:24px; overflow:hidden; box-shadow:var(--shadow);
+  }
+  .card-top, .sheet-top { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; }
+  iframe { width:100%; height:min(62dvh,480px); border:0; background:#0f172a; }
+  .person-card { width:min(420px,100%); padding:8px 16px 18px; }
+  .tabs { display:none; }
+  .film-hero { display:flex; gap:12px; padding:0 14px 12px; }
+  .film-hero img { width:72px; border-radius:10px; }
+  @media (max-width:980px) {
+    .app { grid-template-columns:1fr; height:100dvh; padding:8px 8px 72px; }
+    .side, .people { display:none; }
+    .side.open, .people.open {
+      display:flex; position:fixed; inset:0 0 64px 0; z-index:20; border-radius:0;
+    }
+    .feed { min-height:0; }
+    .tabs {
+      display:flex; position:fixed; left:10px; right:10px; bottom:10px; height:56px;
+      background:#fff; border-radius:18px; box-shadow:0 10px 24px rgba(15,23,42,.12);
+      z-index:25; align-items:center; justify-content:space-around; padding-bottom:var(--safe);
+    }
+    .tab { background:none; color:var(--muted); font-size:11px; font-weight:800; display:flex; flex-direction:column; gap:2px; align-items:center; }
+    .tab.on { color:var(--primary); }
+    .composer { grid-template-columns:auto auto auto 1fr auto; }
+  }
+</style>
+</head>
+<body>
+<section class="gate" id="gate">
+  <div class="gate-card">
+    <div class="brand"><div class="logo">B</div><div><strong>BWHS Lounge</strong><br><a class="site" href="https://bwhs.online" target="_blank" rel="noopener">bwhs.online</a></div></div>
+    <div class="kicker" style="margin-top:14px">Private test room</div>
+    <h1>Talk the film. Tag the people.</h1>
+    <p class="lede">Rooms for every title, replies, @mentions, spoilers, and posters you can open. Not linked on the home page yet.</p>
+    <div class="choices">
+      <button class="choice hot" id="jump"><i class="fa-solid fa-bolt"></i> Jump in with a random name</button>
+      <input id="customName" type="text" maxlength="24" placeholder="Or type your name" />
+      <button class="choice" id="useCustom"><i class="fa-solid fa-user"></i> Use that name</button>
+      <button class="choice" id="googleBtn"><i class="fa-brands fa-google"></i> Continue with Google</button>
+    </div>
+  </div>
+</section>
+
+<div class="app hidden" id="app">
+  <aside class="panel side" id="side">
+    <div class="brand">
+      <div class="logo">B</div>
+      <div><strong>BWHS Lounge</strong><br><a class="site" href="https://bwhs.online">Back to films</a></div>
+    </div>
+    <div class="search">
+      <input id="movieQ" type="search" placeholder="Search a movie or show" />
+      <div id="hits" class="hits hidden"></div>
+    </div>
+    <button class="choice" id="newRoom"><i class="fa-solid fa-plus"></i> Create a room</button>
+    <div class="search">
+      <input id="roomFilter" type="search" placeholder="Filter rooms" />
+    </div>
+    <div class="rooms" id="rooms"></div>
+  </aside>
+
+  <main class="panel stage">
+    <div class="top">
+      <div style="min-width:0">
+        <div class="room-title" id="roomTitle"># general</div>
+        <div class="subline" id="conn">Connecting</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="icon" id="share" title="Copy room link"><i class="fa-solid fa-link"></i></button>
+        <button class="icon" id="closeSide" title="Rooms"><i class="fa-solid fa-bars"></i></button>
+      </div>
+    </div>
+    <div class="pin hidden" id="pin"></div>
+    <div class="feed" id="feed"></div>
+    <div class="typing" id="typing"></div>
+    <div class="composer-wrap">
+      <div class="replybar" id="replyBar"></div>
+      <form class="composer" id="composer">
+        <button type="button" class="icon" id="picBtn" title="Photo"><i class="fa-solid fa-image"></i></button>
+        <button type="button" class="icon" id="micBtn" title="Voice note"><i class="fa-solid fa-microphone"></i></button>
+        <button type="button" class="icon" id="filmBtn" title="Tag a film"><i class="fa-solid fa-clapperboard"></i></button>
+        <input id="box" type="text" maxlength="800" placeholder="Message, @name, or #film" autocomplete="off" />
+        <button class="send" type="submit">Send</button>
+      </form>
+      <div class="note" id="note">Reply, react, or pin from any bubble. Spoilers stay blurred until tapped.</div>
+      <div class="hits hidden" id="inlineHits"></div>
+    </div>
+    <input id="file" type="file" accept="image/*" class="hidden" />
+  </main>
+
+  <aside class="panel people" id="people">
+    <strong>Here now</strong>
+    <div id="online"></div>
+    <div id="filmCard"></div>
+    <p class="lede">Tag a title to open its room. Tap a name to mention them.</p>
+  </aside>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button class="tab" data-tab="rooms"><i class="fa-solid fa-comments"></i>Rooms</button>
+  <button class="tab on" data-tab="chat"><i class="fa-solid fa-message"></i>Chat</button>
+  <button class="tab" data-tab="people"><i class="fa-solid fa-users"></i>People</button>
+</nav>
+
+<div class="modal hidden" id="modal">
+  <div class="card">
+    <div class="card-top"><strong id="modalTitle">Film</strong><button class="icon" id="closeModal">✕</button></div>
+    <div class="film-hero" id="filmHero"></div>
+    <div style="display:flex;gap:8px;padding:0 14px 10px;flex-wrap:wrap">
+      <button class="choice" id="playTrailer">Play trailer</button>
+      <a class="choice hot" id="watchOnBwhs" href="https://bwhs.online" target="_blank" rel="noopener">Watch on BWHS</a>
+      <button class="choice" id="openFilmRoom">Open this film's room</button>
+    </div>
+    <iframe id="frame" allow="autoplay *; fullscreen *; encrypted-media *" allowfullscreen></iframe>
+  </div>
+</div>
+
+<div class="sheet hidden" id="personSheet">
+  <div class="card person-card">
+    <div class="card-top"><strong id="personName">Member</strong><button class="icon" id="closePerson">✕</button></div>
+    <p class="lede" id="personMeta"></p>
+    <button class="choice hot" id="mentionPerson"><i class="fa-solid fa-at"></i> Mention</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const CFG = {
+  apiKey: "AIzaSyBrOc4fG4Xo4HIMkVHW9ptcfkr1POZI9VA",
+  authDomain: "chat-bwhs-films.firebaseapp.com",
+  databaseURL: "https://chat-bwhs-films-default-rtdb.firebaseio.com",
+  projectId: "chat-bwhs-films"
+};
+const TMDB = "129637a8869a61522af21b80f6eb5129";
+const REACTIONS = ["🔥","😂","👏","👀"];
+const feed = document.getElementById("feed");
+const box = document.getElementById("box");
+const roomsEl = document.getElementById("rooms");
+let me = JSON.parse(localStorage.getItem("bwhs-lounge") || "null");
+let room = (location.hash || "#general").replace("#","").split("?")[0] || "general";
+let db, live = false, reply = null, rec = null, chunks = [];
+let seen = new Map();
+let peopleHere = [];
+let roomUnsub = [];
+let typingTimer = null;
+let draftFilm = null;
+let spoilerOn = false;
+let currentFilm = null;
+let activePerson = null;
+const lastRead = JSON.parse(localStorage.getItem("bwhs-read") || "{}");
+const rooms = JSON.parse(localStorage.getItem("bwhs-rooms") || "null") || [
+  {id:"general", title:"General hangout"},
+  {id:"now-watching", title:"Now watching"},
+  {id:"trailers", title:"Trailer talk"}
+];
+
+function saveRooms(){ localStorage.setItem("bwhs-rooms", JSON.stringify(rooms)); }
+function esc(s){ return String(s || "").replace(/[&<>"]/g, c => ({ "&":"&","<":"<",">":">","\"":""" }[c])); }
+function toast(text){ document.getElementById("note").textContent = text; }
+
+function enter(name){
+  me = me && me.uid ? me : { color:"#4f46e5", uid: localStorage.getItem("bwhs-uid") || ("u"+Math.random().toString(36).slice(2,8)) };
+  me.name = String(name || "Guest").slice(0,24);
+  localStorage.setItem("bwhs-lounge", JSON.stringify(me));
+  localStorage.setItem("bwhs-uid", me.uid);
+  document.getElementById("gate").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  boot();
+}
+document.getElementById("jump").onclick = () => enter("Guest"+Math.floor(Math.random()*90+10));
+document.getElementById("useCustom").onclick = () => { const n = document.getElementById("customName").value.trim(); if (n) enter(n); };
+document.getElementById("customName").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("useCustom").click(); });
+document.getElementById("googleBtn").onclick = async () => {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(CFG);
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const cred = await firebase.auth().signInWithPopup(provider);
+    enter(cred.user.displayName || "Google guest");
+  } catch (err) {
+    alert("Google sign-in is not on yet. Use a name, or enable Google in Firebase Authentication.");
+  }
+};
+
+function renderRooms(){
+  const q = (document.getElementById("roomFilter").value || "").toLowerCase();
+  roomsEl.innerHTML = "";
+  rooms.filter(r => !q || (r.title || r.id).toLowerCase().includes(q)).forEach(r => {
+    const b = document.createElement("button");
+    b.className = "room" + (r.id === room ? " active" : "");
+    const unread = r.lastTs && lastRead[r.id] && r.lastTs > lastRead[r.id] && r.id !== room;
+    b.innerHTML = `<i class="fa-solid fa-hashtag"></i><span><b>${esc(r.title || r.id)}</b><small>${esc(r.preview || "Jump in")}</small></span>${unread ? '<i class="dot"></i>' : ""}`;
+    b.onclick = () => openRoom(r.id);
+    roomsEl.appendChild(b);
+  });
+  const meta = rooms.find(r => r.id === room);
+  document.getElementById("roomTitle").textContent = "# " + ((meta && meta.title) || room);
+}
+document.getElementById("roomFilter").oninput = renderRooms;
+
+function openRoom(id){
+  room = id;
+  history.replaceState(null, "", "#" + id);
+  seen = new Map();
+  feed.innerHTML = "";
+  draftFilm = null;
+  reply = null;
+  document.getElementById("replyBar").textContent = "";
+  lastRead[id] = Date.now();
+  localStorage.setItem("bwhs-read", JSON.stringify(lastRead));
+  renderRooms();
+  listen();
+  document.getElementById("side").classList.remove("open");
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.tab === "chat"));
+}
+document.getElementById("newRoom").onclick = () => {
+  const title = (prompt("Room name") || "").trim().slice(0,32);
+  if (!title) return;
+  const id = title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,28) || "room";
+  upsertRoom({id, title});
+  openRoom(id);
+};
+
+function upsertRoom(info){
+  const hit = rooms.find(r => r.id === info.id);
+  if (hit) Object.assign(hit, info);
+  else rooms.unshift(info);
+  saveRooms();
+  renderRooms();
+  if (live) db.ref("catalog/"+info.id).update({ title: info.title || info.id, film: info.film || null, ts: Date.now() });
+}
+
+function paintMessage(msg, mine){
+  let el = document.getElementById("m-"+msg.id);
+  if (!el) {
+    el = document.createElement("article");
+    el.className = "msg" + (mine ? " mine" : "");
+    el.id = "m-" + (msg.id || Math.random().toString(36).slice(2));
+    feed.appendChild(el);
+  }
+  el.innerHTML = "";
+  const who = document.createElement("button");
+  who.className = "who";
+  who.textContent = msg.name || "Guest";
+  who.onclick = () => openPerson(msg);
+  el.appendChild(who);
+  if (msg.replyTo && (msg.replyTo.text || msg.replyTo.name)) {
+    const r = document.createElement("div");
+    r.className = "reply";
+    r.textContent = (msg.replyTo.name || "Guest") + ": " + (msg.replyTo.text || "attachment");
+    r.onclick = () => {
+      const parent = document.getElementById("m-" + msg.replyTo.id);
+      if (parent) parent.scrollIntoView({ behavior:"smooth", block:"center" });
+    };
+    el.appendChild(r);
+  }
+  if (msg.film && msg.film.title) el.appendChild(filmChip(msg.film));
+  if (msg.image) {
+    const img = document.createElement("img");
+    img.className = "shot";
+    img.src = msg.image;
+    el.appendChild(img);
+  }
+  if (msg.audio) {
+    const a = document.createElement("audio");
+    a.className = "voice";
+    a.controls = true;
+    a.src = msg.audio;
+    el.appendChild(a);
+  }
+  if (msg.text) {
+    const b = document.createElement("div");
+    b.className = "bubble" + (msg.spoiler ? " spoiler" : "");
+    b.innerHTML = linkText(msg.text);
+    b.querySelectorAll("[data-mention]").forEach(n => n.onclick = () => openPerson({ name:n.dataset.mention, uid:n.dataset.uid || "" }));
+    b.querySelectorAll("[data-hash]").forEach(n => n.onclick = () => searchAndOpen(n.dataset.hash));
+    if (msg.spoiler) b.onclick = () => b.classList.toggle("open");
+    el.appendChild(b);
+  }
+  const reacts = document.createElement("div");
+  reacts.className = "reacts";
+  REACTIONS.forEach(emo => {
+    const count = msg.reactions && msg.reactions[emo] ? Object.keys(msg.reactions[emo]).length : 0;
+    const btn = document.createElement("button");
+    btn.className = "react" + (msg.reactions && msg.reactions[emo] && msg.reactions[emo][me.uid] ? " on" : "");
+    btn.textContent = emo + (count ? " " + count : "");
+    btn.onclick = () => toggleReact(msg, emo);
+    reacts.appendChild(btn);
+  });
+  el.appendChild(reacts);
+  const tools = document.createElement("div");
+  tools.className = "msg-tools";
+  const replyBtn = document.createElement("button");
+  replyBtn.className = "tool";
+  replyBtn.textContent = "Reply";
+  replyBtn.onclick = () => setReply(msg);
+  const pinBtn = document.createElement("button");
+  pinBtn.className = "tool";
+  pinBtn.textContent = "Pin";
+  pinBtn.onclick = () => pinMessage(msg);
+  const spoilBtn = document.createElement("button");
+  spoilBtn.className = "tool";
+  spoilBtn.textContent = msg.spoiler ? "Spoiler on" : "Mark spoiler";
+  spoilBtn.onclick = () => markSpoiler(msg);
+  tools.append(replyBtn, pinBtn, spoilBtn);
+  el.appendChild(tools);
+  let x0 = 0;
+  el.addEventListener("touchstart", e => x0 = e.touches[0].clientX, {passive:true});
+  el.addEventListener("touchend", e => { if (e.changedTouches[0].clientX - x0 > 70) setReply(msg); });
+  return el;
+}
+function linkText(text){
+  return esc(text).replace(/@([A-Za-z0-9_]{2,24})/g, (m, name) => `<button type="button" class="at" data-mention="${name}">@${name}</button>`)
+    .replace(/#([A-Za-z0-9][A-Za-z0-9 .:'-]{1,40})/g, (m, name) => `<button type="button" class="hash" data-hash="${esc(name)}">#${esc(name)}</button>`);
+}
+function filmChip(film){
+  const f = document.createElement("button");
+  f.className = "film";
+  if (film.poster) {
+    const img = document.createElement("img");
+    img.className = "poster";
+    img.src = film.poster;
+    f.appendChild(img);
+  }
+  const t = document.createElement("div");
+  t.innerHTML = `<b>${esc(film.title)}</b><br><span>${esc(film.year || "")} ${film.rating ? "· ★ " + film.rating : ""}</span>`;
+  f.appendChild(t);
+  f.onclick = () => openFilm(film);
+  return f;
+}
+function add(msg){
+  if (msg.id && seen.has(msg.id)) {
+    seen.set(msg.id, msg);
+    paintMessage(msg, msg.uid === me.uid);
+    return;
+  }
+  if (msg.id) seen.set(msg.id, msg);
+  paintMessage(msg, msg.uid === me.uid);
+  feed.scrollTop = feed.scrollHeight;
+}
+function setReply(msg){
+  reply = { id: msg.id || "", name: msg.name || "Guest", text: (msg.text || (msg.film && msg.film.title) || "attachment").slice(0,80) };
+  document.getElementById("replyBar").textContent = "Replying to " + reply.name + " · " + reply.text;
+}
+function clearReply(){ reply = null; document.getElementById("replyBar").textContent = ""; }
+
+async function send(extra){
+  const text = (extra && extra.text != null) ? extra.text : box.value.trim();
+  const film = (extra && extra.film) || draftFilm;
+  if (!text && !(extra && (extra.image || extra.audio)) && !film) return;
+  const msg = {
+    uid: me.uid,
+    name: me.name,
+    text: text || (film ? film.title : " "),
+    ts: Date.now(),
+    replyTo: reply || null,
+    spoiler: spoilerOn,
+    film: film || null
+  };
+  if (extra && extra.image) msg.image = extra.image;
+  if (extra && extra.audio) msg.audio = extra.audio;
+  box.value = "";
+  draftFilm = null;
+  spoilerOn = false;
+  clearReply();
+  hideInline();
+  if (!live) {
+    add(msg);
+    toast("On this screen only. Database rules are still locked.");
+    return;
+  }
+  try {
+    const ref = await db.ref("rooms/"+room+"/messages").push(msg);
+    await db.ref("catalog/"+room).update({ title: (rooms.find(r => r.id === room) || {}).title || room, lastTs: msg.ts, preview: msg.text.slice(0,80) });
+    toast("Sent to everyone in this room.");
+    add({ id: ref.key, ...msg });
+  } catch (err) {
+    add(msg);
+    toast("Blocked by database rules. Publish the rules, then send again.");
+  }
+}
+document.getElementById("composer").onsubmit = e => { e.preventDefault(); send(); };
+
+function toggleReact(msg, emo){
+  if (!live || !msg.id) { toast("Reactions need the live room."); return; }
+  const path = db.ref("rooms/"+room+"/messages/"+msg.id+"/reactions/"+emo+"/"+me.uid);
+  const on = msg.reactions && msg.reactions[emo] && msg.reactions[emo][me.uid];
+  if (on) path.remove();
+  else path.set(me.name);
+}
+function pinMessage(msg){
+  const pin = { text: (msg.text || "Pinned").slice(0,140), by: msg.name, ts: Date.now(), msgId: msg.id || "" };
+  paintPin(pin);
+  if (live) db.ref("rooms/"+room+"/pin").set(pin);
+}
+function markSpoiler(msg){
+  if (!live || !msg.id) { toast("Open the live room to mark spoilers for everyone."); return; }
+  db.ref("rooms/"+room+"/messages/"+msg.id+"/spoiler").set(!msg.spoiler);
+}
+function paintPin(pin){
+  const el = document.getElementById("pin");
+  if (!pin || !pin.text) { el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+  el.innerHTML = `<i class="fa-solid fa-thumbtack"></i><div><b>Pinned by ${esc(pin.by || "someone")}</b><br>${esc(pin.text)}</div>`;
+}
+
+document.getElementById("picBtn").onclick = () => document.getElementById("file").click();
+document.getElementById("file").onchange = () => {
+  const file = document.getElementById("file").files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas");
+    const scale = Math.min(1, 520 / img.width);
+    c.width = img.width * scale;
+    c.height = img.height * scale;
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    send({ text: box.value.trim() || "shared a photo", image: c.toDataURL("image/jpeg", .62) });
+  };
+  img.src = URL.createObjectURL(file);
+};
+document.getElementById("micBtn").onclick = async () => {
+  if (rec && rec.state === "recording") { rec.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    chunks = [];
+    rec = new MediaRecorder(stream);
+    rec.ondataavailable = e => chunks.push(e.data);
+    rec.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(chunks, {type: rec.mimeType || "audio/webm"});
+      const reader = new FileReader();
+      reader.onload = () => send({ text: "sent a voice note", audio: reader.result });
+      reader.readAsDataURL(blob);
+    };
+    rec.start();
+    toast("Recording… tap the mic again to send.");
+    setTimeout(() => { if (rec && rec.state === "recording") rec.stop(); }, 20000);
+  } catch (err) { toast("Mic permission is needed for voice notes."); }
+};
+
+let timer;
+function searchFilms(q, target){
+  clearTimeout(timer);
+  if (q.length < 2) { target.classList.add("hidden"); return; }
+  timer = setTimeout(async () => {
+    const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    target.innerHTML = "";
+    target.classList.remove("hidden");
+    (data.results || []).filter(x => x.media_type !== "person" && (x.title || x.name)).slice(0,7).forEach(item => {
+      const b = document.createElement("button");
+      b.className = "hit";
+      b.type = "button";
+      const poster = item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : "";
+      if (poster) { const img = document.createElement("img"); img.className = "poster"; img.src = poster; b.appendChild(img); }
+      const label = document.createElement("span");
+      label.textContent = `${item.title || item.name} · ${(item.release_date || item.first_air_date || "").slice(0,4)}`;
+      b.appendChild(label);
+      b.onclick = () => pickFilm(item);
+      target.appendChild(b);
+    });
+  }, 220);
+}
+document.getElementById("movieQ").oninput = () => searchFilms(document.getElementById("movieQ").value.trim(), document.getElementById("hits"));
+document.getElementById("filmBtn").onclick = () => {
+  document.getElementById("inlineHits").classList.remove("hidden");
+  searchFilms(box.value.replace(/^#/, "") || "dune", document.getElementById("inlineHits"));
+};
+box.addEventListener("input", () => {
+  const val = box.value;
+  const at = val.match(/@([A-Za-z0-9_]{1,24})$/);
+  const hash = val.match(/#([A-Za-z0-9 .:'-]{1,40})$/);
+  if (at) showMentions(at[1]);
+  else if (hash) searchFilms(hash[1], document.getElementById("inlineHits"));
+  else hideInline();
+  pulseTyping();
+});
+function hideInline(){ document.getElementById("inlineHits").classList.add("hidden"); document.getElementById("hits").classList.add("hidden"); }
+function showMentions(q){
+  const boxEl = document.getElementById("inlineHits");
+  boxEl.innerHTML = "";
+  boxEl.classList.remove("hidden");
+  peopleHere.filter(p => p.name && p.name.toLowerCase().includes(q.toLowerCase())).forEach(p => {
+    const b = document.createElement("button");
+    b.className = "mention";
+    b.type = "button";
+    b.textContent = "@" + p.name.replace(/\s+/g, "");
+    b.onclick = () => {
+      box.value = box.value.replace(/@([A-Za-z0-9_]{1,24})$/, "@" + p.name.replace(/\s+/g,"") + " ");
+      hideInline();
+      box.focus();
+    };
+    boxEl.appendChild(b);
+  });
+}
+function filmFrom(item){
+  return {
+    id:item.id,
+    type:item.media_type || (item.title ? "movie" : "tv"),
+    title:item.title || item.name,
+    year:(item.release_date || item.first_air_date || "").slice(0,4),
+    rating:item.vote_average ? Number(item.vote_average).toFixed(1) : "",
+    poster:item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : ""
+  };
+}
+function pickFilm(item){
+  const film = filmFrom(item);
+  hideInline();
+  document.getElementById("movieQ").value = "";
+  draftFilm = film;
+  const id = "film-" + film.type + "-" + film.id;
+  upsertRoom({id, title: film.title, film, preview: "Film room"});
+  openRoom(id);
+  send({ text: "opened a room for this", film });
+  paintFilmCard(film);
+}
+async function searchAndOpen(name){
+  const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${encodeURIComponent(name)}`);
+  const data = await res.json();
+  const item = (data.results || []).find(x => x.media_type !== "person" && (x.title || x.name));
+  if (item) openFilm(filmFrom(item));
+}
+function openFilm(film){
+  currentFilm = film;
+  document.getElementById("modalTitle").textContent = film.title;
+  document.getElementById("filmHero").innerHTML = `${film.poster ? `<img src="${film.poster}" alt="">` : ""}<div><b>${esc(film.title)}</b><br>${esc(film.year || "")} ${film.rating ? "· ★ " + film.rating : ""}</div>`;
+  const kind = film.type === "tv" ? "tv" : "movie";
+  document.getElementById("watchOnBwhs").href = `https://bwhs.online/#/watch/${kind}/${film.id}${kind === "tv" ? "/1/1" : ""}`;
+  document.getElementById("modal").classList.remove("hidden");
+  document.getElementById("frame").src = "about:blank";
+  paintFilmCard(film);
+}
+document.getElementById("closeModal").onclick = () => { document.getElementById("modal").classList.add("hidden"); document.getElementById("frame").src = "about:blank"; };
+document.getElementById("playTrailer").onclick = async () => {
+  const kind = currentFilm.type === "tv" ? "tv" : "movie";
+  const res = await fetch(`https://api.themoviedb.org/3/${kind}/${currentFilm.id}/videos?api_key=${TMDB}`);
+  const data = await res.json();
+  const clip = (data.results || []).find(v => v.site === "YouTube" && v.type === "Trailer") || (data.results || []).find(v => v.site === "YouTube");
+  document.getElementById("frame").src = clip ? `https://www.youtube.com/embed/${clip.key}?autoplay=1` : "about:blank";
+};
+document.getElementById("openFilmRoom").onclick = () => {
+  if (!currentFilm) return;
+  const id = "film-" + currentFilm.type + "-" + currentFilm.id;
+  upsertRoom({id, title: currentFilm.title, film: currentFilm});
+  document.getElementById("modal").classList.add("hidden");
+  openRoom(id);
+};
+function paintFilmCard(film){
+  const el = document.getElementById("filmCard");
+  if (!film) { el.innerHTML = ""; return; }
+  el.innerHTML = "";
+  el.appendChild(filmChip(film));
+}
+
+function openPerson(msg){
+  activePerson = msg;
+  document.getElementById("personName").textContent = msg.name || "Member";
+  document.getElementById("personMeta").textContent = msg.uid ? "In this room now. Mention to pull them into the thread." : "From an earlier message.";
+  document.getElementById("personSheet").classList.remove("hidden");
+}
+document.getElementById("closePerson").onclick = () => document.getElementById("personSheet").classList.add("hidden");
+document.getElementById("mentionPerson").onclick = () => {
+  if (!activePerson) return;
+  const tag = "@" + String(activePerson.name || "guest").replace(/\s+/g, "");
+  box.value = (box.value ? box.value + " " : "") + tag + " ";
+  document.getElementById("personSheet").classList.add("hidden");
+  box.focus();
+};
+
+function pulseTyping(){
+  if (!live) return;
+  db.ref("rooms/"+room+"/typing/"+me.uid).set({ name: me.name, ts: Date.now() });
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(() => db.ref("rooms/"+room+"/typing/"+me.uid).remove(), 1600);
+}
+function renderPeople(){
+  const boxEl = document.getElementById("online");
+  boxEl.innerHTML = "";
+  peopleHere.filter(p => p.room === room).forEach(p => {
+    const b = document.createElement("button");
+    b.className = "person";
+    b.innerHTML = `<span class="avatar">${esc((p.name || "?").slice(0,1))}</span><span>${esc(p.name)}</span><i class="live"></i>`;
+    b.onclick = () => openPerson(p);
+    boxEl.appendChild(b);
+  });
+}
+function renderTyping(map){
+  const names = Object.entries(map || {}).filter(([uid, v]) => uid !== me.uid && v && Date.now() - (v.ts || 0) < 4000).map(([, v]) => v.name);
+  document.getElementById("typing").textContent = names.length ? names.join(", ") + (names.length > 1 ? " are typing" : " is typing") : "";
+}
+
+function clearListen(){ roomUnsub.forEach(fn => fn()); roomUnsub = []; }
+function listen(){
+  clearListen();
+  paintPin(null);
+  if (!live) return;
+  const msgRef = db.ref("rooms/"+room+"/messages").limitToLast(80);
+  const onAdd = msgRef.on("child_added", snap => add({ id:snap.key, ...snap.val() }));
+  const onChange = msgRef.on("child_changed", snap => add({ id:snap.key, ...snap.val() }));
+  roomUnsub.push(() => msgRef.off("child_added", onAdd), () => msgRef.off("child_changed", onChange));
+  const pinRef = db.ref("rooms/"+room+"/pin");
+  const onPin = pinRef.on("value", snap => paintPin(snap.val()));
+  roomUnsub.push(() => pinRef.off("value", onPin));
+  const typeRef = db.ref("rooms/"+room+"/typing");
+  const onType = typeRef.on("value", snap => renderTyping(snap.val()));
+  roomUnsub.push(() => typeRef.off("value", onType));
+  db.ref("presence/"+me.uid).onDisconnect().remove();
+  db.ref("presence/"+me.uid).set({ name: me.name, room, ts: Date.now() });
+  const meta = rooms.find(r => r.id === room);
+  if (meta && meta.film) paintFilmCard(meta.film);
+}
+function watchPresence(){
+  db.ref("presence").on("value", snap => {
+    peopleHere = [];
+    snap.forEach(c => { const v = c.val(); if (v) peopleHere.push({ uid:c.key, ...v }); });
+    renderPeople();
+  });
+  db.ref("catalog").on("value", snap => {
+    snap.forEach(c => {
+      const v = c.val() || {};
+      upsertRoom({ id:c.key, title:v.title || c.key, film:v.film || null, lastTs:v.lastTs || 0, preview:v.preview || "" });
+    });
+  });
+}
+
+async function boot(){
+  renderRooms();
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(CFG);
+    db = firebase.database();
+    if (!firebase.auth().currentUser) await firebase.auth().signInAnonymously();
+    me.uid = firebase.auth().currentUser.uid;
+    localStorage.setItem("bwhs-lounge", JSON.stringify(me));
+    live = true;
+    document.getElementById("conn").textContent = "Live · same room on every device";
+    watchPresence();
+    listen();
+    setInterval(() => { if (live) db.ref("presence/"+me.uid).update({ ts: Date.now(), room, name: me.name }); }, 25000);
+  } catch (err) {
+    document.getElementById("conn").textContent = "This device only";
+    toast("Turn on Anonymous auth in Firebase, then refresh.");
+  }
+}
+document.getElementById("share").onclick = async () => {
+  const url = location.origin + location.pathname + "#" + room;
+  try { await navigator.clipboard.writeText(url); toast("Room link copied. It stays unlisted."); }
+  catch (err) { toast(url); }
+};
+document.getElementById("closeSide").onclick = () => document.getElementById("side").classList.toggle("open");
+document.querySelectorAll(".tab").forEach(tab => tab.onclick = () => {
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t === tab));
+  document.getElementById("side").classList.toggle("open", tab.dataset.tab === "rooms");
+  document.getElementById("people").classList.toggle("open", tab.dataset.tab === "people");
+});
+if (me && me.name) { document.getElementById("gate").classList.add("hidden"); document.getElementById("app").classList.remove("hidden"); boot(); }
+</script>
+</body>
+</html>
