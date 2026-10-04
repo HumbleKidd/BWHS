@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="referrer" content="origin" />
+  <title>24 AUTOPLAY · BWHS Live Theatre</title>
+  <meta name="description" content="BWHS 24 Autoplay — a live movie channel. One genre a day, films only, playing in real time like cable. No seeking, no next, theatre only." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://image.tmdb.org" />
+  <link rel="preconnect" href="https://api.themoviedb.org" />
+  <link rel="preconnect" href="https://vixsrc.to" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --pink: #ec4899;
+      --amber: #f59e0b;
+      --cyan: #06b6d4;
+      --bg: #f4f7ff;
+      --surface: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e7ecf8;
+      --shadow: 0 18px 40px rgba(79, 70, 229, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background:
+        radial-gradient(900px 420px at 8% -10%, rgba(236,72,153,0.18), transparent 60%),
+        radial-gradient(800px 380px at 100% 0%, rgba(79,70,229,0.16), transparent 55%),
+        linear-gradient(180deg, #f8faff 0%, var(--bg) 40%, #eef2ff 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    button, a { font-family: inherit; }
+    .stage {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 14px 18px;
+      gap: 12px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255,255,255,0.86);
+      border: 1px solid rgba(255,255,255,0.8);
+      box-shadow: var(--shadow);
+      border-radius: 22px;
+      padding: 10px 12px;
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+      min-width: 0;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--pink) 60%, var(--amber));
+      box-shadow: 0 8px 18px rgba(79,70,229,0.35);
+      flex-shrink: 0;
+    }
+    .brand b { display: block; font-size: 0.95rem; letter-spacing: -0.03em; }
+    .brand small { color: var(--muted); font-weight: 700; font-size: 0.68rem; }
+    .live-pill, .genre-pill, .clock-pill, .tool-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      border: none;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .live-pill {
+      background: #fff1f2;
+      color: #be123c;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #ef4444;
+      box-shadow: 0 0 0 0 rgba(239,68,68,0.65);
+      animation: pulse 1.3s ease-out infinite;
+    }
+    @keyframes pulse {
+      70% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+      100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+    .genre-pill { background: #eef2ff; color: var(--primary); }
+    .clock-pill { background: #fff7ed; color: #c2410c; }
+    .tools { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .tool-btn {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+      cursor: pointer;
+    }
+    .tool-btn.primary {
+      background: linear-gradient(135deg, var(--primary), var(--pink));
+      color: #fff;
+    }
+    .tool-btn:hover { transform: translateY(-1px); }
+    .now-card {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 12px;
+      align-items: center;
+      background: var(--surface);
+      border-radius: 22px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+    .now-card img {
+      width: 74px;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #e2e8f0;
+    }
+    .kicker {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--pink);
+    }
+    .now-card h1 {
+      font-size: clamp(1.15rem, 2.4vw, 1.7rem);
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin: 2px 0 6px;
+    }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 0.75rem; font-weight: 700; }
+    .meta span { display: inline-flex; align-items: center; gap: 4px; }
+    .star { color: #f59e0b; }
+    .track {
+      margin-top: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      overflow: hidden;
+    }
+    .track > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--pink), var(--amber));
+    }
+    .track-label {
+      margin-top: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .theatre {
+      position: relative;
+      border-radius: 28px;
+      overflow: hidden;
+      background: #070b16;
+      box-shadow: 0 24px 50px rgba(15,23,42,0.28);
+      min-height: 52vh;
+    }
+    .theatre-aura {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: blur(18px) saturate(1.2) brightness(0.45);
+      transform: scale(1.08);
+    }
+    .theatre-frame {
+      position: relative;
+      z-index: 1;
+      padding: 18px 16px 16px;
+    }
+    .viewport {
+      position: relative;
+      width: min(100%, 1180px);
+      margin: 0 auto;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    }
+    .viewport iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      pointer-events: none;
+      background: #000;
+    }
+    .shield {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background: transparent;
+    }
+    .boot {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #fff;
+      background: rgba(7,11,22,0.55);
+      text-align: center;
+      padding: 20px;
+    }
+    .boot.hidden { display: none; }
+    .boot strong { font-size: 1.05rem; }
+    .boot p { color: #e2e8f0; font-size: 0.82rem; max-width: 42ch; }
+    .tap {
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, var(--primary), var(--pink));
+      box-shadow: 0 10px 24px rgba(79,70,229,0.45);
+    }
+    .fs-exit {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 6;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      color: #fff;
+      background: rgba(15,23,42,0.82);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .viewport:fullscreen .fs-exit,
+    .viewport:-webkit-full-screen .fs-exit { display: inline-flex; }
+    .missed {
+      background: var(--surface);
+      border-radius: 22px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .missed-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .missed-head h2 { font-size: 0.95rem; letter-spacing: -0.02em; }
+    .missed-head span { color: var(--muted); font-size: 0.72rem; font-weight: 700; }
+    .rail {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scroll-snap-type: x proximity;
+    }
+    .rail::-webkit-scrollbar { height: 0; }
+    .miss-card {
+      flex: 0 0 148px;
+      scroll-snap-align: start;
+      text-decoration: none;
+      color: inherit;
+      background: #f8fafc;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(15,23,42,0.05);
+      transition: transform 0.16s ease;
+    }
+    .miss-card:hover { transform: translateY(-3px); }
+    .miss-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; background: #e2e8f0; display: block; }
+    .miss-card div { padding: 8px 8px 10px; }
+    .miss-card strong {
+      display: block;
+      font-size: 0.74rem;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .miss-card em { font-style: normal; color: var(--muted); font-size: 0.66rem; font-weight: 700; }
+    .empty-miss {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 8px 2px 2px;
+    }
+    .note {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 700;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 0 4px 8px;
+    }
+    .note i { color: var(--amber); margin-top: 2px; }
+    @media (max-width: 760px) {
+      .clock-pill span.long, .tool-btn span.hide-sm { display: none; }
+      .topbar { padding: 8px; border-radius: 18px; }
+      .now-card { grid-template-columns: 62px 1fr; }
+      .theatre-frame { padding: 10px; }
+      .stage { padding: 10px; }
+    }
+    body.fs-live .topbar,
+    body.fs-live .now-card,
+    body.fs-live .missed,
+    body.fs-live .note { display: none; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <header class="topbar">
+      <a class="brand" href="./index.html" title="Back to BWHS">
+        <span class="brand-mark"><i class="fa-solid fa-film"></i></span>
+        <span>
+          <b>BWHS · 24 AUTOPLAY</b>
+          <small>Live theatre · films only</small>
+        </span>
+      </a>
+      <div class="tools">
+        <span class="live-pill"><i class="live-dot"></i> ON AIR</span>
+        <span class="genre-pill" id="genrePill"><i class="fa-solid fa-clapperboard"></i> Locking genre</span>
+        <span class="clock-pill" id="clockPill"><i class="fa-solid fa-clock"></i> <span class="long">Jamaica</span> <span id="clockText">--:--:--</span></span>
+        <button class="tool-btn" id="fsBtn" type="button"><i class="fa-solid fa-expand"></i> <span class="hide-sm">Fullscreen</span></button>
+        <a class="tool-btn" href="./index.html"><i class="fa-solid fa-arrow-left"></i> <span class="hide-sm">BWHS</span></a>
+      </div>
+    </header>
+
+    <section class="now-card">
+      <img id="nowPoster" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='120'%3E%3Crect fill='%23e2e8f0' width='80' height='120'/%3E%3C/svg%3E" />
+      <div>
+        <div class="kicker" id="nowKicker">Now playing</div>
+        <h1 id="nowTitle">Tuning the live theatre…</h1>
+        <div class="meta" id="nowMeta">
+          <span><i class="fa-solid fa-circle-notch fa-spin"></i> Building today’s film reel</span>
+        </div>
+        <div class="track" aria-hidden="true"><i id="progressBar"></i></div>
+        <div class="track-label">
+          <span id="progressLabel">Live position locked</span>
+          <span id="remainLabel">Auto everything</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="theatre" id="theatre">
+      <div class="theatre-aura" id="aura"></div>
+      <div class="theatre-frame">
+        <div class="viewport" id="viewport">
+          <iframe id="player" title="BWHS 24 Autoplay" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
+          <div class="shield" id="shield"></div>
+          <button class="fs-exit" id="fsExit" type="button"><i class="fa-solid fa-compress"></i> Theatre</button>
+          <div class="boot" id="boot">
+            <i class="fa-solid fa-tower-broadcast" style="font-size:1.4rem;"></i>
+            <strong id="bootTitle">Catching the live film</strong>
+            <p id="bootCopy">Same reel for everyone. You join wherever the movie already is — no skip, no rewind.</p>
+            <button class="tap" id="startBtn" type="button">Enter theatre</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="missed">
+      <div class="missed-head">
+        <h2>You just missed</h2>
+        <span>Already aired today · open any film in the normal BWHS player</span>
+      </div>
+      <div class="rail" id="missedRail"></div>
+      <p class="empty-miss" id="missedEmpty">The first film of the day is still on. Missed titles land here as the channel moves.</p>
+    </section>
+    <p class="note"><i class="fa-solid fa-shield-halved"></i><span>24 AUTOPLAY is a live movie channel on VixSrc. Films only — no series, no upcoming title, no seek. Streams are third-party embeds. BWHS does not host the files.</span></p>
+  </div>
+
+  <script>
+    const TMDB = 'https://api.themoviedb.org/3';
+    const KEY = '129637a8869a61522af21b80f6eb5129';
+    const IMG = 'https://image.tmdb.org/t/p/w342';
+    const BACK = 'https://image.tmdb.org/t/p/w780';
+    const JAMAICA_SHIFT = 5 * 3600 * 1000;
+    const GENRES = [
+      { id: 28, name: 'Action' },
+      { id: 12, name: 'Adventure' },
+      { id: 16, name: 'Animation' },
+      { id: 35, name: 'Comedy' },
+      { id: 80, name: 'Crime' },
+      { id: 18, name: 'Drama' },
+      { id: 14, name: 'Fantasy' },
+      { id: 27, name: 'Horror' },
+      { id: 9648, name: 'Mystery' },
+      { id: 10749, name: 'Romance' },
+      { id: 878, name: 'Science Fiction' },
+      { id: 53, name: 'Thriller' },
+      { id: 10752, name: 'War' },
+      { id: 37, name: 'Western' }
+    ];
+    const FALLBACK = {
+      28: [155,603,27205,245891,76341,299536,353081,324857],
+      12: [122,120,671,329,122917,11,85,10193],
+      16: [129,585,10681,12477,12,808,9806,14160],
+      35: [13,773,18785,120467,546554,49519,864,210577],
+      80: [769,111,680,807,103,1422,9732,1949],
+      18: [278,238,424,550,13,389,73,857],
+      14: [671,122,120,121,122917,76338,49051,283366],
+      27: [694,948,539,9552,419430,493922,138843,565],
+      9648: [745,807,77,11324,146,1949,4547,5915],
+      10749: [11036,597,4348,313369,152601,332562,398818,4951],
+      878: [603,27205,157336,78,62,335984,264660,68718],
+      53: [550,680,745,807,694,146233,500,275],
+      10752: [857,424,600,228150,374720,1271,592,105],
+      37: [68718,5176,33,11969,9360,336,11412,3078]
+    };
+
+    const els = {
+      genrePill: document.getElementById('genrePill'),
+      clockText: document.getElementById('clockText'),
+      nowPoster: document.getElementById('nowPoster'),
+      nowTitle: document.getElementById('nowTitle'),
+      nowMeta: document.getElementById('nowMeta'),
+      nowKicker: document.getElementById('nowKicker'),
+      progressBar: document.getElementById('progressBar'),
+      progressLabel: document.getElementById('progressLabel'),
+      remainLabel: document.getElementById('remainLabel'),
+      player: document.getElementById('player'),
+      viewport: document.getElementById('viewport'),
+      boot: document.getElementById('boot'),
+      bootTitle: document.getElementById('bootTitle'),
+      startBtn: document.getElementById('startBtn'),
+      aura: document.getElementById('aura'),
+      missedRail: document.getElementById('missedRail'),
+      missedEmpty: document.getElementById('missedEmpty'),
+      fsBtn: document.getElementById('fsBtn'),
+      fsExit: document.getElementById('fsExit')
+    };
+
+    let playlist = [];
+    let genre = GENRES[0];
+    let dayKey = '';
+    let started = false;
+    let loadedKey = '';
+    let wakeLock = null;
+
+    function jamaicaDate() { return new Date(Date.now() - JAMAICA_SHIFT); }
+    function dayStamp() { return jamaicaDate().toISOString().slice(0, 10); }
+    function secondsIntoDay() {
+      const j = jamaicaDate();
+      return j.getUTCHours() * 3600 + j.getUTCMinutes() * 60 + j.getUTCSeconds();
+    }
+    function hash(str) {
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+    function mulberry32(a) {
+      return function() {
+        a |= 0; a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+    function shuffle(list, seed) {
+      const rand = mulberry32(seed);
+      const arr = list.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function clock(total) {
+      const s = Math.max(0, Math.floor(total));
+      return pad(Math.floor(s / 3600)) + ':' + pad(Math.floor((s % 3600) / 60)) + ':' + pad(s % 60);
+    }
+    function ago(sec) {
+      if (sec < 90) return 'just ended';
+      if (sec < 3600) return Math.round(sec / 60) + 'm ago';
+      const h = Math.floor(sec / 3600);
+      const m = Math.round((sec % 3600) / 60);
+      return h + 'h ' + m + 'm ago';
+    }
+    async function getJSON(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('tmdb ' + res.status);
+      return res.json();
+    }
+    function releasedCutoff() {
+      const d = new Date(Date.now() - 50 * 86400000);
+      return d.toISOString().slice(0, 10);
+    }
+    async function fetchPool(genreId) {
+      const lte = releasedCutoff();
+      const page = (hash(dayKey + ':p') % 2) + 1;
+      const base = `${TMDB}/discover/movie?api_key=${KEY}&include_adult=false&include_video=false&without_genres=10770&with_genres=${genreId}&sort_by=vote_count.desc&vote_count.gte=900&vote_average.gte=6.2&primary_release_date.lte=${lte}&language=en-US&page=${page}`;
+      let data = await getJSON(base + '&with_original_language=en');
+      let results = (data.results || []).filter(m => m.poster_path && m.id && m.title);
+      if (results.length < 10) {
+        data = await getJSON(base);
+        results = (data.results || []).filter(m => m.poster_path && m.id && m.title);
+      }
+      const seen = new Set();
+      return results.filter(m => {
+        if (seen.has(m.id)) return false;
+        seen.add(m.id);
+        return true;
+      });
+    }
+    async function hydrate(movie) {
+      try {
+        const d = await getJSON(`${TMDB}/movie/${movie.id}?api_key=${KEY}&language=en-US`);
+        const runtime = Number(d.runtime) || 0;
+        if (runtime < 75 || runtime > 210) return null;
+        if (d.adult) return null;
+        return {
+          id: d.id,
+          title: d.title,
+          year: (d.release_date || '').slice(0, 4),
+          runtime,
+          vote: d.vote_average ? Number(d.vote_average).toFixed(1) : '',
+          poster: d.poster_path ? IMG + d.poster_path : '',
+          backdrop: d.backdrop_path ? BACK + d.backdrop_path : '',
+          overview: d.overview || ''
+        };
+      } catch (_) {
+        return null;
+      }
+    }
+    async function buildPlaylist() {
+      dayKey = dayStamp();
+      genre = GENRES[hash(dayKey) % GENRES.length];
+      els.genrePill.innerHTML = `<i class="fa-solid fa-clapperboard"></i> ${genre.name} day`;
+      const cacheKey = 'bwhs24v3:' + dayKey + ':' + genre.id;
+      try {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.length >= 8) return parsed;
+        }
+      } catch (_) {}
+      let pool = [];
+      try { pool = await fetchPool(genre.id); } catch (_) { pool = []; }
+      pool = shuffle(pool, hash(dayKey + ':' + genre.id));
+      const picked = [];
+      const queue = pool.slice(0, 22);
+      const extras = (FALLBACK[genre.id] || []).map(id => ({ id, title: 'Film', poster_path: '/x.jpg' }));
+      for (const extra of extras) {
+        if (!queue.some(m => m.id === extra.id)) queue.push(extra);
+      }
+      for (let i = 0; i < queue.length && picked.length < 16; i += 4) {
+        const slice = queue.slice(i, i + 4);
+        const rows = await Promise.all(slice.map(hydrate));
+        rows.forEach(row => { if (row) picked.push(row); });
+      }
+      if (picked.length < 8) {
+        for (const id of (FALLBACK[genre.id] || [])) {
+          if (picked.some(p => p.id === id)) continue;
+          const row = await hydrate({ id });
+          if (row) picked.push(row);
+          if (picked.length >= 12) break;
+        }
+      }
+      const ordered = shuffle(picked, hash('reel:' + dayKey));
+      let cursor = 0;
+      const reel = [];
+      const loop = ordered.length ? ordered : [];
+      if (!loop.length) throw new Error('empty reel');
+      while (cursor < 24 * 3600 + 1800 && reel.length < 40) {
+        const film = loop[reel.length % loop.length];
+        const dur = film.runtime * 60;
+        reel.push({ ...film, start: cursor, dur });
+        cursor += dur;
+        if (reel.length >= loop.length && cursor >= 24 * 3600) break;
+      }
+      try { sessionStorage.setItem(cacheKey, JSON.stringify(reel)); } catch (_) {}
+      return reel;
+    }
+    function liveSpot() {
+      const t = secondsIntoDay();
+      const total = playlist.reduce((n, f) => n + f.dur, 0) || 1;
+      const pos = playlist.length && playlist[playlist.length - 1].start + playlist[playlist.length - 1].dur > 24 * 3600
+        ? Math.min(t, total - 1)
+        : t % total;
+      let film = playlist[0];
+      for (const item of playlist) {
+        if (pos >= item.start && pos < item.start + item.dur) { film = item; break; }
+      }
+      const into = Math.max(0, Math.floor(pos - film.start));
+      return { film, into, pos };
+    }
+    function vixUrl(id, startAt) {
+      const qs = [
+        'autoplay=1',
+        'autoPlay=true',
+        'muted=0',
+        'mute=0',
+        'volume=1',
+        'lang=en',
+        'primaryColor=4f46e5',
+        'secondaryColor=0f172a',
+        'skin=vixsrc',
+        'canPlayFHD=1',
+        'quality=2160',
+        'maxQuality=2160',
+        'res=2160',
+        'startAt=' + Math.max(0, Math.floor(startAt || 0))
+      ].join('&');
+      return `https://vixsrc.to/movie/${id}?${qs}`;
+    }
+    function paintNow(spot) {
+      const film = spot.film;
+      els.nowKicker.textContent = 'Now playing · ' + genre.name;
+      els.nowTitle.textContent = film.title;
+      document.title = film.title + ' · 24 AUTOPLAY · BWHS';
+      if (film.poster) els.nowPoster.src = film.poster;
+      if (film.backdrop) els.aura.style.backgroundImage = `url("${film.backdrop}")`;
+      const pct = Math.min(100, (spot.into / film.dur) * 100);
+      els.progressBar.style.width = pct.toFixed(2) + '%';
+      els.progressLabel.textContent = 'Live at ' + clock(spot.into) + ' of ' + clock(film.dur);
+      els.remainLabel.textContent = 'Locked · no seek';
+      els.nowMeta.innerHTML = [
+        film.year ? `<span><i class="fa-solid fa-calendar"></i> ${film.year}</span>` : '',
+        film.vote ? `<span class="star"><i class="fa-solid fa-star"></i> ${film.vote}</span>` : '',
+        `<span><i class="fa-solid fa-clock"></i> ${film.runtime} min</span>`,
+        `<span><i class="fa-solid fa-tower-broadcast"></i> VixSrc</span>`
+      ].join('');
+    }
+    function paintMissed(spot) {
+      const missed = playlist.filter(f => f.start + f.dur <= spot.film.start + 1).slice(-10).reverse();
+      els.missedRail.innerHTML = '';
+      els.missedEmpty.style.display = missed.length ? 'none' : 'block';
+      if (missed[0]) els.missedEmpty.style.display = 'none';
+      const head = document.querySelector('.missed-head span');
+      if (head) head.textContent = missed[0] ? ('You just missed ' + missed[0].title) : 'Already aired today · open any film in the normal BWHS player';
+      const nowSec = secondsIntoDay();
+      missed.forEach(film => {
+        const a = document.createElement('a');
+        a.className = 'miss-card';
+        a.href = `./index.html#/watch/movie/${film.id}`;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        const ended = Math.max(0, nowSec - (film.start + film.dur));
+        a.innerHTML = `<img alt="" src="${film.poster || ''}" /><div><strong>${film.title}</strong><em>You just missed · ${ago(ended)}</em></div>`;
+        els.missedRail.appendChild(a);
+      });
+    }
+    function nudgeSeek(seconds) {
+      try {
+        const win = els.player.contentWindow;
+        if (!win) return;
+        [
+          { type: 'seek', seconds },
+          { event: 'seek', time: seconds },
+          { action: 'setCurrentTime', currentTime: seconds },
+          { type: 'unmute' },
+          { muted: false }
+        ].forEach(msg => { try { win.postMessage(msg, '*'); } catch (_) {} });
+      } catch (_) {}
+    }
+    function loadLive(force) {
+      if (!playlist.length) return;
+      const spot = liveSpot();
+      paintNow(spot);
+      paintMissed(spot);
+      const key = spot.film.id + ':' + dayKey;
+      if (!force && loadedKey === key) return;
+      loadedKey = key;
+      const startAt = Math.min(spot.into, Math.max(0, spot.film.dur - 20));
+      els.player.src = vixUrl(spot.film.id, startAt);
+      setTimeout(() => nudgeSeek(startAt), 1200);
+      setTimeout(() => nudgeSeek(startAt), 2800);
+    }
+    function tick() {
+      const j = jamaicaDate();
+      els.clockText.textContent = pad(j.getUTCHours()) + ':' + pad(j.getUTCMinutes()) + ':' + pad(j.getUTCSeconds());
+      if (dayStamp() !== dayKey && started) {
+        bootChannel(true);
+        return;
+      }
+      if (!started || !playlist.length) return;
+      const spot = liveSpot();
+      paintNow(spot);
+      const key = spot.film.id + ':' + dayKey;
+      if (key !== loadedKey) loadLive(false);
+    }
+    async function bootChannel(refresh) {
+      els.boot.classList.remove('hidden');
+      els.bootTitle.textContent = refresh ? 'New day, new genre' : 'Catching the live film';
+      try {
+        playlist = await buildPlaylist();
+        started = true;
+        loadLive(true);
+        els.boot.classList.add('hidden');
+        keepAwake();
+      } catch (err) {
+        els.bootTitle.textContent = 'Reel unavailable';
+        els.bootCopy.textContent = 'Could not lock today’s films. Check the connection and enter again.';
+      }
+    }
+    async function keepAwake() {
+      try {
+        if (!navigator.wakeLock) return;
+        wakeLock = await navigator.wakeLock.request('screen');
+      } catch (_) {}
+    }
+    function enter() {
+      started = true;
+      els.boot.classList.add('hidden');
+      if (!playlist.length) bootChannel(false);
+      else loadLive(true);
+      keepAwake();
+    }
+    async function toggleFs() {
+      const vp = els.viewport;
+      const active = document.fullscreenElement || document.webkitFullscreenElement;
+      if (active) {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) exit.call(document);
+        return;
+      }
+      const req = vp.requestFullscreen || vp.webkitRequestFullscreen;
+      if (req) req.call(vp);
+    }
+    els.startBtn.addEventListener('click', enter);
+    els.fsBtn.addEventListener('click', toggleFs);
+    els.fsExit.addEventListener('click', toggleFs);
+    document.addEventListener('keydown', (e) => {
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'MediaTrackNext', 'MediaTrackPrevious'].includes(e.key)) {
+        e.preventDefault();
+      }
+      if (e.key === 'f' || e.key === 'F') toggleFs();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && started) {
+        loadLive(false);
+        keepAwake();
+      }
+    });
+    setInterval(tick, 1000);
+    bootChannel(false);
+  </script>
+</body>
+</html>
