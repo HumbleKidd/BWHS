@@ -328,7 +328,14 @@ const rooms = JSON.parse(localStorage.getItem("bwhs-rooms") || "null") || [
 ];
 
 function saveRooms(){ localStorage.setItem("bwhs-rooms", JSON.stringify(rooms)); }
-function esc(s){ return String(s || "").replace(/[&<>"]/g, c => ({ "&":"&","<":"<",">":">","\"":""" }[c])); }
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){
+    if (c === "&") return "&amp;";
+    if (c === "<") return "&lt;";
+    if (c === ">") return "&gt;";
+    return "&quot;";
+  });
+}
 function toast(text){ document.getElementById("note").textContent = text; }
 
 function enter(name){
