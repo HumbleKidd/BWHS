@@ -629,7 +629,7 @@
       [...$("qpop").children].forEach((c) => c.classList.toggle("on", c === btn));
       $("qpop").classList.remove("on");
       const at = nowTime();
-      swapIn(nowTime(), playing);
+      mount(nowTime());
       toast(btn.dataset.q === "auto" ? "Auto" : quality + "p");
     });
     $("closeBtn").addEventListener("click", closeTheatre);
