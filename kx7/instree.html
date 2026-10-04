@@ -54,7 +54,7 @@
       background: linear-gradient(135deg, var(--green-2), var(--green) 55%, #0ea571);
       box-shadow: 0 12px 24px rgba(18, 196, 139, 0.28);
     }
-    .app { display: none; }
+    .app { display: block; }
     .app.on { display: block; }
     .shell { width: min(1280px, calc(100% - 28px)); margin: 0 auto; padding: 16px 0 48px; }
     .top {
@@ -586,7 +586,7 @@
     function closeTheatre() {
       if (current) remember(current, nowTime());
       playing = false;
-      $("player").src = "about:blank";
+      ["playerA","playerB"].forEach((id) => { const f=$(id); if (f) f.src="about:blank"; });
       $("theatre").classList.remove("on");
       document.body.style.overflow = "";
       document.title = "Instree";
@@ -687,13 +687,12 @@
       if (eventName === "ended") { playing = false; paintPlay(); }
       paintSeek();
     });
-    $("player").addEventListener("load", () => tell(live, "getStatus"));
     document.querySelectorAll("[data-seek]").forEach(bindSeek);
     new IntersectionObserver((entries) => {
       if (entries.some((x) => x.isIntersecting)) loadPage(false);
     }, { rootMargin: "600px" }).observe($("sentinel"));
     setInterval(() => { if (!scrubbing) paintSeek(); }, 200);
-    unlock(true);
+    try { unlock(true); } catch (err) { console.error(err); $("app").classList.add("on"); }
   </script>
 </body>
 </html>
