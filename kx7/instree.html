@@ -141,8 +141,9 @@
     .frame { position: absolute; inset: 0; overflow: hidden; background: #000; }
     .frame iframe {
       position: absolute; left: 0; top: 0; width: 100%; height: calc(100% + 78px); border: 0; background: #000;
-      pointer-events: none;
+      pointer-events: none; opacity: 0;
     }
+    .frame iframe.live { opacity: 1; }
     .shield { position: absolute; inset: 0 0 54px 0; z-index: 3; background: transparent; touch-action: manipulation; }
     .flash {
       position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) scale(.86);
@@ -283,7 +284,8 @@
       <div class="stage" id="stage">
         <div class="aura" id="aura"></div>
         <div class="frame">
-          <iframe id="player" title="Instree player" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
+          <iframe id="playerA" class="live" title="Instree player" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
+          <iframe id="playerB" title="Instree player next" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
         </div>
         <div class="shield" id="shield"></div>
         <div class="flash" id="flash"><i class="fa-solid fa-pause" id="flashIcon"></i></div>
@@ -346,11 +348,13 @@
       { key: "primary_release_date.desc", label: "Newest" },
       { key: "revenue.desc", label: "Biggest" }
     ];
-    const SERVERS = [
-      (id, at, q) => `https://vidfast.pro/movie/${id}?autoPlay=true&startAt=${Math.max(0, Math.floor(at || 0))}&title=false&poster=false&hideServer=true&fullscreenButton=false&chromecast=false&theme=12c48b&sub=en`,
-      (id, at, q) => `https://vidfast.vc/movie/${id}?autoPlay=true&startAt=${Math.max(0, Math.floor(at || 0))}&title=false&poster=false&hideServer=true&fullscreenButton=false&chromecast=false&theme=12c48b&sub=en`,
-      (id, at, q) => `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=12c48b&secondaryColor=04140e&skin=vixsrc&canPlayFHD=1&quality=${q || "1080"}&startAt=${Math.max(0, Math.floor(at || 0))}`
-    ];
+    function filmSrc(id, at, mute, play) {
+      const start = Math.max(0, Math.floor(at || 0));
+      const q = quality === "auto" ? "1080" : quality;
+      if (server === 1) return `https://vidfast.pro/movie/${id}?autoPlay=${play ? "true" : "false"}&startAt=${start}&title=false&poster=false&hideServer=true&fullscreenButton=false&chromecast=false&theme=12c48b&sub=en`;
+      if (server === 2) return `https://vidlink.pro/movie/${id}?autoplay=${play ? "true" : "false"}&startAt=${start}&title=false&poster=false&primaryColor=12c48b&secondaryColor=04140e&player=jw`;
+      return `https://vixsrc.to/movie/${id}?autoplay=${play ? 1 : 0}&autoPlay=${play ? "true" : "false"}&muted=${mute ? 1 : 0}&lang=en&primaryColor=12c48b&secondaryColor=04140e&skin=vixsrc&canPlayFHD=1&quality=${q}&startAt=${start}`;
+    }
 
     let genre = 0, sort = 0, page = 1, query = "", loading = false, done = false;
     let films = new Map();
@@ -454,32 +458,26 @@
       }
       loading = false;
     }
-    function send(packet) {
-      const frame = $("player");
-      if (!frame || !frame.contentWindow) return;
-      try { frame.contentWindow.postMessage(packet, "*"); } catch (_) {}
-      if (typeof packet !== "string") {
-        try { frame.contentWindow.postMessage(JSON.stringify(packet), "*"); } catch (_) {}
-      }
+    let live = null, next = null;
+    function frames() {
+      if (!live) { live = $("playerA"); next = $("playerB"); }
+      return [live, next];
     }
-    function command(name, value) {
+    function tell(frame, name, value) {
+      if (!frame || !frame.contentWindow) return;
       const time = typeof value === "number" ? value : nowTime();
-      if (name === "play" || name === "pause") {
-        send({ command: name });
-        send({ command: name, time });
-      } else if (name === "seek") {
-        send({ command: "seek", time });
-      } else if (name === "volume") {
-        send({ command: "volume", level: value });
-      } else if (name === "getStatus") {
-        send({ command: "getStatus" });
-      }
-      const method = name === "seek" ? "setCurrentTime" : name === "volume" ? "setVolume" : name;
-      send(JSON.stringify({ context: "player.js", version: "0.0.11", method, value: name === "volume" ? value : time }));
+      const packets = [
+        { command: name, time, level: value },
+        { command: name === "volume" ? "volume" : name, time, level: value },
+        { api: name === "volume" ? "volume" : name === "seek" ? "seek" : name, set: value },
+        { event: "command", func: name === "volume" ? "setVolume" : name, args: [value] }
+      ];
+      packets.forEach((packet) => { try { frame.contentWindow.postMessage(packet, "*"); } catch (_) {} });
     }
     function paintPlay() {
       $("playIcon").className = playing ? "fa-solid fa-pause" : "fa-solid fa-play";
       $("playBtn").setAttribute("aria-label", playing ? "Pause" : "Play");
+      $("muteIcon").className = muted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
     }
     function flash(icon) {
       $("flashIcon").className = "fa-solid " + icon;
@@ -488,22 +486,43 @@
       void el.offsetWidth;
       el.classList.add("on");
     }
+    function swapIn(at, play) {
+      frames();
+      const incoming = next;
+      incoming.src = filmSrc(current.id, at, muted, play);
+      const show = () => {
+        incoming.classList.add("live");
+        live.classList.remove("live");
+        if (live.src && live.src !== "about:blank") live.src = "about:blank";
+        const old = live;
+        live = incoming;
+        next = old;
+        incoming.removeEventListener("load", show);
+      };
+      incoming.addEventListener("load", show);
+    }
+    function stopLive() {
+      frames();
+      tell(live, "pause");
+      if (live.src && live.src !== "about:blank") live.src = "about:blank";
+    }
     function pause() {
       if (!playing) return;
       mediaTime = nowTime();
       playing = false;
+      tickAt = Date.now();
       paintPlay();
       flash("fa-pause");
-      command("pause");
+      stopLive();
       if (current) remember(current, mediaTime);
     }
     function resume() {
-      if (playing) return;
+      if (!current || playing) return;
       playing = true;
       tickAt = Date.now();
       paintPlay();
       flash("fa-play");
-      command("play");
+      swapIn(mediaTime, true);
     }
     function toggle() { playing ? pause() : resume(); }
     function seekTo(seconds) {
@@ -511,12 +530,15 @@
       mediaTime = Math.max(0, Math.min(Math.max(dur - 0.2, 0), seconds));
       tickAt = Date.now();
       paintSeek();
-      command("seek", mediaTime);
+      frames();
+      tell(live, "seek", mediaTime);
+      if (current) swapIn(mediaTime, playing);
     }
     function bindSeek(el) {
       const at = (event) => {
         const rect = el.getBoundingClientRect();
-        const x = Math.min(Math.max(0, (event.clientX || (event.touches && event.touches[0].clientX) || 0) - rect.left), rect.width);
+        const point = event.clientX || (event.touches && event.touches[0].clientX) || 0;
+        const x = Math.min(Math.max(0, point - rect.left), rect.width);
         const dur = duration || ((current && current.runtime) ? current.runtime * 60 : 0);
         if (!dur) return;
         seekTo((x / rect.width) * dur);
@@ -526,15 +548,17 @@
       el.addEventListener("pointerup", () => { scrubbing = false; });
     }
     function mount(at) {
-      const frame = $("player");
-      frame.src = SERVERS[server](current.id, at, quality);
+      frames();
       playing = true;
       mediaTime = at || 0;
       tickAt = Date.now();
       duration = (current.runtime || 0) * 60;
       paintPlay();
       paintSeek();
+      live.src = filmSrc(current.id, at, muted, true);
+      live.classList.add("live");
     }
+
     async function openFilm(id) {
       let film = films.get(id);
       try {
@@ -606,8 +630,11 @@
     $("muteBtn").addEventListener("pointerdown", (e) => {
       e.preventDefault();
       muted = !muted;
-      $("muteIcon").className = muted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
-      command("volume", muted ? 0 : 1);
+      paintPlay();
+      frames();
+      tell(live, "volume", muted ? 0 : 1);
+      tell(live, muted ? "mute" : "unmute");
+      if (current) swapIn(nowTime(), playing);
     });
     $("qualityBtn").addEventListener("click", () => $("qpop").classList.toggle("on"));
     $("qpop").addEventListener("click", (e) => {
@@ -617,7 +644,7 @@
       [...$("qpop").children].forEach((c) => c.classList.toggle("on", c === btn));
       $("qpop").classList.remove("on");
       const at = nowTime();
-      mount(at);
+      swapIn(nowTime(), playing);
       toast(btn.dataset.q === "auto" ? "Auto" : quality + "p");
     });
     $("closeBtn").addEventListener("click", closeTheatre);
@@ -628,7 +655,7 @@
     });
     $("serverBtn").addEventListener("click", () => {
       server = (server + 1) % SERVERS.length;
-      mount(nowTime());
+      swapIn(nowTime(), playing);
       toast("Server " + (server + 1));
     });
     document.addEventListener("keydown", (e) => {
@@ -661,7 +688,7 @@
       if (eventName === "ended") { playing = false; paintPlay(); }
       paintSeek();
     });
-    $("player").addEventListener("load", () => command("getStatus"));
+    $("player").addEventListener("load", () => tell(live, "getStatus"));
     document.querySelectorAll("[data-seek]").forEach(bindSeek);
     new IntersectionObserver((entries) => {
       if (entries.some((x) => x.isIntersecting)) loadPage(false);
