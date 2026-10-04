@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="preconnect" href="https://vixsrc.to" crossorigin>
+  <link rel="dns-prefetch" href="https://vixsrc.to">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="referrer" content="origin" />
@@ -153,8 +155,10 @@
     }
     .viewport iframe {
       position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
-      pointer-events: none; background: #000;
+      pointer-events: none; background: #000; opacity: 0; z-index: 1;
+      transition: opacity .5s ease;
     }
+    .viewport iframe.front { opacity: 1; z-index: 2; }
     .shield { position: absolute; inset: 0; z-index: 3; }
     .fs-exit, #fsBtn.floating {
       position: absolute; top: 12px; right: 12px; z-index: 5;
@@ -254,7 +258,8 @@
     <section class="theatre">
       <div class="aura" id="aura"></div>
       <div class="viewport" id="viewport">
-        <iframe id="player" title="BWHS 24/7 PLAY" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
+        <iframe id="player" class="front" title="BWHS 24/7 PLAY" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
+        <iframe id="playerB" title="BWHS 24/7 PLAY next" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
         <div class="shield" id="shield"></div>
         <button class="fs-exit" id="fsExit" type="button"><i class="fa-solid fa-compress"></i> Theatre</button>
         <div class="boot" id="boot">Catching the live film…</div>
@@ -408,7 +413,7 @@
       return { film, into: Math.max(0, pos - film.start), pos };
     }
     function vixUrl(id, startAt) {
-      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=2160&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
+      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
     }
     function paint(spot) {
       const film = spot.film;
@@ -440,6 +445,47 @@
       });
       rail.scrollLeft = rail.scrollWidth;
     }
+    let front = null, back = null, primedId = 0, priming = false;
+    function armPlayers() {
+      front = $('player');
+      back = $('playerB');
+      [front, back].forEach(frame => {
+        frame.addEventListener('load', () => {
+          if (!frame.src || frame.src === 'about:blank') return;
+          frame.dataset.ready = '1';
+          if (frame === back && primedId && primedId === liveSpot().film.id) swapToBack();
+        });
+      });
+    }
+    function nextFilm(spot) {
+      const i = Math.max(0, playlist.findIndex(f => f.id === spot.film.id));
+      return playlist[(i + 1) % playlist.length];
+    }
+    function warm(frame, film, startAt) {
+      const url = vixUrl(film.id, startAt);
+      if (frame.dataset.url === url) return;
+      frame.dataset.ready = '';
+      frame.dataset.url = url;
+      frame.src = url;
+    }
+    function swapToBack() {
+      if (!back || back.dataset.ready !== '1') return false;
+      back.classList.add('front');
+      front.classList.remove('front');
+      const old = front;
+      front = back;
+      back = old;
+      loadedId = primedId || loadedId;
+      primedId = 0;
+      priming = false;
+      setTimeout(() => {
+        back.classList.remove('front');
+        back.dataset.ready = '';
+        back.dataset.url = '';
+        back.src = 'about:blank';
+      }, 700);
+      return true;
+    }
     function remember(film, startAt) {
       try { sessionStorage.setItem('bwhs247-live', JSON.stringify({ id: film.id, title: film.title, startAt, saved: Date.now() })); } catch (_) {}
     }
@@ -449,28 +495,42 @@
         if (!saved || !saved.id) return;
         const elapsed = Math.max(0, Math.floor((Date.now() - (saved.saved || Date.now())) / 1000));
         const startAt = (saved.startAt || 0) + elapsed;
-        $('player').src = vixUrl(saved.id, startAt);
+        warm($('player'), {id: saved.id}, startAt);
         $('nowTitle').textContent = saved.title || 'Back on air';
         $('boot').classList.add('hidden');
         loadedId = saved.id;
       } catch (_) {}
     }
     function loadLive() {
-      if (!playlist.length) return;
+      if (!playlist.length || !front) return;
       const spot = liveSpot();
       paint(spot);
       paintMissed(spot);
       const startAt = Math.min(Math.floor(spot.into), Math.max(0, spot.film.dur - 12));
-      if (loadedId === spot.film.id && $('player').src) {
+      const remain = spot.film.dur - spot.into;
+      if (loadedId === spot.film.id) {
         remember(spot.film, startAt);
+        if (remain < 45) {
+          const nxt = nextFilm(spot);
+          if (nxt && primedId !== nxt.id) {
+            primedId = nxt.id;
+            priming = true;
+            warm(back, nxt, 0);
+          }
+        }
         return;
       }
+      if (primedId === spot.film.id && swapToBack()) {
+        remember(spot.film, startAt);
+        $('boot').classList.add('hidden');
+        return;
+      }
+      warm(front, spot.film, startAt);
       loadedId = spot.film.id;
-      $('player').src = vixUrl(spot.film.id, startAt);
       remember(spot.film, startAt);
       $('boot').classList.add('hidden');
       clearTimeout(handoff);
-      handoff = setTimeout(() => { loadedId = 0; loadLive(); }, Math.max(8000, (spot.film.dur - spot.into) * 1000));
+      handoff = setTimeout(() => { loadedId = 0; loadLive(); }, Math.max(8000, remain * 1000));
     }
     function tick() {
       $('clockPill').textContent = nowClock();
@@ -533,6 +593,7 @@
         });
       } catch (_) {}
     }
+    armPlayers();
     setInterval(tick, 1000);
     keepScreenAwake();
     restoreInstant();
