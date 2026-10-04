@@ -13744,5 +13744,23 @@
 </script>
 
 
+<script id="lounge-secret">
+(function(){
+  if (location.hash === "#/lounge" || location.hash === "#lounge") {
+    location.replace("./lounge.html");
+    return;
+  }
+  var n=0,t=0;
+  function hit(){
+    var now=Date.now();
+    if (now-t>1800) n=0;
+    t=now; n++;
+    if (n>=5) location.href="./lounge.html";
+  }
+  document.querySelectorAll(".sidebar-brand, .mobile-brand").forEach(function(el){
+    el.addEventListener("click", hit);
+  });
+})();
+</script>
 </body>
 </html>
