@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive" />
   <meta name="referrer" content="origin" />
   <title>Instree</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <link rel="icon" href="../apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -233,7 +234,7 @@
     </form>
   </div>
 
-  <div class="app" id="app">
+  <div class="app on" id="app">
     <div class="shell">
       <header class="top">
         <div class="brand">
@@ -653,7 +654,7 @@
       else (node.requestFullscreen || node.webkitRequestFullscreen).call(node);
     });
     $("serverBtn").addEventListener("click", () => {
-      server = (server + 1) % SERVERS.length;
+      server = (server + 1) % 3;
       swapIn(nowTime(), playing);
       toast("Server " + (server + 1));
     });
