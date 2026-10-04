@@ -376,6 +376,8 @@ function stopFilm(){
 let lastToggle = 0;
 function togglePlay(e){
   if(e){ e.preventDefault(); e.stopPropagation(); }
+  if(e && e.target && e.target.closest && e.target.closest("#muteBtn, #vol, .vol")) return;
+  if(state.soundLock && Date.now() - state.soundLock < 800) return;
   const now = Date.now();
   if(now - lastToggle < 450) return;
   lastToggle = now;
@@ -601,28 +603,28 @@ $("nextBtn").addEventListener("click", ()=>{ if(state.next) openFilm(state.next,
 function applyVolume(){
   $("muteIco").className = state.muted || state.volume === 0 ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
   const level = state.muted ? 0 : state.volume;
-  command("setVolume", Math.round(level*100));
-  command(level === 0 ? "mute" : "unmute");
   const frame = $("frame");
-  if(!frame.contentWindow) return;
-  try {
-    frame.contentWindow.postMessage({type:"PLAYER_COMMAND", data:{command:"setVolume", value:level}}, "*");
-    frame.contentWindow.postMessage({event:"command", func: level === 0 ? "mute" : "setVolume", args:[level]}, "*");
-    frame.contentWindow.postMessage(JSON.stringify({context:"player.js", version:"0.0.11", method: level === 0 ? "mute" : "setVolume", value: Math.round(level*100)}), "*");
-  } catch(e){}
+  if(!frame || !frame.contentWindow) return;
+  const msg = {context:"player.js", version:"0.0.11", method: level === 0 ? "mute" : "setVolume", value: Math.round(level*100)};
+  try { frame.contentWindow.postMessage(msg, "*"); } catch(e){}
+  try { frame.contentWindow.postMessage(JSON.stringify(msg), "*"); } catch(e){}
+}
+function markSound(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  state.soundLock = Date.now();
 }
 function toggleMute(e){
-  if(e){ e.preventDefault(); e.stopPropagation(); }
+  markSound(e);
   state.muted = !state.muted;
   if(!state.muted && state.volume === 0) state.volume = 1;
   $("vol").value = state.muted ? 0 : Math.round(state.volume*100);
   applyVolume();
 }
-$("muteBtn").addEventListener("pointerdown", e => e.stopPropagation());
+$("muteBtn").addEventListener("pointerdown", markSound);
 $("muteBtn").addEventListener("click", toggleMute);
-$("vol").addEventListener("pointerdown", e => e.stopPropagation());
+$("vol").addEventListener("pointerdown", markSound);
 $("vol").addEventListener("input", e => {
-  e.stopPropagation();
+  markSound(e);
   state.volume = Number(e.target.value)/100;
   state.muted = state.volume === 0;
   applyVolume();
@@ -642,7 +644,8 @@ $("fsBtn").addEventListener("click", ()=>{
   else (s.requestFullscreen||s.webkitRequestFullscreen).call(s);
 });
 $("liveBtn").addEventListener("click", startLive);
-$("screen").addEventListener("click", (e)=>{ if(e.target.closest(".scrub, .vol, .speed, #muteBtn, #vol, #back10, #fwd10, #nextBtn, #fsBtn")) return; togglePlay(e); });
+$("screen").addEventListener("click", (e)=>{ if(e.target.closest(".scrub, .vol, .speed, #muteBtn, #vol, #back10, #fwd10, #nextBtn, #fsBtn")) return;
+    if(state.soundLock && Date.now() - state.soundLock < 800) return; togglePlay(e); });
 $("shield").addEventListener("dblclick", ()=>{
   const s=$("screen");
   if(document.fullscreenElement) document.exitFullscreen();
