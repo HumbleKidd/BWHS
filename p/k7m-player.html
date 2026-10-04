@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex, nofollow, noarchive" />
 <meta name="googlebot" content="noindex, nofollow" />
 <title>BWHS Player</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <link rel="icon" href="https://bwhs.online/apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -317,7 +318,7 @@ function command(name, value){
   packs.forEach(p => { try { frame.contentWindow.postMessage(p, "*"); } catch(e){} });
 }
 function mount(start){
-  if(!state.film) return;
+  if(!state.film || state.userHold) return;
   state.hard = false;
   state.heard = false;
   state.current = start || 0;
@@ -336,6 +337,19 @@ function showHold(on){
   if(state.film && state.film.backdrop) hold.style.backgroundImage = 'url("'+state.film.backdrop+'")';
   hold.classList.toggle("on", !!on);
 }
+function killFrame(){
+  const old = $("frame");
+  const fresh = document.createElement("iframe");
+  fresh.id = "frame";
+  fresh.title = "BWHS player";
+  fresh.setAttribute("allow", "autoplay *; fullscreen *; encrypted-media *; picture-in-picture *");
+  fresh.allowFullscreen = true;
+  fresh.referrerPolicy = "origin";
+  fresh.src = "about:blank";
+  old.replaceWith(fresh);
+  const warm = $("warm");
+  if(warm){ warm.removeAttribute("src"); warm.src = "about:blank"; }
+}
 function stopFilm(){
   state.playing = false;
   state.userHold = true;
@@ -343,8 +357,8 @@ function stopFilm(){
   state.anchor = 0;
   clearTimeout(state.seekWait);
   showHold(true);
-  const frame = $("frame");
-  frame.src = "about:blank";
+  command("pause");
+  killFrame();
   setPlayIcon();
   paintTime();
 }
@@ -627,7 +641,7 @@ $("scrub").addEventListener("pointerdown", ev => {
 });
 document.addEventListener("keydown", e => {
   if(e.target && e.target.id==="q") return;
-  if(e.key===" "){ e.preventDefault(); togglePlay(); }
+  if(e.key===" " || e.key==="p" || e.key==="P" || e.key==="k" || e.key==="K"){ e.preventDefault(); togglePlay(e); }
   if(e.key==="ArrowLeft") seekTo(state.current-10, true);
   if(e.key==="ArrowRight") seekTo(state.current+10, true);
   if(e.key==="f" || e.key==="F") $("fsBtn").click();
