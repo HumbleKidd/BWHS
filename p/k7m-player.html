@@ -74,7 +74,7 @@
   }
   .screen iframe {
     position:absolute; left:0; top:0; width:100%; height:calc(100% + 64px);
-    border:0; background:#000; pointer-events:auto; z-index:1;
+    border:0; background:#000; pointer-events:none; z-index:1;
   }
   .crop { display:none; }
   .shield { position:absolute; inset:0 0 72px 0; z-index:3; background:transparent; }
@@ -344,22 +344,30 @@ function showHold(on){
   if(state.film && state.film.backdrop) hold.style.backgroundImage = 'url("'+state.film.backdrop+'")';
   hold.classList.toggle("on", !!on);
 }
+function stopFilm(){
+  state.playing = false;
+  state.userHold = true;
+  state.heard = false;
+  state.anchor = 0;
+  clearTimeout(state.seekWait);
+  showHold(true);
+  const frame = $("frame");
+  frame.removeAttribute("src");
+  frame.src = "about:blank";
+  setPlayIcon();
+  paintTime();
+}
 function togglePlay(){
   if(!state.film){ toast("Pick a film first"); return; }
-  if(state.playing){
-    state.playing = false;
-    state.heard = false;
-    state.anchor = 0;
-    showHold(true);
-    $("frame").src = "about:blank";
-    setPlayIcon();
-    paintTime();
-  } else {
-    showHold(false);
-    mount(state.current);
-    state.playing = true;
-    setPlayIcon();
+  if(state.playing || (!state.userHold && $("frame").src.indexOf("vixsrc.to") !== -1)){
+    stopFilm();
+    return;
   }
+  state.userHold = false;
+  showHold(false);
+  mount(state.current);
+  state.playing = true;
+  setPlayIcon();
 }
 function seekTo(t, commit){
   const d = state.duration || (state.film ? state.film.runtime*60 : 0) || t;
@@ -541,10 +549,11 @@ window.addEventListener("message", ev => {
   state.heard = true;
   if(typeof data.duration === "number" && data.duration > 0) state.duration = data.duration;
   if(typeof data.currentTime === "number"){ state.current = data.currentTime; state.anchor = performance.now(); }
-  if(data.event === "play" && $("frame").src.indexOf("vixsrc.to") !== -1){ state.playing = true; state.hard = false; showHold(false); clearTimeout(state.pauseWait); }
+  if(state.userHold) return;
+      if(data.event === "play" && $("frame").src.indexOf("vixsrc.to") !== -1){ state.playing = true; state.hard = false; showHold(false); clearTimeout(state.pauseWait); }
   if(data.event === "pause"){ state.playing = false; clearTimeout(state.pauseWait); }
   if(data.event === "seeked"){ clearTimeout(state.seekWait); }
-  if(data.event === "timeupdate"){ clearTimeout(state.seekWait); if(state.current > 0.4) state.playing = true; }
+  if(data.event === "timeupdate"){ clearTimeout(state.seekWait); if(!state.userHold && state.current > 0.4) state.playing = true; }
   if(data.event === "ended"){
     state.playing = false;
     if(state.next) openFilm(state.next, 0);
@@ -586,7 +595,7 @@ $("vol").addEventListener("input", e => {
   state.muted = state.volume === 0;
   applyVolume();
 });
-$("playBtn").addEventListener("pointerdown", ()=> passToFilm($("playBtn")));
+
 const rates = [1, 1.25, 1.5, 1.75, 2];
 $("speedBtn").addEventListener("click", ()=>{
   const i = rates.indexOf(state.rate);
@@ -601,7 +610,7 @@ $("fsBtn").addEventListener("click", ()=>{
   else (s.requestFullscreen||s.webkitRequestFullscreen).call(s);
 });
 $("liveBtn").addEventListener("click", startLive);
-$("shield").addEventListener("click", ()=>{ showVeil(); togglePlay(); });
+$("screen").addEventListener("click", (e)=>{ if(e.target.closest(".ib, .scrub, .vol, .speed, #playBtn, #bigplay")) return; showVeil(); togglePlay(); });
 $("shield").addEventListener("dblclick", ()=>{
   const s=$("screen");
   if(document.fullscreenElement) document.exitFullscreen();
