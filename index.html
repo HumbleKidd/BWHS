@@ -3593,6 +3593,51 @@
     }
 
 
+
+    .btn-24-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      text-decoration: none;
+      border: none;
+      background: linear-gradient(135deg, #4f46e5 0%, #ec4899 55%, #f59e0b 120%);
+      color: #fff !important;
+      padding: 7px 12px;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+      white-space: nowrap;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .btn-24-live:hover { transform: translateY(-1px) scale(1.03); }
+    .btn-24-live .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 0 rgba(255,255,255,0.7);
+      animation: livePulse24 1.4s ease-out infinite;
+    }
+    @keyframes livePulse24 {
+      0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.65); }
+      100% { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+    }
+    @media (max-width: 420px) {
+      .btn-24-live .btn-24-label { display: none; }
+      .btn-24-live::after { content: "24"; font-weight: 800; }
+    }
+    a.sidebar-btn.autoplay-side-link { text-decoration: none; }
+    a.sidebar-btn.autoplay-side-link .live-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #ef4444;
+      box-shadow: 0 0 0 0 rgba(239,68,68,0.6);
+      animation: livePulse24 1.4s ease-out infinite;
+      display: inline-block;
+    }
+    a.sheet-nav-item.autoplay-side-link { text-decoration: none; }
+
     .feature-tip-backdrop {
       position: fixed;
       inset: 0;
@@ -5044,6 +5089,10 @@
         <i class="fa-solid fa-house" style="color: #f59e0b;"></i>
         <span>Home</span>
       </button>
+      <a class="sidebar-btn autoplay-side-link" href="24-autoplay.html" title="24 Autoplay live movie channel">
+        <i class="fa-solid fa-tower-broadcast" style="color:#ef4444;"></i>
+        <span>24 AUTOPLAY <i class="live-dot"></i></span>
+      </a>
       <button class="sidebar-btn" id="sideTrending" onclick="selectType('trending')" onpointerenter="warmCoreCatalog()">
         <i class="fa-solid fa-fire" style="color: #f97316;"></i>
         <span>Trending</span>
@@ -5150,6 +5199,10 @@
         </div>
 
         <div class="header-actions">
+          <a class="btn-24-live" href="24-autoplay.html" title="24 Autoplay — live movie channel">
+            <span class="live-dot"></span>
+            <span class="btn-24-label">24 AUTOPLAY</span>
+          </a>
           <button class="btn-circle mobile-header-share" id="mobileHeaderShareBtn" onclick="shareCurrentTitle(event)" title="Share this title" aria-label="Share">
             <i class="fa-solid fa-share-nodes"></i>
           </button>
@@ -5821,6 +5874,10 @@
         <i class="fa-solid fa-house" style="color:#f59e0b;"></i>
         <span>Home</span>
       </button>
+      <a class="sheet-nav-item autoplay-side-link" href="24-autoplay.html">
+        <i class="fa-solid fa-tower-broadcast" style="color:#ef4444;"></i>
+        <span>24 AUTOPLAY · Live movies</span>
+      </a>
       <button class="sheet-nav-item" onclick="selectType('trending'); closeMoreSheet(null);">
         <i class="fa-solid fa-fire" style="color:#f97316;"></i>
         <span>Trending Now</span>
