@@ -89,7 +89,7 @@
   .eps button { border:0; background:#fff; border-radius:12px; padding:8px 10px; font-weight:800; flex:0 0 auto; }
   #player { position:fixed; inset:0; width:100vw; height:100vh; z-index:80; background:#000; }
   #player:fullscreen, #player:-webkit-full-screen { width:100%; height:100%; background:#000; }
-  #player { overflow:hidden; } #player iframe { position:absolute; left:0; width:100%; top:-120px; height:calc(100% + 260px); border:0; pointer-events:none !important; background:#000; } #player .mask { position:absolute; inset:0; z-index:4; background:transparent; }
+  #player { overflow:hidden; } #player video, #player iframe { position:absolute; inset:0; width:100%; height:100%; border:0; background:#000; } #player video { z-index:1; object-fit:contain; } #player iframe { z-index:1; top:-140px; height:calc(100% + 280px); pointer-events:none !important; } #player.native iframe { display:none; } #player.native video { display:block; } #player .mask { position:absolute; inset:0; z-index:4; background:transparent; }
   #player .chrome { position:absolute; left:0; right:0; z-index:5; display:flex; align-items:center; gap:10px; color:#fff; padding:14px 16px; transition:opacity .2s ease; }
   #player .top { top:0; background:linear-gradient(rgba(0,0,0,.72), transparent); }
   #player .bar { bottom:0; background:linear-gradient(transparent, rgba(0,0,0,.82)); }
@@ -119,6 +119,28 @@
   body.thumb-small .grid { grid-template-columns:repeat(auto-fill,minmax(108px,1fr)); } body.thumb-medium .grid { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); } body.thumb-large .grid { grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); }
 
   @media (max-width:860px) { .shell { grid-template-columns:1fr; grid-template-rows:auto 1fr; } aside.nav { position:sticky; top:0; width:100%; flex-direction:row; overflow-x:auto; z-index:5; } aside.nav .brand, aside.nav .foot { display:none; } aside.nav button.item { width:auto; flex:0 0 auto; } }
+
+  body { color:#f4f1ea; background:#07080c; }
+  #gate { background:#07080c; }
+  .gate, .chooser .card, .clog .card, .exitbox .card, #tmodal .sheet { background:#141820; color:#f4f1ea; }
+  .gate input, .choices button, .exitbox button, .clog button, .chip, .eps button, .person { background:#1c2230; color:#f4f1ea; }
+  aside.nav { background:linear-gradient(180deg,#10131a,#0b0d12); border-right:1px solid rgba(255,255,255,.06); padding:18px 10px; }
+  .brand b, .brand span { color:#fff; }
+  .mark { background:#111; overflow:hidden; padding:4px; }
+  .mark img { width:100%; height:100%; object-fit:contain; }
+  aside.nav button.item { color:#c9c3b8; border-radius:12px; }
+  aside.nav button.item.on, aside.nav button.item.is-focus { background:#f4f1ea; color:#111; }
+  .view { background:#07080c; color:#f4f1ea; }
+  .topbar input, .filters, .chip { background:#161b24; color:#f4f1ea; border-color:transparent; }
+  .hero { border-radius:22px; min-height:340px; box-shadow:none; }
+  .hero h2, .titleline h2, h3 { color:#fff; }
+  .card, .tile, .person { background:#12161e; color:#f4f1ea; box-shadow:none; }
+  .card small, .person small, .released, .titleline em { color:#b7b1a6; }
+  .is-focus { transform:scale(1.06); z-index:3; }
+  .stagebox { background:#000; border-radius:22px; }
+  #player { background:#000; }
+  #player .chrome { font-size:1.05rem; }
+  #player .bar { padding-bottom:22px; }
 </style>
 </head>
 <body>
@@ -128,7 +150,7 @@
 <section id="gate"><form class="gate" id="gateForm"><div class="mark" style="margin:0 auto"><i class="fa-solid fa-clapperboard"></i></div><h1>Private screening</h1><input id="keyInput" autocomplete="off"><button>Open</button><div id="gateErr"></div></form></section>
 <div class="shell hidden" id="app">
   <aside class="nav" id="side">
-    <div class="brand"><div class="mark"><i class="fa-solid fa-film"></i></div><div><b>BWHS</b><span>STREAMS</span></div></div>
+    <div class="brand"><div class="mark"><img alt="" src="https://bwhs.online/apple-touch-icon.png"></div><div><b>BWHS</b><span>STREAMS</span></div></div>
     <button class="item focusable on" data-cat="popular"><i class="fa-solid fa-fire"></i> Popular</button>
     <button class="item focusable" data-cat="movies"><i class="fa-solid fa-film"></i> Movies</button>
     <button class="item focusable" data-cat="shows"><i class="fa-solid fa-tv"></i> Shows</button>
@@ -141,7 +163,7 @@
 <section id="tmodal" class="hidden"><div class="sheet"><header><button class="back focusable" id="tclose"><i class="fa-solid fa-arrow-left"></i></button><b>Trailer</b></header><iframe id="tframe" title="Trailer" allow="autoplay; encrypted-media" allowfullscreen></iframe></div></section>
 <section id="player" class="hidden">
   <div class="chrome top"><button class="back pctrl" id="playerBack"><i class="fa-solid fa-arrow-left"></i></button><div><b id="pTitle"></b><br><small id="pSub"></small></div></div>
-  <iframe id="frame" title="Film" allow="autoplay; fullscreen; encrypted-media" referrerpolicy="origin"></iframe><div class="mask" id="mask"></div>
+  <video id="film" playsinline></video><iframe id="frame" title="Film" allow="autoplay; fullscreen; encrypted-media" referrerpolicy="origin"></iframe><div class="mask" id="mask"></div>
   <div class="shield" id="shield" style="position:absolute;inset:0;z-index:2"></div>
   <div class="freeze" id="freeze"><span>Paused</span></div><div class="osd" id="osd"></div>
   <div id="servers" class="hidden"></div>
@@ -217,15 +239,18 @@ function providerUrl(kind,id,season,episode,seconds){ const p=PROVIDERS[S.provid
 function paintTime(){ const max=Math.max(S.duration||0, S.seconds||0, 1); $('#scrub').value=Math.min(1000, Math.round(S.seconds/max*1000)); $('#timeRead').textContent=fmt(S.seconds)+' / '+(S.duration?fmt(S.duration):'—'); }
 function goFull(){ const el=$('#player'); const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen; if(req) req.call(el); }
 function startWatch(media, kind){ S.player={media, kind, season:S.season||1, episode:S.episode||1}; S.provider=0; S.seconds=0; S.duration=0; S.paused=false; S.playing=false; S.serversOpen=false; document.body.classList.add('watching'); $('#pTitle').textContent=titleOf(media)+' ('+yearOf(media)+')'; $('#pSub').textContent=dateOf(media)+(kind==='tv'?' · S'+S.season+'E'+S.episode:''); $('#player').classList.remove('hidden'); $('#player').classList.remove('idle'); $('#freeze').classList.remove('show'); showChrome(); armHide(); $('#servers').classList.add('hidden'); $('#timeRead').textContent='0:00 / —'; $('#scrub').value=0; $('#frame').src=providerUrl(kind, media.id, S.season, S.episode, 0); goFull(); }
-function loadPlayer(seconds){ const p=S.player; if(!p) return; S.seconds=seconds||0; S.paused=false; S.serversOpen=false; $('#servers').classList.add('hidden'); $('#freeze').classList.remove('show'); $('#frame').src=providerUrl(p.kind, p.media.id, p.season, p.episode, S.seconds); $('#playBtn').innerHTML='<i class="fa-solid fa-pause"></i>'; paintTime(); }
+async function resolveStream(url){ try{ const r=await fetch(url); const t=await r.text(); const m=t.match(/https?:\/\/[^"'\s]+\.m3u8[^"'\s]*/); return m?m[0]:''; }catch(e){ return ''; } }
+function loadPlayer(seconds){ const p=S.player; if(!p) return; S.seconds=seconds||0; S.paused=false; S.serversOpen=false; $('#servers').classList.add('hidden'); $('#freeze').classList.remove('show'); const page=providerUrl(p.kind, p.media.id, p.season, p.episode, S.seconds); const film=$('#film'); film.pause(); film.removeAttribute('src'); $('#player').classList.remove('native'); $('#frame').src=page; resolveStream(page).then(src=>{ if(!src) return; film.src=src; film.currentTime=S.seconds||0; film.play().then(()=>$('#player').classList.add('native')).catch(()=>{}); }); $('#playBtn').innerHTML='<i class="fa-solid fa-pause"></i>'; paintTime(); }
+$('#film').addEventListener('timeupdate', ()=>{ if(!$('#player').classList.contains('native')||S.paused) return; S.seconds=$('#film').currentTime||0; S.duration=$('#film').duration||S.duration; paintTime(); });
+$('#film').addEventListener('pause', ()=>{ if($('#player').classList.contains('native')) S.paused=true; });
 function seekSoft(delta){ S.seconds=Math.max(0,S.seconds+delta); paintTime(); sendSeek(S.seconds); toast((delta>0?'+':'')+delta+'s'); showChrome(); armHide(); }
 function playerWin(){ try { return $('#frame').contentWindow; } catch(e){ return null; } }
 function sendSeek(t){ const win=playerWin(); if(!win) return; const pack=[{type:'seek', value:t},{type:'SEEK', time:t},{event:'command', func:'seek', args:[t]},{method:'seek', value:t},{command:'seek', time:t}]; pack.forEach(m=>{ try{ win.postMessage(m,'*'); win.postMessage(JSON.stringify(m),'*'); }catch(e){} }); S.seekAck=false; clearTimeout(S.seekTimer); S.seekTimer=setTimeout(()=>{ if(!S.seekAck) loadPlayer(S.seconds); }, 1600); }
 window.addEventListener('message', ev=>{ const d=ev.data; const raw=typeof d==='string'?(()=>{ try{return JSON.parse(d)}catch(e){return null} })():d; if(!raw||typeof raw!=='object') return; const t=Number(raw.currentTime||raw.time||raw.seconds||(raw.data&&raw.data.currentTime)||(raw.info&&raw.info.currentTime)); const dur=Number(raw.duration||(raw.data&&raw.data.duration)||0); if(dur>0) S.duration=dur; if(t>=0 && !Number.isNaN(t)){ S.seconds=t; S.seekAck=true; S.playing=true; if(!S.paused) paintTime(); } });
 function closePlayer(){ $('#frame').src='about:blank'; $('#player').classList.add('hidden'); document.body.classList.remove('watching'); if(document.fullscreenElement) document.exitFullscreen?.(); S.player=null; S.playing=false; }
 function send(cmd){ const win=$('#frame').contentWindow; if(!win) return; try{ win.postMessage({event:'command', func:cmd, args:[]}, '*'); win.postMessage({type:cmd}, '*'); win.postMessage(JSON.stringify({event:'command', func:cmd==='pause'?'pauseVideo':'playVideo', args:[]}), '*'); } catch(e){} }
-function togglePlay(){ if(S.paused){ S.paused=false; $('#freeze').classList.remove('show'); send('play'); $('#playBtn').innerHTML='<i class="fa-solid fa-pause"></i>'; toast('Playing'); showChrome(); armHide(); return; } S.paused=true; send('pause'); $('#freeze').classList.add('show'); $('#playBtn').innerHTML='<i class="fa-solid fa-play"></i>'; toast('Paused'); showChrome(); clearTimeout(S.idle); }
-function seek(delta){ seekSoft(delta); }
+function togglePlay(){ const film=$('#film'); if($('#player').classList.contains('native')){ if(film.paused){ film.play(); S.paused=false; $('#playBtn').innerHTML='<i class="fa-solid fa-pause"></i>'; } else { film.pause(); S.paused=true; $('#playBtn').innerHTML='<i class="fa-solid fa-play"></i>'; } $('#freeze').classList.toggle('show', S.paused); showChrome(); if(!S.paused) armHide(); return; } if(S.paused){ S.paused=false; $('#freeze').classList.remove('show'); send('play'); $('#playBtn').innerHTML='<i class="fa-solid fa-pause"></i>'; toast('Playing'); showChrome(); armHide(); return; } S.paused=true; send('pause'); $('#freeze').classList.add('show'); $('#playBtn').innerHTML='<i class="fa-solid fa-play"></i>'; toast('Paused'); showChrome(); clearTimeout(S.idle); }
+function seek(delta){ if($('#player').classList.contains('native')){ const film=$('#film'); film.currentTime=Math.max(0,(film.currentTime||0)+delta); S.seconds=film.currentTime; paintTime(); showChrome(); armHide(); return; } seekSoft(delta); }
 function openServers(){ S.serversOpen=true; $('#servers').classList.remove('hidden'); $('#servers').innerHTML=PROVIDERS.map((p,i)=>`<button class="pctrl ${i===S.provider?'on':''}" data-server="${i}">${p.name}</button>`).join(''); $('#servers').querySelectorAll('button').forEach(b=>b.onclick=()=>{ S.provider=Number(b.dataset.server); loadPlayer(S.seconds); toast(PROVIDERS[S.provider].name); }); showChrome(); }
 function toast(text){ const o=$('#osd'); o.textContent=text; o.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>o.classList.remove('show'), 700); }
 function showChrome(){ $('#player').classList.remove('idle'); }
