@@ -103,10 +103,23 @@
   .osd { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); background:#fff; border-radius:14px; padding:10px 14px; font-weight:800; opacity:0; z-index:4; }
   .osd.show { opacity:1; }
   body.watching #app { visibility:hidden; }
+  .chooser, .clog, .exitbox { position:fixed; inset:0; z-index:95; display:grid; place-items:center; background:rgba(255,247,241,.82); padding:20px; }
+  .chooser .card, .clog .card, .exitbox .card { width:min(560px,100%); background:#fff; border-radius:28px; padding:22px; box-shadow:var(--shadow); }
+  .chooser h2, .clog h2, .exitbox h2 { font-family:Fraunces,serif; margin:0 0 8px; }
+  .choices { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .choices button, .exitbox button, .clog button { border:0; border-radius:16px; padding:14px; font-weight:800; background:#fff7f1; color:var(--ink); }
+  .choices button.on, .exitbox button.yes { background:linear-gradient(90deg,var(--coral),#ff7a3c); color:#fff; }
+  body.device-phone .hero { min-height:220px; } body.device-phone .hero h2 { font-size:1.7rem; }
+  body.device-tv { font-size:18px; } body.device-tv .hero { min-height:420px; } body.device-tv .card, body.device-tv .tile { flex-basis:190px; }
+  body.device-tablet .shell { grid-template-columns:180px minmax(0,1fr); }
+
   @media (max-width:860px) { .shell { grid-template-columns:1fr; grid-template-rows:auto 1fr; } aside.nav { position:sticky; top:0; width:100%; flex-direction:row; overflow-x:auto; z-index:5; } aside.nav .brand, aside.nav .foot { display:none; } aside.nav button.item { width:auto; flex:0 0 auto; } }
 </style>
 </head>
 <body>
+<section id="chooser" class="chooser hidden"><div class="card"><div class="kicker">BWHS Lounge</div><h2>What are you watching on?</h2><p>Pick a device. Arrows move, OK selects. The layout fits that screen.</p><div class="choices"><button class="focusable" data-device="phone">Phone</button><button class="focusable" data-device="tablet">Tablet</button><button class="focusable" data-device="tv">TV</button><button class="focusable" data-device="computer">Computer</button></div></div></section>
+<section id="clog" class="clog hidden"><div class="card"><h2>What's new</h2><p>Version 1.3</p><ul><li>Official BWHS icon on the app.</li><li>Device picker so the room fits phone, tablet, TV, or computer.</li><li>Back no longer dumps you out. Trailer closes first.</li><li>Stay or leave prompt at the last back step.</li><li>On-screen remote bar removed.</li></ul><button class="focusable" id="clogOk">Continue</button></div></section>
+<section id="exitbox" class="exitbox hidden"><div class="card"><h2>Leave BWHS Lounge?</h2><p>You are at the start. Stay here, or leave the app.</p><div class="choices"><button class="focusable" id="stayBtn">Stay</button><button class="focusable yes" id="leaveBtn">Leave</button></div></div></section>
 <section id="gate"><form class="gate" id="gateForm"><div class="mark" style="margin:0 auto"><i class="fa-solid fa-clapperboard"></i></div><h1>Private screening</h1><input id="keyInput" autocomplete="off"><button>Open</button><div id="gateErr"></div></form></section>
 <div class="shell hidden" id="app">
   <aside class="nav" id="side">
@@ -154,7 +167,7 @@ const dateOf=m=>{const raw=m.release_date||m.first_air_date; if(!raw) return 'Re
 const fmt=s=>{s=Math.max(0,Math.floor(s||0)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 async function tmdb(path){const res=await fetch(TMDB+path+(path.includes('?')?'&':'?')+'api_key='+API); if(!res.ok) throw new Error('Catalog unavailable'); return res.json();}
 const clean=list=>(list||[]).filter(m=>(m.poster_path||m.backdrop_path)&&titleOf(m)&&!m.adult);
-function unlock(ok){ if(!ok){$('#gateErr').textContent='Wrong key'; return;} sessionStorage.setItem('bwhs_lounge','1'); $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden'); render(); }
+function unlock(ok){ if(!ok){$('#gateErr').textContent='Wrong key'; return;} sessionStorage.setItem('bwhs_lounge','1'); $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden'); const saved=localStorage.getItem('bwhs_device'); if(saved) applyDevice(saved); else { const w=Math.min(screen.width,screen.height); $('#chooser').classList.remove('hidden'); document.querySelector('[data-device="'+(w<700?'phone':w<1100?'tablet':'tv')+'"]').classList.add('is-focus'); } render(); }
 $('#gateForm').onsubmit=e=>{e.preventDefault(); unlock($('#keyInput').value.trim().toLowerCase()===PORTAL);};
 if(((location.hash||'').replace('#','')||new URLSearchParams(location.search).get('k')||'').toLowerCase()===PORTAL||sessionStorage.getItem('bwhs_lounge')==='1') unlock(true);
 function bits(kind){const cat=CATS[S.cat]; const b=['language=en-US','include_adult=false','vote_count.gte=40']; const g=[]; if(cat.genre) g.push(cat.genre); if(S.genre!=='all') g.push(S.genre); if(g.length) b.push('with_genres='+g.join(',')); if(cat.lang) b.push('with_original_language='+cat.lang); if(cat.notLang) b.push('without_original_language='+cat.notLang); const y=YEARS.find(x=>x.id===S.year); const dk=kind==='tv'?'first_air_date':'primary_release_date'; if(y&&y.id!=='all'){ if(y.gte) b.push(dk+'.gte='+y.gte); if(y.lte) b.push(dk+'.lte='+y.lte); if(!y.gte&&!y.lte) b.push(dk+'.gte='+y.id+'-01-01', dk+'.lte='+y.id+'-12-31'); } if(S.filter==='popular') b.push('sort_by=popularity.desc'); if(S.filter==='latest') b.push('sort_by='+dk+'.desc'); if(S.filter==='oldies') b.push(dk+'.lte=1999-12-31','sort_by=popularity.desc'); if(S.filter==='top') b.push('sort_by=vote_average.desc','vote_count.gte=300'); if(S.filter==='throwback') b.push(dk+'.gte=2000-01-01',dk+'.lte=2012-12-31','sort_by=popularity.desc'); return b.join('&'); }
@@ -163,7 +176,13 @@ const tile=m=>`<button class="tile focusable" data-go="detail" data-id="${m.id}"
 document.querySelectorAll('.nav .item').forEach(b=>b.onclick=()=>{S.cat=b.dataset.cat; S.genre='all'; S.stack=[{type:'home'}]; document.querySelectorAll('.nav .item').forEach(x=>x.classList.toggle('on', x.dataset.cat===S.cat)); $('#side').classList.remove('open'); render();});
 async function render(){ const screen=S.stack.at(-1); $('#view').innerHTML=`<div class="line"><button class="back focusable" id="backArrow"><i class="fa-solid fa-arrow-left"></i></button><strong>${CATS[S.cat].label}</strong></div><form class="search" id="searchForm"><i class="fa-solid fa-magnifying-glass"></i><input class="focusable" id="q" placeholder="Search films and shows"></form><div id="body">Loading ${CATS[S.cat].label}…</div>`; $('#backArrow').onclick=goBack; $('#searchForm').onsubmit=async e=>{e.preventDefault(); const q=$('#q').value.trim(); if(!q) return; const data=await tmdb('/search/multi?language=en-US&query='+encodeURIComponent(q)); push({type:'more', title:'Search · '+q, items:clean(data.results).filter(m=>m.media_type!=='person')});}; try{ if(screen.type==='home') await renderHome(); else if(screen.type==='more') renderMore(screen); else if(screen.type==='detail') await renderDetail(screen); else if(screen.type==='person') await renderPerson(screen);} catch(err){ $('#body').innerHTML='<p>'+err.message+'</p>'; } bind(); collect(); }
 function push(screen){ S.stack.push(screen); render(); }
-function goBack(){ if(!$('#tmodal').classList.contains('hidden')){ closeTrailer(); return; } if(!$('#player').classList.contains('hidden')){ closePlayer(); return; } if(S.stack.length>1) S.stack.pop(); render(); }
+function goBack(){ if(!$('#exitbox').classList.contains('hidden')){ $('#exitbox').classList.add('hidden'); return 'stay'; } if(!$('#tmodal').classList.contains('hidden')){ closeTrailer(); return 'stay'; } if(!$('#clog').classList.contains('hidden')){ $('#clog').classList.add('hidden'); return 'stay'; } if(!$('#chooser').classList.contains('hidden')) return 'stay'; if(!$('#player').classList.contains('hidden')){ closePlayer(); return 'stay'; } if(S.stack.length>1){ S.stack.pop(); render(); return 'stay'; } $('#exitbox').classList.remove('hidden'); collect(); return 'exit'; }
+window.bwhsBack=goBack; window.bwhsLeave=function(){ if(window.Android&&Android.leave) Android.leave(); else history.back(); };
+function applyDevice(kind){ document.body.classList.remove('device-phone','device-tablet','device-tv','device-computer'); document.body.classList.add('device-'+(kind||'computer')); localStorage.setItem('bwhs_device', kind||'computer'); $('#chooser').classList.add('hidden'); if(localStorage.getItem('bwhs_clog')!=='1.3') $('#clog').classList.remove('hidden'); }
+document.querySelectorAll('[data-device]').forEach(b=>b.onclick=()=>applyDevice(b.dataset.device));
+$('#clogOk').onclick=()=>{ localStorage.setItem('bwhs_clog','1.3'); $('#clog').classList.add('hidden'); };
+$('#stayBtn').onclick=()=>$('#exitbox').classList.add('hidden');
+$('#leaveBtn').onclick=()=>window.bwhsLeave();
 function openTrailer(key){ if(!key) return; $('#tframe').src='https://www.youtube.com/embed/'+key+'?autoplay=1&rel=0'; $('#tmodal').classList.remove('hidden'); }
 function closeTrailer(){ $('#tframe').src='about:blank'; $('#tmodal').classList.add('hidden'); }
 $('#tclose').onclick=closeTrailer;
