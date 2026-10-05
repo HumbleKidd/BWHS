@@ -33,7 +33,7 @@
   .brand span { font-size:.64rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:800; }
   .nav button.item { display:flex; align-items:center; gap:10px; width:100%; text-align:left; border:0; background:transparent; border-radius:14px; padding:11px 12px; font-weight:750; color:var(--ink); }
   .nav button.item.on { background:#fff; box-shadow:var(--shadow); }
-  main.view { min-width:0; height:100%; overflow:auto; padding:14px 16px 96px; }
+  main.view { min-width:0; height:100%; overflow:auto; padding:14px 16px 28px; }
   .line { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
   .back { width:40px; height:40px; border-radius:50%; border:0; background:#fff; box-shadow:var(--shadow); }
   .search { display:flex; align-items:center; gap:8px; background:#fff; border-radius:999px; padding:8px 14px; width:min(520px,100%); box-shadow:0 8px 18px rgba(70,30,70,.06); margin-bottom:12px; }
@@ -102,11 +102,8 @@
   #servers button.on { background:#fff1ea; }
   .osd { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); background:#fff; border-radius:14px; padding:10px 14px; font-weight:800; opacity:0; z-index:4; }
   .osd.show { opacity:1; }
-  .dock { position:fixed; left:calc(var(--side) + 12px); right:12px; bottom:12px; z-index:30; display:flex; justify-content:center; pointer-events:none; }
-  .dock div { pointer-events:auto; display:flex; gap:8px; background:rgba(255,252,248,.94); border-radius:999px; padding:8px; box-shadow:var(--shadow); }
-  .dock button { width:42px; height:42px; border-radius:50%; border:0; background:#fff; }
-  body.watching .dock, body.watching #app { visibility:hidden; }
-  @media (max-width:860px) { .shell { grid-template-columns:1fr; } aside.nav { position:fixed; inset:0 auto 0 0; width:var(--side); z-index:25; transform:translateX(-105%); } aside.nav.open { transform:none; } .dock { left:12px; } }
+  body.watching #app { visibility:hidden; }
+  @media (max-width:860px) { .shell { grid-template-columns:1fr; grid-template-rows:auto 1fr; } aside.nav { position:sticky; top:0; width:100%; flex-direction:row; overflow-x:auto; z-index:5; } aside.nav .brand, aside.nav .foot { display:none; } aside.nav button.item { width:auto; flex:0 0 auto; } }
 </style>
 </head>
 <body>
@@ -123,15 +120,6 @@
   </aside>
   <main class="view" id="view"></main>
 </div>
-<div class="dock"><div>
-  <button id="menuBtn"><i class="fa-solid fa-bars"></i></button>
-  <button data-dir="up"><i class="fa-solid fa-chevron-up"></i></button>
-  <button data-dir="left"><i class="fa-solid fa-chevron-left"></i></button>
-  <button data-dir="ok"><i class="fa-solid fa-check"></i></button>
-  <button data-dir="right"><i class="fa-solid fa-chevron-right"></i></button>
-  <button data-dir="down"><i class="fa-solid fa-chevron-down"></i></button>
-  <button id="dockBack"><i class="fa-solid fa-arrow-left"></i></button>
-</div></div>
 <section id="tmodal" class="hidden"><div class="sheet"><header><button class="back focusable" id="tclose"><i class="fa-solid fa-arrow-left"></i></button><b>Trailer</b></header><iframe id="tframe" title="Trailer" allow="autoplay; encrypted-media" allowfullscreen></iframe></div></section>
 <section id="player" class="hidden">
   <div class="chrome top"><button class="back pctrl" id="playerBack"><i class="fa-solid fa-arrow-left"></i></button><div><b id="pTitle"></b><br><small id="pSub"></small></div></div>
@@ -210,8 +198,7 @@ function collect(){ S.nodes=[...document.querySelectorAll('#side .item, #view .f
 function setFocus(i){ S.nodes.forEach(n=>n.classList.remove('is-focus')); if(!S.nodes.length) return; S.focus=(i+S.nodes.length)%S.nodes.length; const el=S.nodes[S.focus]; el.classList.add('is-focus'); el.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'}); }
 function move(dir){ collect(); if(!S.nodes.length) return; const cur=S.nodes[S.focus]||S.nodes[0]; const onSide=!!cur.closest('#side'); const pool=S.nodes.map((el,i)=>({el,i})).filter(x=>onSide?x.el.closest('#side'):x.el.closest('#view')); const r=cur.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; let best=null, score=Infinity; pool.forEach(({el,i})=>{ if(el===cur) return; const b=el.getBoundingClientRect(); const dx=b.left+b.width/2-cx, dy=b.top+b.height/2-cy; if(dir==='left'&&dx>=-8) return; if(dir==='right'&&dx<=8) return; if(dir==='up'&&dy>=-8) return; if(dir==='down'&&dy<=8) return; const primary=dir==='left'||dir==='right'?Math.abs(dx):Math.abs(dy); const secondary=dir==='left'||dir==='right'?Math.abs(dy):Math.abs(dx); const s=primary+secondary*2.6; if(s<score){ score=s; best=i; } }); if(best==null && dir==='left' && !onSide){ const side=S.nodes.findIndex(el=>el.closest('#side')); if(side>=0) best=side; } if(best==null && dir==='right' && onSide){ const main=S.nodes.findIndex(el=>el.closest('#view')); if(main>=0) best=main; } if(best!=null) setFocus(best); }
 function activate(){ const el=S.nodes[S.focus]; if(!el) return; if(el.id==='q'){ el.focus(); return; } el.click(); }
-document.querySelectorAll('.dock button[data-dir]').forEach(b=>b.onclick=()=>{ if(!$('#player').classList.contains('hidden')){ onRemote(b.dataset.dir==='ok'?'Enter':b.dataset.dir); return; } b.dataset.dir==='ok'?activate():move(b.dataset.dir); });
-$('#dockBack').onclick=goBack; $('#menuBtn').onclick=()=>$('#side').classList.toggle('open');
+const dockBack=$('#dockBack'); if(dockBack) dockBack.onclick=goBack; const menuBtn=$('#menuBtn'); if(menuBtn) menuBtn.onclick=()=>$('#side').classList.toggle('open');
 function onRemote(key){ const idle=$('#player').classList.contains('idle'); if(key==='up'||key==='down'||key==='ArrowUp'||key==='ArrowDown'){ showChrome(); if(idle){ markP(); return; } moveP(key.includes('up')||key==='up'?'up':'down'); armHide(); return; } if(key==='left'||key==='right'||key==='ArrowLeft'||key==='ArrowRight'){ showChrome(); const nodes=pNodes(); const onScrub=nodes[S.pFocus]&&nodes[S.pFocus].id==='scrub'; if(onScrub){ seek((key.includes('right')||key==='right')?10:-10); return; } moveP(key.includes('left')||key==='left'?'left':'right'); armHide(); return; } if(key==='Enter'||key==='ok'){ if(S.serversOpen){ pNodes()[S.pFocus]?.click(); return; } togglePlay(); } }
 document.addEventListener('keydown', e=>{ if(!$('#gate').classList.contains('hidden')) return; const typing=document.activeElement&&document.activeElement.id==='q'; const watching=!$('#player').classList.contains('hidden'); const k=e.key; if(k==='Escape'||k==='BrowserBack'||k==='GoBack'||(k==='Backspace'&&!typing)){ e.preventDefault(); goBack(); return; } if(!watching){ if(typing&&k!=='Escape'){ if(k==='ArrowDown'||k==='ArrowUp'){ e.preventDefault(); $('#q').blur(); move(k==='ArrowDown'?'down':'up'); } return; } if(k==='ArrowLeft'){e.preventDefault(); move('left');} if(k==='ArrowRight'){e.preventDefault(); move('right');} if(k==='ArrowUp'){e.preventDefault(); move('up');} if(k==='ArrowDown'){e.preventDefault(); move('down');} if(k==='Enter'){e.preventDefault(); activate();} return; } if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' ','p','P','s','S'].includes(k)) e.preventDefault(); if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight') onRemote(k); else if(k==='Enter'||k===' '||k==='p'||k==='P') onRemote('Enter'); else if(k==='s'||k==='S') openServers(); });
 </script>
