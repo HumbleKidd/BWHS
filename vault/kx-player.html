@@ -115,14 +115,14 @@ const API = "129637a8869a61522af21b80f6eb5129";
 const TMDB = "https://api.themoviedb.org/3";
 const IMG = "https://image.tmdb.org/t/p";
 const PROVIDERS = [
-  { id:"vixsrc", name:"VixSrc", build:(id,t)=>`https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&startAt=${t||0}&lang=en&primaryColor=ff4b2b&secondaryColor=120d0a&canPlayFHD=1&quality=2160` },
-  { id:"vidlink", name:"VidLink", build:(id,t)=>`https://vidlink.pro/movie/${id}?autoplay=true&startAt=${t||0}&title=false&poster=false&primaryColor=ff4b2b&icons=vid&muted=false` },
-  { id:"vidsrc", name:"VidSrc", build:(id,t)=>`https://vidsrc.xyz/embed/movie?tmdb=${id}&autoplay=1&ds_lang=en` },
-  { id:"vidcore", name:"VidCore", build:(id)=>`https://vidcore.org/embed/movie/${id}?autoplay=1&theme=ff4b2b` },
-  { id:"vidapi", name:"VidAPI", build:(id)=>`https://vidapi.ru/embed/movie/${id}?autoplay=1` },
-  { id:"moviesapi", name:"MoviesAPI", build:(id)=>`https://moviesapi.club/movie/${id}?autoplay=1` },
-  { id:"vidbolt", name:"VidBolt", build:(id)=>`https://vidbolt.xyz/embed/movie/${id}?autoplay=1` },
-  { id:"upcloud", name:"UpCloud", build:(id)=>`https://vidsrc.cc/v2/embed/movie/${id}?autoplay=1` }
+  { id:"vixsrc", name:"VixSrc", build:(id,t,m)=>`https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&startAt=${t||0}&lang=en&primaryColor=ff4b2b&secondaryColor=120d0a&canPlayFHD=1&quality=2160${m?"&mute=1":""}` },
+  { id:"vidlink", name:"VidLink", build:(id,t,m)=>`https://vidlink.pro/movie/${id}?autoplay=true&startAt=${t||0}&title=false&poster=false&primaryColor=ff4b2b&icons=vid&muted=${m?"true":"false"}&mute=${m?1:0}&volume=${m?0:1}` },
+  { id:"vidsrc", name:"VidSrc", build:(id,t,m)=>`https://vidsrc.xyz/embed/movie?tmdb=${id}&autoplay=1&ds_lang=en${m?"&mute=1":""}` },
+  { id:"vidcore", name:"VidCore", build:(id,t,m)=>`https://vidcore.org/embed/movie/${id}?autoplay=1&theme=ff4b2b${m?"&mute=1":""}` },
+  { id:"vidapi", name:"VidAPI", build:(id,t,m)=>`https://vidapi.ru/embed/movie/${id}?autoplay=1${m?"&mute=1":""}` },
+  { id:"moviesapi", name:"MoviesAPI", build:(id,t,m)=>`https://moviesapi.club/movie/${id}?autoplay=1${m?"&mute=1":""}` },
+  { id:"vidbolt", name:"VidBolt", build:(id,t,m)=>`https://vidbolt.xyz/embed/movie/${id}?autoplay=1${m?"&mute=1":""}` },
+  { id:"upcloud", name:"UpCloud", build:(id,t,m)=>`https://vidsrc.cc/v2/embed/movie/${id}?autoplay=1${m?"&mute=1":""}` }
 ];
 const frame = document.getElementById("frame");
 const S = { provider:"vixsrc", film:null, t:0, d:0, paused:true, muted:false, vol:1, rate:1, seeking:false };
@@ -133,26 +133,19 @@ function provider(){ return PROVIDERS.find(p=>p.id===S.provider)||PROVIDERS[0]; 
 function fmt(n){ n=Math.max(0,Math.floor(n||0)); return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0"); }
 function paintTime(){ document.getElementById("cur").textContent=fmt(S.t); document.getElementById("dur").textContent=fmt(S.d); if(!S.seeking && S.d) document.getElementById("scrub").value=Math.round((S.t/S.d)*1000); }
 function post(msg){ try { frame.contentWindow.postMessage(msg,"*"); } catch(e){} }
-function command(kind, value){
-  const msgs = [];
-  if (kind==="play") msgs.push({type:"play"},{event:"play"},{action:"play"},{method:"play"},{event:"command",func:"playVideo",args:[]},{command:"play"});
-  if (kind==="pause") msgs.push({type:"pause"},{event:"pause"},{action:"pause"},{method:"pause"},{event:"command",func:"pauseVideo",args:[]},{command:"pause"});
-  if (kind==="seek") msgs.push({type:"seek",currentTime:value,time:value,value},{event:"seek",currentTime:value},{method:"seek",value},{event:"command",func:"seekTo",args:[value,true]});
-  if (kind==="mute") msgs.push({type:"mute"},{event:"mute"},{method:"mute"},{event:"command",func:"mute",args:[]});
-  if (kind==="unmute") msgs.push({type:"unmute"},{event:"unmute"},{method:"unmute"},{muted:false},{event:"command",func:"unMute",args:[]});
-  if (kind==="volume") msgs.push({type:"volume",value},{event:"volume",value},{method:"setVolume",value},{event:"command",func:"setVolume",args:[Math.round(value*100)]});
-  if (kind==="rate") msgs.push({type:"playbackRate",value},{method:"setPlaybackRate",value},{event:"command",func:"setPlaybackRate",args:[value]});
-  msgs.forEach(post);
-}
-function setPaused(p){ S.paused=p; document.getElementById("playBtn").innerHTML = p ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>'; document.getElementById("bigplay").style.display = p ? "block" : "none"; }
-function toggle(){ if(S.paused){ command("play"); setPaused(false); } else { command("pause"); setPaused(true); } }
-function seekTo(sec){ S.t=Math.max(0,sec); paintTime(); command("seek", S.t); if(S.provider==="vixsrc" || S.provider==="vidlink"){ frame.src = provider().build(S.film.id, Math.floor(S.t)); } }
+function streamUrl(){ return provider().build(S.film.id, Math.floor(S.t||0), S.muted || S.vol===0); }
+function holdFrame(){ try { frame.src = "about:blank"; } catch(e){} }
+function setPaused(p){ S.paused=p; document.getElementById("playBtn").innerHTML = p ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>'; document.getElementById("bigplay").style.display = p ? "block" : "none"; document.getElementById("muteBtn").innerHTML = (S.muted||S.vol===0) ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>'; }
+function playFromHere(){ if(!S.film) return; setPaused(false); frame.src = streamUrl(); }
+function pauseHere(){ setPaused(true); holdFrame(); toast("Paused at "+fmt(S.t)); }
+function toggle(){ if(S.paused) playFromHere(); else pauseHere(); }
+function seekTo(sec){ S.t=Math.max(0,sec); paintTime(); if(!S.paused) frame.src = streamUrl(); }
+function applyVolume(){ document.getElementById("vol").value=Math.round(S.vol*100); setPaused(S.paused); if(!S.paused && S.film) frame.src = streamUrl(); }
 function loadFrame(){
   if(!S.film) return;
-  frame.src = provider().build(S.film.id, Math.floor(S.t||0));
   document.getElementById("srvName").textContent = provider().name;
   document.querySelectorAll(".srv").forEach(b=>b.classList.toggle("active", b.dataset.srv===S.provider));
-  setPaused(false);
+  playFromHere();
   toast("Your player · "+provider().name);
 }
 function renderServers(){
@@ -192,8 +185,9 @@ document.getElementById("bigplay").onclick=toggle;
 document.getElementById("shield").onclick=toggle;
 document.getElementById("back10").onclick=()=>seekTo(S.t-10);
 document.getElementById("fwd10").onclick=()=>seekTo(S.t+10);
-document.getElementById("muteBtn").onclick=()=>{ S.muted=!S.muted; command(S.muted?"mute":"unmute"); };
-document.getElementById("vol").oninput=(e)=>{ S.vol=e.target.value/100; command("volume", S.vol); };
+document.getElementById("muteBtn").onclick=()=>{ S.muted=!S.muted; if(!S.muted && S.vol===0) S.vol=1; applyVolume(); toast(S.muted?"Muted":"Volume on"); };
+document.getElementById("vol").oninput=(e)=>{ S.vol=Number(e.target.value)/100; S.muted=S.vol===0; setPaused(S.paused); };
+document.getElementById("vol").onchange=()=>{ applyVolume(); toast(S.vol===0?"Muted":"Volume "+Math.round(S.vol*100)+"%"); };
 document.getElementById("rateBtn").onclick=()=>{ S.rate=S.rate>=2?0.75:Math.round((S.rate+0.25)*100)/100; document.getElementById("rateBtn").textContent=S.rate+"x"; command("rate", S.rate); };
 document.getElementById("nextSrv").onclick=()=>{ const i=PROVIDERS.findIndex(p=>p.id===S.provider); S.provider=PROVIDERS[(i+1)%PROVIDERS.length].id; loadFrame(); };
 document.getElementById("fsBtn").onclick=()=>{ const s=document.getElementById("stage"); document.fullscreenElement?document.exitFullscreen():s.requestFullscreen(); };
