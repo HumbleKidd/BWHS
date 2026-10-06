@@ -281,7 +281,7 @@ function toast(msg) {
   const t = $("#toast"); t.textContent = msg; t.classList.add("on");
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 1800);
 }
-function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&", "<": "<", ">": ">", '"': """ }[c])); }
+function esc(s) { return String(s ?? "").replace(/&/g, "&" + "amp;").replace(/</g, "&" + "lt;").replace(/>/g, "&" + "gt;").replace(/"/g, "&" + "quot;"); }
 async function tmdb(path) {
   const join = path.includes("?") ? "&" : "?";
   const res = await fetch(`${TMDB}${path}${join}api_key=${API}`);
