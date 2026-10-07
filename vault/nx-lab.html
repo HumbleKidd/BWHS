@@ -301,7 +301,7 @@
         </div>
         <div class="box">
           <h3>Source</h3>
-          <p class="note">Servers are the three engines from your player file, plus two same-pattern mirrors if a domain is down. The iframe is the real player — no fake timeline, no click-glass blocking the stream.</p>
+          <p class="note">These are the BWHS server engines, driven by this player only. Nothing here loads or changes the main site. The iframe is the real player.</p>
           <div class="url-line" id="src-url"></div>
           <div class="row-actions" style="margin-top:10px">
             <button class="btn quiet" id="copy-url">Copy embed URL</button>
@@ -311,7 +311,7 @@
       </div>
     </div>
   </section>
-  <footer class="fine">Playback is served by the third-party embed APIs in your file (VixSrc, VidSrc.me, VidApi). Availability and ads depend on those providers.</footer>
+  <footer class="fine">Standalone lab player. Servers match the BWHS bar. This page is not wired into the main site.</footer>
 
 <script>
 const IMG = "https://image.tmdb.org/t/p/w500";
@@ -319,47 +319,34 @@ const BACK = "https://image.tmdb.org/t/p/w1280";
 
 /* Endpoints lifted from universal_stream_player.html, normalized for movie + TV.
    VixSrc also documents /movie/{id} and /tv/{id}/{s}/{e}; both are wired. */
+const HD = "autoplay=1&autoPlay=true&quality=2160&maxQuality=2160&res=2160&q=2160";
+const VIX = "autoplay=1&autoPlay=true&startAt=0&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=2160&maxQuality=2160&res=2160";
+/* Same engines and URL shapes as the BWHS server bar. This page does not load the BWHS site. */
 const SERVERS = [
-  {
-    id: "vixsrc",
-    name: "VixSrc",
-    hint: "from your file",
-    idType: "tmdb",
-    movie: id => `https://vixsrc.to/embed/movie/${id}?primaryColor=ea580c&autoplay=1`,
-    tv: (id, s, e) => `https://vixsrc.to/embed/tv/${id}/${s}/${e}?primaryColor=ea580c&autoplay=1`
-  },
-  {
-    id: "vixsrc-direct",
-    name: "VixSrc Direct",
-    hint: "docs path",
-    idType: "tmdb",
-    movie: id => `https://vixsrc.to/movie/${id}?primaryColor=ea580c&autoplay=1`,
-    tv: (id, s, e) => `https://vixsrc.to/tv/${id}/${s}/${e}?primaryColor=ea580c&autoplay=1`
-  },
-  {
-    id: "vidsrc",
-    name: "VidSrc.me",
-    hint: "from your file",
-    idType: "imdb",
-    movie: id => `https://vidsrc.me/embed/movie/${id}`,
-    tv: (id, s, e) => `https://vidsrc.me/embed/tv/${id}/${s}/${e}`
-  },
-  {
-    id: "vidapi",
-    name: "VidApi",
-    hint: "from your file",
-    idType: "tmdb",
-    movie: id => `https://vidapi.io/embed/movie/${id}`,
-    tv: (id, s, e) => `https://vidapi.io/embed/tv/${id}/${s}/${e}`
-  },
-  {
-    id: "vidsrc-link",
-    name: "VidSrc Link",
-    hint: "mirror",
-    idType: "either",
-    movie: id => `https://vidsrc.link/embed/movie/${id}`,
-    tv: (id, s, e) => `https://vidsrc.link/embed/tv/${id}/${s}/${e}`
-  }
+  { id:"vixsrc", name:"VixSrc", hint:"BWHS", idType:"tmdb",
+    movie: id => `https://vixsrc.to/movie/${id}?${VIX}`,
+    tv: (id,s,e) => `https://vixsrc.to/tv/${id}/${s}/${e}?${VIX}` },
+  { id:"vidlink", name:"VidLink", hint:"BWHS", idType:"tmdb",
+    movie: id => `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=2160&maxQuality=2160`,
+    tv: (id,s,e) => `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=2160&maxQuality=2160` },
+  { id:"vidsrc", name:"VidSrc", hint:"BWHS", idType:"tmdb",
+    movie: id => `https://vidsrc.xyz/embed/movie?tmdb=${id}&${HD}&ds_lang=en`,
+    tv: (id,s,e) => `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}&${HD}&ds_lang=en` },
+  { id:"vidcore", name:"VidCore", hint:"BWHS", idType:"tmdb",
+    movie: id => `https://vidcore.org/embed/movie/${id}?${HD}&theme=4f46e5`,
+    tv: (id,s,e) => `https://vidcore.org/embed/tv/${id}/${s}/${e}?${HD}&theme=4f46e5` },
+  { id:"vidapi", name:"VidAPI", hint:"BWHS", idType:"tmdb",
+    movie: id => `https://vidapi.ru/embed/movie/${id}?${HD}`,
+    tv: (id,s,e) => `https://vidapi.ru/embed/tv/${id}/${s}/${e}?${HD}` },
+  { id:"moviesapi", name:"MoviesAPI", hint:"BWHS", idType:"tmdb",
+    movie: id => `https://moviesapi.club/movie/${id}?${HD}`,
+    tv: (id,s,e) => `https://moviesapi.club/tv/${id}-${s}-${e}?${HD}` },
+  { id:"vidbolt", name:"VidBolt", hint:"multi-language", idType:"tmdb",
+    movie: id => `https://vidbolt.xyz/embed/movie/${id}?${HD}`,
+    tv: (id,s,e) => `https://vidbolt.xyz/embed/tv/${id}/${s}/${e}?${HD}` },
+  { id:"upcloud", name:"UpCloud", hint:"BWHS", idType:"tmdb",
+    movie: id => `https://vidsrc.cc/v2/embed/movie/${id}?${HD}`,
+    tv: (id,s,e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}?${HD}` }
 ];
 
 const CATALOG = [
