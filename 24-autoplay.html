@@ -447,8 +447,10 @@
       }
       return { film, into: Math.max(0, pos - film.start), pos };
     }
+    const mobilePlay = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.matchMedia('(max-width: 900px)').matches;
     function vixUrl(id, startAt) {
-      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
+      const muted = mobilePlay ? 1 : 0;
+      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&playsinline=1&muted=${muted}&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
     }
     function paint(spot) {
       const film = spot.film;
@@ -537,16 +539,16 @@
         loadedId = saved.id;
       } catch (_) {}
     }
-    function loadLive() {
+    function loadLive(resume) {
       if (!playlist.length || !front) return;
       const spot = liveSpot();
       paint(spot);
       paintMissed(spot);
       const startAt = Math.min(Math.floor(spot.into), Math.max(0, spot.film.dur - 12));
       const remain = spot.film.dur - spot.into;
-      if (loadedId === spot.film.id) {
+      if (loadedId === spot.film.id && !resume) {
         remember(spot.film, startAt);
-        if (remain < 45) {
+        if (remain < (mobilePlay ? 90 : 45)) {
           const nxt = nextFilm(spot);
           if (nxt && primedId !== nxt.id) {
             primedId = nxt.id;
@@ -644,9 +646,15 @@
     armPlayers();
     setInterval(tick, 1000);
     keepScreenAwake();
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepScreenAwake(); if (playlist.length) loadLive(true); } });
-    window.addEventListener('pageshow', () => { keepScreenAwake(); if (playlist.length) loadLive(true); });
-    window.addEventListener('focus', keepScreenAwake);
+    function resumeChannel() {
+      keepScreenAwake();
+      if (!playlist.length) return;
+      loadLive(mobilePlay);
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resumeChannel(); });
+    window.addEventListener('pageshow', resumeChannel);
+    window.addEventListener('focus', () => { if (mobilePlay) resumeChannel(); else keepScreenAwake(); });
+    document.addEventListener('touchend', () => { keepScreenAwake(); }, { passive: true });
     boot();
   </script>
 </body>
