@@ -448,7 +448,7 @@
       return { film, into: Math.max(0, pos - film.start), pos };
     }
     function vixUrl(id, startAt) {
-      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
+      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&playsinline=1&muted=0&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
     }
     function paint(spot) {
       const film = spot.film;
@@ -536,14 +536,14 @@
         loadedId = saved.id;
       } catch (_) {}
     }
-    function loadLive() {
+    function loadLive(force) {
       if (!playlist.length || !front) return;
       const spot = liveSpot();
       paint(spot);
       paintMissed(spot);
       const startAt = Math.min(Math.floor(spot.into), Math.max(0, spot.film.dur - 12));
       const remain = spot.film.dur - spot.into;
-      if (loadedId === spot.film.id) {
+      if (loadedId === spot.film.id && !force) {
         remember(spot.film, startAt);
         if (remain < 45) {
           const nxt = nextFilm(spot);
@@ -594,8 +594,26 @@
       (vp.requestFullscreen || vp.webkitRequestFullscreen).call(vp);
       showChrome();
     }
+    function startNow() {
+      if (!front) armPlayers();
+      let id = 155, at = 0, title = 'Starting the channel…';
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('bwhs247-live') || 'null');
+        if (saved && saved.id) {
+          id = saved.id;
+          title = saved.title || title;
+          at = (saved.startAt || 0) + Math.max(0, Math.floor((Date.now() - (saved.saved || Date.now())) / 1000));
+        }
+      } catch (_) {}
+      warm(front, { id }, at);
+      $('nowTitle').textContent = title;
+      $('boot').classList.add('hidden');
+      loadedId = id;
+    }
     async function boot() {
+      startNow();
       playlist = await buildPlaylist();
+      loadedId = 0;
       loadLive(true);
     }
     $('fsBtn').addEventListener('click', toggleFs);
@@ -632,9 +650,9 @@
     armPlayers();
     setInterval(tick, 1000);
     keepScreenAwake();
-    restoreInstant();
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepScreenAwake(); if (playlist.length) loadLive(); } });
-    window.addEventListener('pageshow', () => { keepScreenAwake(); if (playlist.length) loadLive(); });
+    startNow();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepScreenAwake(); if (playlist.length) loadLive(true); } });
+    window.addEventListener('pageshow', () => { keepScreenAwake(); if (playlist.length) loadLive(true); else startNow(); });
     window.addEventListener('focus', keepScreenAwake);
     boot();
   </script>

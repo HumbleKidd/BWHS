@@ -1,6 +1,6 @@
 # BWHS changelog
 
-## 2026-10-07 — player restored
+## 2026-10-07 — film starts on open
 
-- 24/7 playback is back to the version that was already working.
-- The only change kept is the reload icon, on the right of the movie title card, for a manual refresh.
+- The 24/7 film starts as soon as the page opens.
+- A normal browser reload starts it too. The on-page reload icon is only for a manual refresh.
