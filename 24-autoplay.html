@@ -210,38 +210,35 @@
     }
     .go-home:hover { transform: translate(-50%, -50%) scale(1.04); }
 
-    .title-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
-    .title-row h1 { min-width: 0; }
+    .title-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .title-row h1 { min-width: 0; flex: 1; }
     .reload-live {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      position: fixed;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 30;
+      flex: 0 0 auto;
+      margin-left: auto;
       border: 0;
       border-radius: 999px;
-      padding: 8px 12px;
-      background: rgba(15, 23, 42, 0.55);
+      padding: 6px 10px;
+      background: rgba(15, 23, 42, 0.72);
       color: #fff;
-      opacity: 0.72;
-      font-size: 0.75rem;
+      opacity: 0.82;
+      font-size: 0.72rem;
       font-weight: 800;
       line-height: 1;
       cursor: pointer;
       box-shadow: none;
     }
-    .reload-live:hover, .reload-live:focus-visible { opacity: 0.95; outline: none; }
+    .reload-live:hover, .reload-live:focus-visible { opacity: 1; outline: none; }
     @media (max-width: 900px) {
       .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
       .go-home { position: static; left: auto; top: auto; transform: none; margin: 0 auto; flex: 1 0 100%; text-align: center; width: fit-content; }
       .brand, .tools { position: relative; z-index: 1; }
       .tools { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-start; }
       .pill, .tool { flex: 0 1 auto; }
-      .reload-live { right: 8px; padding: 8px 11px; opacity: 0.78; }
+      .reload-live { padding: 6px 9px; opacity: 0.88; }
     }
     .note { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; color: var(--muted); padding: 0 6px 4px; }
     @media (max-width: 900px) {
@@ -283,7 +280,7 @@
         <div class="kicker" id="nowKicker">Now playing</div>
         <div class="title-row">
           <h1 id="nowTitle">Tuning the channel…</h1>
-        </div>
+                </div>
         <div class="sub" id="nowSub"></div>
         <p class="synopsis" id="nowSyn"></p>
         <div class="track"><i id="progressBar"></i></div>

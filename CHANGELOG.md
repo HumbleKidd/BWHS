@@ -1,9 +1,9 @@
 # BWHS changelog
 
-## 2026-10-07 — reload on the far right
+## 2026-10-07 — reload sits in the title card
 
-- Reload now sits on the far right of the screen on every device, halfway down, so it does not cover the title or the bottom text.
-- It is a bit more visible than the faded icon, still light enough to stay out of the way.
+- Reload is inline with the movie title, on the right side of that card, on every device.
+- It is no longer pinned to the screen edge.
 
 ## 2026-10-07 — 24/7 playback restored
 
