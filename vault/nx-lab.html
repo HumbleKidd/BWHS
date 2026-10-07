@@ -348,7 +348,7 @@
       </div>
       <div class="screen" id="screen">
         <div class="loader" id="loader"><div class="spin"></div><p id="loader-label">Opening server…</p></div>
-        <iframe id="frame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="origin"></iframe>
+        <iframe id="frame" sandbox="allow-scripts allow-same-origin allow-presentation allow-forms" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="origin"></iframe>
         <div class="hold-still" id="hold-still"></div>
         <div class="shield" id="shield"></div>
         <div class="play-fab" id="play-fab">
@@ -362,7 +362,7 @@
             <button id="play-btn" type="button">Pause</button>
             <button id="mute-btn" type="button">Mute</button>
             <span class="time-label" id="time-label">00:00</span>
-            <span class="shield-tag">Shield on · video taps blocked</span>
+            <span class="shield-tag" id="sync-tag">Waiting for server time</span>
             <button id="fs-inline" type="button">Fullscreen</button>
           </div>
         </div>
@@ -377,7 +377,7 @@
         </div>
         <div class="box">
           <h3>Source</h3>
-          <p class="note">Shield stays over the embed so taps never hit the provider. Pause and play talk to the frame in place, so the picture stays and resume does not reload. Provider controls are cropped out under your bar.</p>
+          <p class="note">Popups are blocked by the frame sandbox, not just the shield. Only VixSrc and VidLink accept a start time. The bar moves only when a server reports real time — it no longer invents a clock.</p>
           <div class="url-line" id="src-url"></div>
           <div class="row-actions" style="margin-top:10px">
             <button class="btn quiet" id="copy-url">Copy embed URL</button>
@@ -641,18 +641,37 @@ function paintTime() {
   const fill = $("timeline-fill");
   const label = $("time-label");
   if (!fill || !label) return;
-  const pct = Math.min(100, (offset / RUNTIME) * 100);
+  const pct = Math.min(100, (offset / (duration || RUNTIME)) * 100);
   fill.style.width = pct + "%";
   label.textContent = fmt(offset);
 }
+let liveSync = false;
+let duration = RUNTIME;
 function startTick() {
   clearInterval(tickTimer);
-  tickTimer = setInterval(() => {
-    if (holding) return;
-    offset = Math.min(RUNTIME, offset + 1);
-    paintTime();
-  }, 1000);
+  if (liveSync) return;
+  $("sync-tag").textContent = "This server does not share time";
 }
+function noteTime(current, dur) {
+  liveSync = true;
+  if (dur && dur > 0) duration = dur;
+  offset = current || 0;
+  paintTime();
+  $("sync-tag").textContent = "Live time from server";
+}
+window.addEventListener("message", (e) => {
+  let data = e.data;
+  if (typeof data === "string") {
+    try { data = JSON.parse(data); } catch (err) { return; }
+  }
+  if (!data || typeof data !== "object") return;
+  const cur = data.currentTime ?? data.time ?? data.position ?? (data.data && data.data.currentTime);
+  const dur = data.duration ?? (data.data && data.data.duration);
+  const ev = String(data.event || data.type || data.method || "");
+  if (cur != null && (ev.toLowerCase().includes("time") || data.currentTime != null || data.time != null)) {
+    noteTime(Number(cur) || 0, Number(dur) || 0);
+  }
+});
 function showChrome() {
   const screen = $("screen");
   screen.classList.add("show-chrome");
@@ -705,16 +724,29 @@ function pauseIntercept() {
   $("frame").src = "about:blank";
   $("loader").classList.add("off");
 }
+function nudgePlay() {
+  tell([
+    { event: "command", func: "playVideo" },
+    { method: "play" }, { type: "play" }, { action: "play" },
+    { command: "play" }, "play", { type: "unmute" }, { muted: false }
+  ]);
+}
 function playIntercept() {
   holding = false;
+  liveSync = false;
   $("screen").classList.remove("paused");
   $("play-btn").textContent = "Pause";
   loadFrame();
+  nudgePlay();
+  setTimeout(nudgePlay, 600);
+  setTimeout(nudgePlay, 1500);
 }
 function seekTo(sec) {
-  offset = Math.max(0, Math.min(RUNTIME, Math.floor(sec)));
+  offset = Math.max(0, Math.min(duration || RUNTIME, Math.floor(sec)));
   paintTime();
-  if (holding) return;
+  const canSeek = state.server === "vixsrc" || state.server === "vidlink";
+  $("sync-tag").textContent = canSeek ? "Jumping on this server" : "This server ignores seek";
+  if (!canSeek || holding) return;
   loadFrame();
 }
 function togglePlay() {
@@ -908,7 +940,7 @@ function scrubAt(clientX) {
   const bar = $("timeline");
   const rect = bar.getBoundingClientRect();
   const pct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-  const sec = Math.floor(pct * RUNTIME);
+  const sec = Math.floor(pct * (duration || RUNTIME));
   $("timeline-fill").style.width = (pct * 100) + "%";
   $("time-label").textContent = fmt(sec);
   const tip = $("scrub-tip");
