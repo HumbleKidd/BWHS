@@ -210,35 +210,36 @@
     }
     .go-home:hover { transform: translate(-50%, -50%) scale(1.04); }
 
-    .title-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .title-row h1 { min-width: 0; flex: 1; }
+    .now { position: relative; }
+    .title-row { min-width: 0; padding-right: 34px; }
     .reload-live {
+      position: absolute;
+      top: 22px;
+      right: 10px;
+      z-index: 3;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      flex: 0 0 auto;
-      margin-left: auto;
+      width: 28px;
+      height: 28px;
       border: 0;
       border-radius: 999px;
-      padding: 6px 10px;
-      background: rgba(15, 23, 42, 0.72);
-      color: #fff;
-      opacity: 0.82;
-      font-size: 0.72rem;
-      font-weight: 800;
+      padding: 0;
+      background: rgba(15, 23, 42, 0.16);
+      color: #334155;
+      font-size: 0.85rem;
       line-height: 1;
       cursor: pointer;
       box-shadow: none;
     }
-    .reload-live:hover, .reload-live:focus-visible { opacity: 1; outline: none; }
+    .reload-live:hover, .reload-live:focus-visible { background: rgba(15, 23, 42, 0.28); outline: none; }
     @media (max-width: 900px) {
       .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
       .go-home { position: static; left: auto; top: auto; transform: none; margin: 0 auto; flex: 1 0 100%; text-align: center; width: fit-content; }
       .brand, .tools { position: relative; z-index: 1; }
       .tools { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-start; }
       .pill, .tool { flex: 0 1 auto; }
-      .reload-live { padding: 6px 9px; opacity: 0.88; }
+      .reload-live { top: 18px; right: 8px; }
     }
     .note { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; color: var(--muted); padding: 0 6px 4px; }
     @media (max-width: 900px) {
@@ -280,7 +281,8 @@
         <div class="kicker" id="nowKicker">Now playing</div>
         <div class="title-row">
           <h1 id="nowTitle">Tuning the channel…</h1>
-                </div>
+        </div>
+        <button class="reload-live" id="reloadLive" type="button" title="Reload" aria-label="Reload"><i class="fa-solid fa-rotate-right"></i></button>
         <div class="sub" id="nowSub"></div>
         <p class="synopsis" id="nowSyn"></p>
         <div class="track"><i id="progressBar"></i></div>
@@ -308,7 +310,6 @@
     </section>
     <p class="note">Live 24/7 channel. Movies keep playing, even after a reload.</p>
   </div>
-  <button class="reload-live" id="reloadLive" type="button" title="Reload channel" aria-label="Reload channel"><i class="fa-solid fa-rotate-right"></i> Reload</button>
   <script>
     const TMDB = 'https://api.themoviedb.org/3';
     const KEY = '129637a8869a61522af21b80f6eb5129';
