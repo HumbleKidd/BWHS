@@ -183,7 +183,7 @@
   }
   .screen:fullscreen, .screen:-webkit-full-screen { border-radius: 0; width: 100%; height: 100%; aspect-ratio: auto; }
   .shield {
-    position: absolute; inset: 0; z-index: 4;
+    position: absolute; left: 0; right: 0; top: 0; bottom: 72px; z-index: 4;
     background: transparent; cursor: pointer;
   }
   .play-fab {
@@ -207,15 +207,17 @@
     font-size: 16px; letter-spacing: -2px;
   }
   .screen-controls {
-    position: absolute; left: 0; right: 0; bottom: 0; z-index: 6;
-    padding: 36px 14px 12px;
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 8;
+    padding: 28px 14px 12px;
     background: linear-gradient(transparent, rgba(5,7,12,.94));
     display: flex; flex-direction: column; gap: 8px;
-    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+    opacity: 1; pointer-events: auto;
   }
-  .screen.show-chrome .screen-controls,
-  .screen:hover .screen-controls,
-  .screen.paused .screen-controls { opacity: 1; pointer-events: auto; }
+  .hold-still {
+    position: absolute; inset: 0; z-index: 2; display: none;
+    background: #000 center/cover no-repeat;
+  }
+  .screen.paused .hold-still { display: block; }
   .timeline { position: relative; height: 6px; background: rgba(255,255,255,.22); border-radius: 99px; cursor: pointer; touch-action: none; }
   .timeline i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; }
   .scrub-tip {
@@ -347,6 +349,7 @@
       <div class="screen" id="screen">
         <div class="loader" id="loader"><div class="spin"></div><p id="loader-label">Opening server…</p></div>
         <iframe id="frame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="origin"></iframe>
+        <div class="hold-still" id="hold-still"></div>
         <div class="shield" id="shield"></div>
         <div class="play-fab" id="play-fab">
           <button type="button" class="skip-btn" id="back10" aria-label="Back 10 seconds">&#9664;&#9664;</button>
@@ -497,7 +500,7 @@ function card(item) {
     <div class="card-body"><strong>${item.title}</strong><em>${item.year} · ${item.genre}</em></div>`;
   const img = el.querySelector("img");
   if (img) img.addEventListener("error", () => img.remove());
-  el.addEventListener("click", () => openTitle(item));
+  el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); openTitle(item); });
   return el;
 }
 
@@ -666,15 +669,17 @@ function tell(list) {
     }
   });
 }
+function stillUrl() {
+  const t = state.title || {};
+  if (t.backdrop) return "https://image.tmdb.org/t/p/w780" + t.backdrop;
+  if (t.poster) return "https://image.tmdb.org/t/p/w780" + t.poster;
+  return "";
+}
 function loadFrame() {
   const src = withFlags(buildSrc());
   const frame = $("frame");
   const loader = $("loader");
   const screen = $("screen");
-  if (frame.dataset.src === src && frame.src && frame.src !== "about:blank") {
-    $("src-url").textContent = src;
-    return;
-  }
   $("src-url").textContent = src;
   holding = false;
   screen.classList.remove("paused");
@@ -685,46 +690,38 @@ function loadFrame() {
   frame.src = src;
   const done = () => loader.classList.add("off");
   frame.onload = done;
-  setTimeout(done, 2500);
+  setTimeout(done, 1800);
   startTick();
   paintTime();
 }
 function pauseIntercept() {
   holding = true;
-  tell([
-    { event: "command", func: "pauseVideo" },
-    { method: "pause" }, { type: "pause" }, { action: "pause" },
-    { command: "pause" }, "pause"
-  ]);
+  clearInterval(tickTimer);
+  const still = $("hold-still");
+  const pic = stillUrl();
+  still.style.backgroundImage = pic ? "url(" + pic + ")" : "none";
   $("screen").classList.add("paused");
   $("play-btn").textContent = "Play";
+  $("frame").src = "about:blank";
+  $("loader").classList.add("off");
 }
 function playIntercept() {
   holding = false;
-  tell([
-    { event: "command", func: "playVideo" },
-    { method: "play" }, { type: "play" }, { action: "play" },
-    { command: "play" }, "play"
-  ]);
   $("screen").classList.remove("paused");
   $("play-btn").textContent = "Pause";
-  startTick();
+  loadFrame();
 }
 function seekTo(sec) {
   offset = Math.max(0, Math.min(RUNTIME, Math.floor(sec)));
   paintTime();
-  tell([
-    { event: "command", func: "seekTo", args: [offset, true] },
-    { method: "seek", value: offset },
-    { type: "seek", seconds: offset },
-    { action: "seek", time: offset },
-    { command: "seek", value: offset }
-  ]);
+  if (holding) return;
+  loadFrame();
 }
 function togglePlay() {
   if (holding) playIntercept();
   else pauseIntercept();
 }
+let armedAt = 0;
 
 function renderPlayerChrome() {
   const t = state.title;
@@ -798,13 +795,13 @@ function openTitle(item, season, episode, server) {
   offset = 0;
   muted = false;
   document.body.classList.add("watching");
+  armedAt = Date.now();
   if (!history.state || !history.state.vividWatch) {
     history.pushState({ vividWatch: 1 }, "", location.pathname + location.search);
   }
   renderPlayerChrome();
   loadFrame();
   remember();
-  location.hash = `#/watch/${item.type}/${item.tmdb || item.imdb}`;
   window.scrollTo(0, 0);
 }
 
@@ -939,6 +936,7 @@ $("timeline").addEventListener("pointerup", (e) => {
 });
 let lastShieldTap = 0;
 $("shield").addEventListener("click", () => {
+  if (Date.now() - armedAt < 500) return;
   const now = Date.now();
   if (now - lastShieldTap < 320) toggleFs();
   else togglePlay();
@@ -948,6 +946,7 @@ $("shield").addEventListener("click", () => {
 $("screen").addEventListener("mousemove", showChrome);
 window.addEventListener("popstate", () => {
   if (leavingPlayer) return;
+  if (Date.now() - armedAt < 700) return;
   if (!document.body.classList.contains("watching")) return;
   if (document.fullscreenElement) {
     document.exitFullscreen().catch(() => {});
