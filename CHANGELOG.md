@@ -1,7 +1,6 @@
 # BWHS changelog
 
-## 2026-10-07 — mobile autoplay keeps going
+## 2026-10-07 — player restored
 
-- Phones start the 24/7 film with inline autoplay so the browser does not block it.
-- Coming back to the page continues from the live spot instead of leaving the video paused.
-- The next film is primed earlier on mobile so the handoff still happens.
+- 24/7 playback is back to the version that was already working.
+- The only change kept is the reload icon, on the right of the movie title card, for a manual refresh.
