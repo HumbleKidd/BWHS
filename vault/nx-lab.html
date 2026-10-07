@@ -176,9 +176,12 @@
     box-shadow: 0 30px 80px -30px rgba(0,0,0,.8);
   }
   .screen iframe {
-    position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000;
+    position: absolute; left: 0; width: 100%;
+    top: -36px; height: calc(100% + 92px);
+    border: 0; background: #000;
     pointer-events: none; z-index: 1;
   }
+  .screen:fullscreen, .screen:-webkit-full-screen { border-radius: 0; width: 100%; height: 100%; aspect-ratio: auto; }
   .shield {
     position: absolute; inset: 0; z-index: 4;
     background: transparent; cursor: pointer;
@@ -186,13 +189,22 @@
   .play-fab {
     position: absolute; inset: 0; z-index: 5;
     display: none; place-items: center; pointer-events: none;
+    background: transparent;
   }
-  .screen.paused .play-fab { display: grid; }
-  .play-fab span {
+  .screen.paused .play-fab { display: flex; align-items: center; justify-content: center; gap: 22px; }
+  .big-play, .skip-btn {
+    border: 0; color: white; display: grid; place-items: center;
+    pointer-events: auto; cursor: pointer;
+  }
+  .big-play {
     width: 76px; height: 76px; border-radius: 50%;
-    background: rgba(234,88,12,.94); color: white;
-    display: grid; place-items: center; font-size: 30px;
+    background: rgba(234,88,12,.94); font-size: 30px;
     box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+  .skip-btn {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.2);
+    font-size: 16px; letter-spacing: -2px;
   }
   .screen-controls {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 6;
@@ -204,8 +216,15 @@
   .screen.show-chrome .screen-controls,
   .screen:hover .screen-controls,
   .screen.paused .screen-controls { opacity: 1; pointer-events: auto; }
-  .timeline { height: 6px; background: rgba(255,255,255,.22); border-radius: 99px; cursor: pointer; }
+  .timeline { position: relative; height: 6px; background: rgba(255,255,255,.22); border-radius: 99px; cursor: pointer; touch-action: none; }
   .timeline i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; }
+  .scrub-tip {
+    position: absolute; top: -30px; transform: translateX(-50%);
+    display: none; background: #111826; color: white; border: 1px solid rgba(255,255,255,.16);
+    border-radius: 7px; padding: 3px 7px; font-size: 12px; font-family: ui-monospace, monospace;
+    pointer-events: none; white-space: nowrap;
+  }
+  .timeline.scrubbing .scrub-tip { display: block; }
   .ctrl-row { display: flex; align-items: center; gap: 8px; }
   .ctrl-row button {
     background: rgba(255,255,255,.08); color: white; border: 1px solid var(--line);
@@ -329,9 +348,13 @@
         <div class="loader" id="loader"><div class="spin"></div><p id="loader-label">Opening server…</p></div>
         <iframe id="frame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="origin"></iframe>
         <div class="shield" id="shield"></div>
-        <div class="play-fab" id="play-fab"><span>&#9654;</span></div>
+        <div class="play-fab" id="play-fab">
+          <button type="button" class="skip-btn" id="back10" aria-label="Back 10 seconds">&#9664;&#9664;</button>
+          <button type="button" class="big-play" id="big-play">&#9654;</button>
+          <button type="button" class="skip-btn" id="fwd10" aria-label="Forward 10 seconds">&#9654;&#9654;</button>
+        </div>
         <div class="screen-controls" id="screen-controls">
-          <div class="timeline" id="timeline"><i id="timeline-fill"></i></div>
+          <div class="timeline" id="timeline"><i id="timeline-fill"></i><b class="scrub-tip" id="scrub-tip">00:00</b></div>
           <div class="ctrl-row">
             <button id="play-btn" type="button">Pause</button>
             <button id="mute-btn" type="button">Mute</button>
@@ -351,7 +374,7 @@
         </div>
         <div class="box">
           <h3>Source</h3>
-          <p class="note">Same shield as 24/7 Play: the embed has pointer-events off and a clear layer catches every tap, so provider popups never get the click. Play, pause, mute, and seek reload the server URL from your controls.</p>
+          <p class="note">Shield stays over the embed so taps never hit the provider. Pause and play talk to the frame in place, so the picture stays and resume does not reload. Provider controls are cropped out under your bar.</p>
           <div class="url-line" id="src-url"></div>
           <div class="row-actions" style="margin-top:10px">
             <button class="btn quiet" id="copy-url">Copy embed URL</button>
@@ -633,42 +656,70 @@ function showChrome() {
   clearTimeout(showChrome._t);
   showChrome._t = setTimeout(() => screen.classList.remove("show-chrome"), 2600);
 }
+function tell(list) {
+  const w = $("frame").contentWindow;
+  if (!w) return;
+  list.forEach(msg => {
+    try { w.postMessage(msg, "*"); } catch (e) {}
+    if (typeof msg !== "string") {
+      try { w.postMessage(JSON.stringify(msg), "*"); } catch (e) {}
+    }
+  });
+}
 function loadFrame() {
   const src = withFlags(buildSrc());
   const frame = $("frame");
   const loader = $("loader");
   const screen = $("screen");
-  $("src-url").textContent = src;
-  if (holding) {
-    frame.src = "about:blank";
-    loader.classList.add("off");
-    screen.classList.add("paused");
-    $("play-btn").textContent = "Play";
+  if (frame.dataset.src === src && frame.src && frame.src !== "about:blank") {
+    $("src-url").textContent = src;
     return;
   }
+  $("src-url").textContent = src;
+  holding = false;
   screen.classList.remove("paused");
   $("play-btn").textContent = "Pause";
   loader.classList.remove("off");
   $("loader-label").textContent = "Opening " + (SERVERS.find(s => s.id === state.server)?.name || "server") + "…";
+  frame.dataset.src = src;
   frame.src = src;
   const done = () => loader.classList.add("off");
   frame.onload = done;
-  setTimeout(done, 4500);
+  setTimeout(done, 2500);
   startTick();
   paintTime();
 }
 function pauseIntercept() {
   holding = true;
-  $("frame").src = "about:blank";
+  tell([
+    { event: "command", func: "pauseVideo" },
+    { method: "pause" }, { type: "pause" }, { action: "pause" },
+    { command: "pause" }, "pause"
+  ]);
   $("screen").classList.add("paused");
   $("play-btn").textContent = "Play";
-  $("loader").classList.add("off");
 }
 function playIntercept() {
   holding = false;
+  tell([
+    { event: "command", func: "playVideo" },
+    { method: "play" }, { type: "play" }, { action: "play" },
+    { command: "play" }, "play"
+  ]);
   $("screen").classList.remove("paused");
   $("play-btn").textContent = "Pause";
-  loadFrame();
+  startTick();
+}
+function seekTo(sec) {
+  offset = Math.max(0, Math.min(RUNTIME, Math.floor(sec)));
+  paintTime();
+  tell([
+    { event: "command", func: "seekTo", args: [offset, true] },
+    { method: "seek", value: offset },
+    { type: "seek", seconds: offset },
+    { action: "seek", time: offset },
+    { command: "seek", value: offset }
+  ]);
 }
 function togglePlay() {
   if (holding) playIntercept();
@@ -747,6 +798,9 @@ function openTitle(item, season, episode, server) {
   offset = 0;
   muted = false;
   document.body.classList.add("watching");
+  if (!history.state || !history.state.vividWatch) {
+    history.pushState({ vividWatch: 1 }, "", location.pathname + location.search);
+  }
   renderPlayerChrome();
   loadFrame();
   remember();
@@ -754,11 +808,17 @@ function openTitle(item, season, episode, server) {
   window.scrollTo(0, 0);
 }
 
+let leavingPlayer = false;
 function closePlayer() {
+  if (leavingPlayer) return;
+  leavingPlayer = true;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   document.body.classList.remove("watching");
-  $("frame").src = "about:blank";
-  history.replaceState(null, "", location.pathname);
+  const frame = $("frame");
+  frame.src = "about:blank";
+  frame.dataset.src = "";
   renderBrowse();
+  setTimeout(() => { leavingPlayer = false; }, 400);
 }
 
 function playRaw(raw) {
@@ -818,26 +878,65 @@ $("q").addEventListener("input", () => {
 });
 function toggleFs() {
   const screen = $("screen");
-  if (!document.fullscreenElement) screen.requestFullscreen().catch(() => {});
-  else document.exitFullscreen();
+  if (!document.fullscreenElement) {
+    (screen.requestFullscreen || screen.webkitRequestFullscreen).call(screen);
+    showChrome();
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  }
+}
+function exitFsOrBack() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+    return;
+  }
+  if (document.body.classList.contains("watching")) closePlayer();
 }
 $("fs-btn").onclick = toggleFs;
 $("fs-inline").onclick = toggleFs;
+$("back-btn").onclick = (e) => { e.preventDefault(); exitFsOrBack(); };
 $("play-btn").onclick = (e) => { e.stopPropagation(); togglePlay(); };
+$("big-play").onclick = (e) => { e.stopPropagation(); playIntercept(); };
+$("back10").onclick = (e) => { e.stopPropagation(); seekTo(offset - 10); };
+$("fwd10").onclick = (e) => { e.stopPropagation(); seekTo(offset + 10); };
 $("mute-btn").onclick = (e) => {
   e.stopPropagation();
   muted = !muted;
   $("mute-btn").textContent = muted ? "Unmute" : "Mute";
-  if (!holding) loadFrame();
+  tell(muted
+    ? [{ event: "command", func: "mute" }, { method: "setVolume", value: 0 }, { type: "mute" }, { action: "mute" }]
+    : [{ event: "command", func: "unMute" }, { method: "setVolume", value: 1 }, { type: "unmute" }, { action: "unmute" }, { muted: false }]);
 };
-$("timeline").onclick = (e) => {
+function scrubAt(clientX) {
+  const bar = $("timeline");
+  const rect = bar.getBoundingClientRect();
+  const pct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+  const sec = Math.floor(pct * RUNTIME);
+  $("timeline-fill").style.width = (pct * 100) + "%";
+  $("time-label").textContent = fmt(sec);
+  const tip = $("scrub-tip");
+  tip.textContent = fmt(sec);
+  tip.style.left = (pct * 100) + "%";
+  return sec;
+}
+let scrubbing = false;
+$("timeline").addEventListener("pointerdown", (e) => {
   e.stopPropagation();
-  const rect = e.currentTarget.getBoundingClientRect();
-  const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-  offset = Math.floor(pct * RUNTIME);
-  paintTime();
-  if (!holding) loadFrame();
-};
+  scrubbing = true;
+  $("timeline").classList.add("scrubbing");
+  $("timeline").setPointerCapture(e.pointerId);
+  scrubAt(e.clientX);
+});
+$("timeline").addEventListener("pointermove", (e) => {
+  if (!scrubbing) return;
+  scrubAt(e.clientX);
+});
+$("timeline").addEventListener("pointerup", (e) => {
+  if (!scrubbing) return;
+  scrubbing = false;
+  $("timeline").classList.remove("scrubbing");
+  seekTo(scrubAt(e.clientX));
+});
 let lastShieldTap = 0;
 $("shield").addEventListener("click", () => {
   const now = Date.now();
@@ -847,6 +946,22 @@ $("shield").addEventListener("click", () => {
   showChrome();
 });
 $("screen").addEventListener("mousemove", showChrome);
+window.addEventListener("popstate", () => {
+  if (leavingPlayer) return;
+  if (!document.body.classList.contains("watching")) return;
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+    history.pushState({ vividWatch: 1 }, "", location.pathname + location.search);
+    return;
+  }
+  leavingPlayer = true;
+  document.body.classList.remove("watching");
+  const frame = $("frame");
+  frame.src = "about:blank";
+  frame.dataset.src = "";
+  renderBrowse();
+  setTimeout(() => { leavingPlayer = false; }, 400);
+});
 $("retry-btn").onclick = loadFrame;
 $("copy-url").onclick = async () => {
   try {
@@ -866,10 +981,12 @@ $("next-ep").onclick = () => {
   remember();
 };
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && document.body.classList.contains("watching") && !document.fullscreenElement) closePlayer();
-  if (e.key === "f" && document.body.classList.contains("watching") && document.activeElement.tagName !== "INPUT") {
-    $("fs-btn").click();
-  }
+  if (!document.body.classList.contains("watching")) return;
+  if (document.activeElement && document.activeElement.tagName === "INPUT") return;
+  const k = e.key.toLowerCase();
+  if (k === "f" || k === "k") { e.preventDefault(); toggleFs(); }
+  if (e.key === "Escape") { e.preventDefault(); exitFsOrBack(); }
+  if (e.key === "Backspace") { e.preventDefault(); exitFsOrBack(); }
 });
 
 renderBrowse();
