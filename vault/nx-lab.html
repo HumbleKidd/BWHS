@@ -175,10 +175,48 @@
     aspect-ratio: 16/9; border: 1px solid var(--line);
     box-shadow: 0 30px 80px -30px rgba(0,0,0,.8);
   }
-  .screen iframe { width: 100%; height: 100%; border: 0; background: #000; }
+  .screen iframe {
+    position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000;
+    pointer-events: none; z-index: 1;
+  }
+  .shield {
+    position: absolute; inset: 0; z-index: 4;
+    background: transparent; cursor: pointer;
+  }
+  .play-fab {
+    position: absolute; inset: 0; z-index: 5;
+    display: none; place-items: center; pointer-events: none;
+  }
+  .screen.paused .play-fab { display: grid; }
+  .play-fab span {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: rgba(234,88,12,.94); color: white;
+    display: grid; place-items: center; font-size: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+  .screen-controls {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 6;
+    padding: 36px 14px 12px;
+    background: linear-gradient(transparent, rgba(5,7,12,.94));
+    display: flex; flex-direction: column; gap: 8px;
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  .screen.show-chrome .screen-controls,
+  .screen:hover .screen-controls,
+  .screen.paused .screen-controls { opacity: 1; pointer-events: auto; }
+  .timeline { height: 6px; background: rgba(255,255,255,.22); border-radius: 99px; cursor: pointer; }
+  .timeline i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; }
+  .ctrl-row { display: flex; align-items: center; gap: 8px; }
+  .ctrl-row button {
+    background: rgba(255,255,255,.08); color: white; border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 10px; font-size: 13px;
+  }
+  .ctrl-row button:hover { background: var(--accent); border-color: var(--accent); }
+  .time-label { font-family: ui-monospace, monospace; font-size: 12px; color: #e2e8f0; }
+  .shield-tag { margin-left: auto; font-size: 11px; letter-spacing: .04em; color: #cbd5e1; }
   .loader {
     position: absolute; inset: 0; display: grid; place-items: center;
-    background: #05070c; z-index: 2; transition: opacity .25s ease;
+    background: #05070c; z-index: 7; transition: opacity .25s ease;
   }
   .loader.off { opacity: 0; pointer-events: none; }
   .spin {
@@ -290,6 +328,18 @@
       <div class="screen" id="screen">
         <div class="loader" id="loader"><div class="spin"></div><p id="loader-label">Opening server…</p></div>
         <iframe id="frame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="origin"></iframe>
+        <div class="shield" id="shield"></div>
+        <div class="play-fab" id="play-fab"><span>&#9654;</span></div>
+        <div class="screen-controls" id="screen-controls">
+          <div class="timeline" id="timeline"><i id="timeline-fill"></i></div>
+          <div class="ctrl-row">
+            <button id="play-btn" type="button">Pause</button>
+            <button id="mute-btn" type="button">Mute</button>
+            <span class="time-label" id="time-label">00:00</span>
+            <span class="shield-tag">Shield on · video taps blocked</span>
+            <button id="fs-inline" type="button">Fullscreen</button>
+          </div>
+        </div>
       </div>
       <div class="servers" id="servers"></div>
       <div class="panel">
@@ -301,7 +351,7 @@
         </div>
         <div class="box">
           <h3>Source</h3>
-          <p class="note">These are the BWHS server engines, driven by this player only. Nothing here loads or changes the main site. The iframe is the real player.</p>
+          <p class="note">Same shield as 24/7 Play: the embed has pointer-events off and a clear layer catches every tap, so provider popups never get the click. Play, pause, mute, and seek reload the server URL from your controls.</p>
           <div class="url-line" id="src-url"></div>
           <div class="row-actions" style="margin-top:10px">
             <button class="btn quiet" id="copy-url">Copy embed URL</button>
@@ -528,17 +578,101 @@ function buildSrc() {
   return server.movie(id);
 }
 
+let holding = false;
+let muted = false;
+let offset = 0;
+let tickTimer = null;
+const RUNTIME = 7200;
+
+function fmt(total) {
+  total = Math.max(0, Math.floor(total));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(s).padStart(2, "0");
+  return h ? h + ":" + mm + ":" + ss : mm + ":" + ss;
+}
+function withFlags(url) {
+  const u = new URL(url);
+  if (offset > 0) {
+    u.searchParams.set("startAt", String(offset));
+    u.searchParams.set("t", String(offset));
+    u.searchParams.set("start", String(offset));
+  }
+  if (muted) {
+    u.searchParams.set("muted", "1");
+    u.searchParams.set("mute", "1");
+    u.searchParams.set("volume", "0");
+  } else {
+    u.searchParams.set("muted", "false");
+    u.searchParams.set("mute", "0");
+    u.searchParams.set("volume", "1");
+  }
+  return u.toString();
+}
+function paintTime() {
+  const fill = $("timeline-fill");
+  const label = $("time-label");
+  if (!fill || !label) return;
+  const pct = Math.min(100, (offset / RUNTIME) * 100);
+  fill.style.width = pct + "%";
+  label.textContent = fmt(offset);
+}
+function startTick() {
+  clearInterval(tickTimer);
+  tickTimer = setInterval(() => {
+    if (holding) return;
+    offset = Math.min(RUNTIME, offset + 1);
+    paintTime();
+  }, 1000);
+}
+function showChrome() {
+  const screen = $("screen");
+  screen.classList.add("show-chrome");
+  clearTimeout(showChrome._t);
+  showChrome._t = setTimeout(() => screen.classList.remove("show-chrome"), 2600);
+}
 function loadFrame() {
-  const src = buildSrc();
+  const src = withFlags(buildSrc());
   const frame = $("frame");
   const loader = $("loader");
+  const screen = $("screen");
+  $("src-url").textContent = src;
+  if (holding) {
+    frame.src = "about:blank";
+    loader.classList.add("off");
+    screen.classList.add("paused");
+    $("play-btn").textContent = "Play";
+    return;
+  }
+  screen.classList.remove("paused");
+  $("play-btn").textContent = "Pause";
   loader.classList.remove("off");
   $("loader-label").textContent = "Opening " + (SERVERS.find(s => s.id === state.server)?.name || "server") + "…";
-  $("src-url").textContent = src;
   frame.src = src;
   const done = () => loader.classList.add("off");
   frame.onload = done;
-  setTimeout(done, 7000);
+  setTimeout(done, 4500);
+  startTick();
+  paintTime();
+}
+function pauseIntercept() {
+  holding = true;
+  $("frame").src = "about:blank";
+  $("screen").classList.add("paused");
+  $("play-btn").textContent = "Play";
+  $("loader").classList.add("off");
+}
+function playIntercept() {
+  holding = false;
+  $("screen").classList.remove("paused");
+  $("play-btn").textContent = "Pause";
+  loadFrame();
+}
+function togglePlay() {
+  if (holding) playIntercept();
+  else pauseIntercept();
 }
 
 function renderPlayerChrome() {
@@ -609,6 +743,9 @@ function openTitle(item, season, episode, server) {
   state.season = season || 1;
   state.episode = episode || 1;
   if (server) state.server = server;
+  holding = false;
+  offset = 0;
+  muted = false;
   document.body.classList.add("watching");
   renderPlayerChrome();
   loadFrame();
@@ -679,11 +816,37 @@ $("q").addEventListener("input", () => {
   if (document.body.classList.contains("watching")) return;
   renderBrowse();
 });
-$("fs-btn").onclick = () => {
+function toggleFs() {
   const screen = $("screen");
   if (!document.fullscreenElement) screen.requestFullscreen().catch(() => {});
   else document.exitFullscreen();
+}
+$("fs-btn").onclick = toggleFs;
+$("fs-inline").onclick = toggleFs;
+$("play-btn").onclick = (e) => { e.stopPropagation(); togglePlay(); };
+$("mute-btn").onclick = (e) => {
+  e.stopPropagation();
+  muted = !muted;
+  $("mute-btn").textContent = muted ? "Unmute" : "Mute";
+  if (!holding) loadFrame();
 };
+$("timeline").onclick = (e) => {
+  e.stopPropagation();
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+  offset = Math.floor(pct * RUNTIME);
+  paintTime();
+  if (!holding) loadFrame();
+};
+let lastShieldTap = 0;
+$("shield").addEventListener("click", () => {
+  const now = Date.now();
+  if (now - lastShieldTap < 320) toggleFs();
+  else togglePlay();
+  lastShieldTap = now;
+  showChrome();
+});
+$("screen").addEventListener("mousemove", showChrome);
 $("retry-btn").onclick = loadFrame;
 $("copy-url").onclick = async () => {
   try {
