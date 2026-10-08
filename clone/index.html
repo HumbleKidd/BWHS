@@ -48,6 +48,8 @@
   <link rel="preconnect" href="https://api.themoviedb.org" />
   <link rel="preconnect" href="https://vixsrc.to" crossorigin />
   <link rel="dns-prefetch" href="https://vixsrc.to" />
+  <link rel="preconnect" href="https://cinesrc.st" crossorigin />
+  <link rel="dns-prefetch" href="https://cinesrc.st" />
   <link rel="dns-prefetch" href="https://vidbolt.xyz" />
   <link rel="dns-prefetch" href="https://vidapi.ru" />
   <link rel="dns-prefetch" href="https://vidsrc.xyz" />
@@ -5362,10 +5364,9 @@
                     <div class="server-bar" id="serverBar">
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
+                      <button class="srv-btn" id="btn-cinesrc" onclick="manualSwitchServer('cinesrc')">CineSrc</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
                       <button class="srv-btn" id="btn-vidrock" onclick="manualSwitchServer('vidrock')">Vidrock</button>
-                      <button class="srv-btn" id="btn-cinesrc" onclick="manualSwitchServer('cinesrc')">CineSrc</button>
-                      <select id="bwhs-quality" class="srv-btn" onchange="setSavedQuality(this.value)"><option>2160</option><option selected>1080</option><option>720</option><option>480</option></select>
                       <button class="srv-btn" id="btn-twoembed" onclick="manualSwitchServer('twoembed')">2Embed</button>
                     </div>
                     <div class="row-slider-track" id="sliderServerTrack">
@@ -5992,14 +5993,14 @@
       <button class="sheet-nav-item active" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
         <span>VixSrc</span>
       </button>
+      <button class="sheet-nav-item" id="sheet-cinesrc" onclick="selectServerFromSheet('cinesrc')">
+        <span>CineSrc</span>
+      </button>
       <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
         <span>VidAPI</span>
       </button>
       <button class="sheet-nav-item" id="sheet-vidrock" onclick="selectServerFromSheet('vidrock')">
         <span>Vidrock</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-cinesrc" onclick="selectServerFromSheet('cinesrc')">
-        <span>CineSrc</span>
       </button>
       <button class="sheet-nav-item" id="sheet-twoembed" onclick="selectServerFromSheet('twoembed')">
         <span>2Embed</span>
@@ -6179,7 +6180,7 @@
     const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w185';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'vidapi', 'vidrock', 'cinesrc', 'twoembed'];
+    const PROVIDERS = ['vixsrc', 'cinesrc', 'vidapi', 'vidrock', 'twoembed'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
       vixsrc: 'VixSrc',
@@ -6275,14 +6276,26 @@
     function prefetchEmbed(id, type, season, episode) {
       if (!id) return;
       const url = vixsrcUrlFor(id, type, season, episode);
-      if (warmedEmbeds.has(url)) return;
-      warmedEmbeds.add(url);
-      try {
-        const link = document.createElement('link');
-        link.rel = 'preconnect';
-        link.href = 'https://vixsrc.to';
-        document.head.appendChild(link);
-      } catch (_) {}
+      if (!warmedEmbeds.has(url)) {
+        warmedEmbeds.add(url);
+        try {
+          const link = document.createElement('link');
+          link.rel = 'preconnect';
+          link.href = 'https://vixsrc.to';
+          document.head.appendChild(link);
+          const cine = document.createElement('link');
+          cine.rel = 'preconnect';
+          cine.href = 'https://cinesrc.st';
+          cine.crossOrigin = 'anonymous';
+          document.head.appendChild(cine);
+          const warm = document.createElement('link');
+          warm.rel = 'prefetch';
+          warm.href = type === 'tv'
+            ? `https://cinesrc.st/embed/tv/${id}?s=${season || 1}&e=${episode || 1}&autoplay=true&subtitles=false`
+            : `https://cinesrc.st/embed/movie/${id}?autoplay=true&subtitles=false`;
+          document.head.appendChild(warm);
+        } catch (_) {}
+      }
     }
 
     function stopPlayerAudio() {
@@ -12871,7 +12884,8 @@
             : `https://vidrock.net/movie/${id}?${rock}`;
         }
         case 'cinesrc': {
-          const cine = 'autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=' + savedQuality() + '&t=' + savedSeconds() + '&continueprompt=true';
+          const start = savedSeconds();
+          const cine = 'autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&subtitles=false&subs=0&color=%230063e5&quality=' + savedQuality() + (start ? '&t=' + start + '&continueprompt=false' : '');
           return isTv
             ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&${cine}`
             : `https://cinesrc.st/embed/movie/${id}?${cine}`;
