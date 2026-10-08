@@ -22,7 +22,7 @@ jobs:
       - name: Publish
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: clone-apk-v3
+          tag_name: clone-apk-v4
           name: BWHS clone app
           overwrite: true
           body: Phone and TV shell for https://bwhs.online/clone/
