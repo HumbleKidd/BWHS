@@ -2589,10 +2589,6 @@
     }
 
 
-    .cinesrc-info { position:absolute; left:0; right:0; bottom:0; z-index:40; display:none; padding:22px 18px 16px; background:linear-gradient(transparent, rgba(0,0,0,.88)); color:#fff; pointer-events:none; }
-    .cinesrc-info.show { display:block; }
-    .cinesrc-info strong { display:block; font-size:22px; margin-bottom:6px; }
-    .cinesrc-info p { margin:0; max-width:760px; font-size:14px; line-height:1.4; opacity:.9; }
 
     .player-dock {
       padding: 14px 18px;
@@ -12902,7 +12898,7 @@
         }
         case 'cinesrc': {
           const start = savedSeconds();
-          const cine = 'autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=' + savedQuality() + (start ? '&t=' + start + '&continueprompt=true' : '');
+          const cine = 'autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&subtitles=off&color=%230063e5&quality=' + savedQuality() + (start ? '&t=' + start + '&continueprompt=true' : '');
           return isTv
             ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&${cine}`
             : `https://cinesrc.st/embed/movie/${id}?${cine}`;
@@ -13612,47 +13608,6 @@
     
 
     
-    function showCineInfo(on) {
-      const vp = document.getElementById('videoViewport');
-      if (!vp) return;
-      let card = document.getElementById('cinesrcInfo');
-      if (!card) {
-        card = document.createElement('div');
-        card.id = 'cinesrcInfo';
-        card.className = 'cinesrc-info';
-        vp.appendChild(card);
-      }
-      if (!on || (PROVIDERS[currentProviderIndex] || '') !== 'cinesrc') {
-        card.classList.remove('show');
-        return;
-      }
-      const m = activeMedia || {};
-      const title = m.title || m.name || 'Now playing';
-      const about = m.overview || m.description || '';
-      card.innerHTML = '<strong>' + title + '</strong>' + (about ? '<p>' + about + '</p>' : '');
-      card.classList.add('show');
-    }
-    window.addEventListener('message', (event) => {
-      const data = event.data || {};
-      if (data.type === 'cinesrc:pause') showCineInfo(true);
-      if (data.type === 'cinesrc:play' || data.type === 'cinesrc:ended') showCineInfo(false);
-    });
-
-    function askResume() {
-      if (resumeChoice || savedSeconds() < 15) return false;
-      const vp = document.getElementById('videoViewport');
-      if (!vp || document.getElementById('bwhsResume')) return true;
-      const box = document.createElement('div');
-      box.id = 'bwhsResume';
-      box.style.cssText = 'position:absolute;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.72);color:#fff;font:600 15px sans-serif';
-      const mins = Math.floor(savedSeconds() / 60);
-      const secs = String(savedSeconds() % 60).padStart(2, '0');
-      box.innerHTML = '<span>Leave off at ' + mins + ':' + secs + '</span><button id="bwhsContinue" style="padding:10px 14px;border:0;border-radius:8px">Continue</button><button id="bwhsRestart" style="padding:10px 14px;border:0;border-radius:8px">Start over</button>';
-      vp.appendChild(box);
-      box.querySelector('#bwhsContinue').onclick = () => { resumeChoice = 'continue'; box.remove(); executeStreamLoad(); };
-      box.querySelector('#bwhsRestart').onclick = () => { resumeChoice = 'restart'; clearLeave(); box.remove(); executeStreamLoad(); };
-      return true;
-    }
     function executeStreamLoad() {
       if (!playerFrame || !activeMedia) return;
       if (askResume()) return;
