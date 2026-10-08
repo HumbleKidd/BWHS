@@ -10,7 +10,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 
-@UnstableApi
+@OptIn(UnstableApi::class)
 class PlayerActivity : AppCompatActivity() {
     private var player: ExoPlayer? = null
 
