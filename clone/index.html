@@ -5363,6 +5363,7 @@
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-twoembed" onclick="manualSwitchServer('twoembed')">2Embed</button>
+                      <button class="srv-btn" id="btn-videm" onclick="manualSwitchServer('videm')">Videm</button>
                       <button class="srv-btn" id="btn-cypher" onclick="manualSwitchServer('cypher')">Cypher</button>
                       <button class="srv-btn" id="btn-breach" onclick="manualSwitchServer('breach')">Breach</button>
                       <button class="srv-btn" id="btn-vyse" onclick="manualSwitchServer('vyse')">Vyse</button>
@@ -5994,6 +5995,9 @@
       <button class="sheet-nav-item" id="sheet-twoembed" onclick="selectServerFromSheet('twoembed')">
         <span>2Embed</span>
       </button>
+      <button class="sheet-nav-item" id="sheet-videm" onclick="selectServerFromSheet('videm')">
+        <span>Videm</span>
+      </button>
       <button class="sheet-nav-item" id="sheet-cypher" onclick="selectServerFromSheet('cypher')">
         <span>Cypher</span>
       </button>
@@ -6178,11 +6182,12 @@
     const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w185';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'twoembed', 'cypher', 'breach', 'vyse'];
+    const PROVIDERS = ['vixsrc', 'twoembed', 'videm', 'cypher', 'breach', 'vyse'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
       vixsrc: 'VixSrc',
       twoembed: '2Embed',
+      videm: 'Videm',
       cypher: 'Cypher',
       breach: 'Breach',
       vyse: 'Vyse'
@@ -12852,8 +12857,13 @@
 
         case 'twoembed':
           return isTv
-            ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`
-            : `https://www.2embed.cc/embed/${id}`;
+            ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}&autoplay=1&autonext=1`
+            : `https://www.2embed.cc/embed/${id}?autoplay=1`;
+
+        case 'videm':
+          return isTv
+            ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}&server=videm&autoplay=1&autonext=1`
+            : `https://www.2embed.cc/embed/${id}?server=videm&autoplay=1`;
 
         case 'moviesapi':
           return isTv
