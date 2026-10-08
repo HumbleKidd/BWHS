@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
 
 object Updater {
     private const val API = "https://api.github.com/repos/HumbleKidd/BWHS/releases/latest"
-    private const val THIS = "clone-apk-v2"
+    private const val THIS = "clone-apk-v3"
 
     fun check(activity: Activity) {
         Executors.newSingleThreadExecutor().execute {
