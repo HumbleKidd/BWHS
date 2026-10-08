@@ -13610,7 +13610,6 @@
     
     function executeStreamLoad() {
       if (!playerFrame || !activeMedia) return;
-      if (askResume()) return;
       const currentProvider = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
       const url = getProviderUrl(currentProvider);
       if (!url) return;
