@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head><script>
+(function(){
+  window.open = function(){ return null; };
+  function lock(frame){
+    if (!frame || frame.dataset.bwhsLock) return;
+    frame.dataset.bwhsLock = "1";
+    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-presentation allow-forms");
+  }
+  document.querySelectorAll("iframe").forEach(lock);
+  new MutationObserver(function(list){
+    list.forEach(function(m){
+      m.addedNodes && m.addedNodes.forEach(function(n){
+        if (!n || n.nodeType !== 1) return;
+        if (n.tagName === "IFRAME") lock(n);
+        n.querySelectorAll && n.querySelectorAll("iframe").forEach(lock);
+      });
+    });
+  }).observe(document.documentElement, {childList:true, subtree:true});
+})();
+</script>
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
