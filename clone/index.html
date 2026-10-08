@@ -6209,27 +6209,38 @@
       const e = kind === 'tv' ? (activeEpisode || 1) : 0;
       return 'bwhs-pos-' + kind + '-' + activeMedia.id + '-' + s + '-' + e;
     }
+    let resumeChoice = '';
+    let livePos = 0;
     function savedSeconds() {
+      if (resumeChoice === 'restart') return 0;
       try {
         const n = Number(localStorage.getItem(progressKey()) || 0);
         return n > 15 ? Math.floor(n) : 0;
       } catch (_) { return 0; }
     }
-    function saveSeconds(n) {
-      if (!n || n < 15) return;
-      try { localStorage.setItem(progressKey(), String(Math.floor(n))); } catch (_) {}
+    function rememberLeave() {
+      if (!livePos || livePos < 15) return;
+      try { localStorage.setItem(progressKey(), String(Math.floor(livePos))); } catch (_) {}
+    }
+    function clearLeave() {
+      try { localStorage.removeItem(progressKey()); } catch (_) {}
+      livePos = 0;
     }
     window.addEventListener('message', (event) => {
       const data = event.data || {};
       const inner = data.data || data;
-      const status = inner.player_status || data.event || '';
+      const status = String(inner.player_status || data.type || data.event || '');
       const pos = Number(inner.player_progress || data.currentTime || data.time || 0);
-      if (pos > 15) saveSeconds(pos);
+      if (pos > 15 && (status.includes('seek') || pos + 2 >= livePos)) livePos = pos;
+      if (status === 'paused' || status === 'cinesrc:pause' || status === 'completed' || status === 'cinesrc:ended') rememberLeave();
+      if (status === 'completed' || status === 'cinesrc:ended') clearLeave();
       if (status === 'completed' && (PROVIDERS[currentProviderIndex] || '') === 'vidapi' && activeMedia && activeMedia.computedType === 'tv') {
         activeEpisode = (activeEpisode || 1) + 1;
         executeStreamLoad();
       }
     });
+    window.addEventListener('pagehide', rememberLeave);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') rememberLeave(); });
 
     function buildVixsrcParams() {
       return [
@@ -6297,8 +6308,8 @@
           const warm = document.createElement('link');
           warm.rel = 'prefetch';
           warm.href = type === 'tv'
-            ? `https://cinesrc.st/embed/tv/${id}?s=${season || 1}&e=${episode || 1}&autoplay=true&subtitles=false`
-            : `https://cinesrc.st/embed/movie/${id}?autoplay=true&subtitles=false`;
+            ? `https://cinesrc.st/embed/tv/${id}?s=${season || 1}&e=${episode || 1}&autoplay=true`
+            : `https://cinesrc.st/embed/movie/${id}?autoplay=true`;
           document.head.appendChild(warm);
         } catch (_) {}
       }
@@ -12891,7 +12902,7 @@
         }
         case 'cinesrc': {
           const start = savedSeconds();
-          const cine = 'autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&subtitles=false&subs=0&color=%230063e5&quality=' + savedQuality() + (start ? '&t=' + start + '&continueprompt=false' : '');
+          const cine = 'autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=' + savedQuality() + (start ? '&t=' + start + '&continueprompt=true' : '');
           return isTv
             ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&${cine}`
             : `https://cinesrc.st/embed/movie/${id}?${cine}`;
@@ -13627,8 +13638,24 @@
       if (data.type === 'cinesrc:play' || data.type === 'cinesrc:ended') showCineInfo(false);
     });
 
+    function askResume() {
+      if (resumeChoice || savedSeconds() < 15) return false;
+      const vp = document.getElementById('videoViewport');
+      if (!vp || document.getElementById('bwhsResume')) return true;
+      const box = document.createElement('div');
+      box.id = 'bwhsResume';
+      box.style.cssText = 'position:absolute;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.72);color:#fff;font:600 15px sans-serif';
+      const mins = Math.floor(savedSeconds() / 60);
+      const secs = String(savedSeconds() % 60).padStart(2, '0');
+      box.innerHTML = '<span>Leave off at ' + mins + ':' + secs + '</span><button id="bwhsContinue" style="padding:10px 14px;border:0;border-radius:8px">Continue</button><button id="bwhsRestart" style="padding:10px 14px;border:0;border-radius:8px">Start over</button>';
+      vp.appendChild(box);
+      box.querySelector('#bwhsContinue').onclick = () => { resumeChoice = 'continue'; box.remove(); executeStreamLoad(); };
+      box.querySelector('#bwhsRestart').onclick = () => { resumeChoice = 'restart'; clearLeave(); box.remove(); executeStreamLoad(); };
+      return true;
+    }
     function executeStreamLoad() {
       if (!playerFrame || !activeMedia) return;
+      if (askResume()) return;
       const currentProvider = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
       const url = getProviderUrl(currentProvider);
       if (!url) return;
