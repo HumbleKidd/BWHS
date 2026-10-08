@@ -5362,6 +5362,7 @@
                     <div class="server-bar" id="serverBar">
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
+                      <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
                       <button class="srv-btn" id="btn-twoembed" onclick="manualSwitchServer('twoembed')">2Embed</button>
                       <button class="srv-btn" id="btn-videm" onclick="manualSwitchServer('videm')">Videm</button>
                       <button class="srv-btn" id="btn-cypher" onclick="manualSwitchServer('cypher')">Cypher</button>
@@ -5992,6 +5993,9 @@
       <button class="sheet-nav-item active" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
         <span>VixSrc</span>
       </button>
+      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
+        <span>VidAPI</span>
+      </button>
       <button class="sheet-nav-item" id="sheet-twoembed" onclick="selectServerFromSheet('twoembed')">
         <span>2Embed</span>
       </button>
@@ -6182,10 +6186,11 @@
     const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w185';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'twoembed', 'videm', 'cypher', 'breach', 'vyse'];
+    const PROVIDERS = ['vixsrc', 'vidapi', 'twoembed', 'videm', 'cypher', 'breach', 'vyse'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
       vixsrc: 'VixSrc',
+      vidapi: 'VidAPI',
       twoembed: '2Embed',
       videm: 'Videm',
       cypher: 'Cypher',
@@ -12815,10 +12820,12 @@
       const e = activeEpisode || 1;
 
       switch (providerName) {
-        case 'vidapi':
+        case 'vidapi': {
+          const look = 'theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&ds_lang=en&showTitle=true';
           return isTv
-            ? `https://vidapi.ru/embed/tv/${id}/${s}/${e}?${hdQuery()}`
-            : `https://vidapi.ru/embed/movie/${id}?${hdQuery()}`;
+            ? `https://vaplayer.ru/embed/tv/${id}/${s}/${e}?${look}`
+            : `https://vaplayer.ru/embed/movie/${id}?${look}`;
+        }
 
         case 'vidsrc':
           return isTv
@@ -12862,8 +12869,8 @@
 
         case 'videm':
           return isTv
-            ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}&server=Videm&autoplay=1&autonext=1`
-            : `https://www.2embed.cc/embed/${id}?server=Videm&autoplay=1`;
+            ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}&server=videm&autoplay=1&autonext=1`
+            : `https://www.2embed.cc/embed/${id}?server=videm&autoplay=1`;
 
         case 'moviesapi':
           return isTv
@@ -12882,13 +12889,12 @@
 
         case 'cypher':
         case 'breach':
-        case 'vyse': {
-          const serverName = providerName.charAt(0).toUpperCase() + providerName.slice(1);
+        case 'vyse':
+          const serverName = provider.charAt(0).toUpperCase() + provider.slice(1);
           const easy = `server=${serverName}&autoplay=1&autonext=1&nextEpisode=true&episodeSelector=true&overlay=true&ds_lang=en`;
           return isTv
             ? `https://player.videasy.net/tv/${id}/${s}/${e}?${easy}`
             : `https://player.videasy.net/movie/${id}?${easy}`;
-        }
 
         default:
           return isTv
@@ -13521,6 +13527,17 @@
       }, false);
       updateLeftOffBanner();
     }
+
+    
+    window.addEventListener('message', (event) => {
+      const data = event.data;
+      if (!data || data.type !== 'PLAYER_EVENT') return;
+      if (!data.data || data.data.player_status !== 'completed') return;
+      if ((PROVIDERS[currentProviderIndex] || '') !== 'vidapi') return;
+      if (!activeMedia || activeMedia.computedType !== 'tv') return;
+      activeEpisode = (activeEpisode || 1) + 1;
+      executeStreamLoad();
+    });
 
     function executeStreamLoad() {
       if (!playerFrame || !activeMedia) return;
