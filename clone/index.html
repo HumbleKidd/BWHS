@@ -12862,8 +12862,8 @@
 
         case 'videm':
           return isTv
-            ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}&server=videm&autoplay=1&autonext=1`
-            : `https://www.2embed.cc/embed/${id}?server=videm&autoplay=1`;
+            ? `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}&server=Videm&autoplay=1&autonext=1`
+            : `https://www.2embed.cc/embed/${id}?server=Videm&autoplay=1`;
 
         case 'moviesapi':
           return isTv
@@ -12882,12 +12882,13 @@
 
         case 'cypher':
         case 'breach':
-        case 'vyse':
-          const serverName = provider.charAt(0).toUpperCase() + provider.slice(1);
+        case 'vyse': {
+          const serverName = providerName.charAt(0).toUpperCase() + providerName.slice(1);
           const easy = `server=${serverName}&autoplay=1&autonext=1&nextEpisode=true&episodeSelector=true&overlay=true&ds_lang=en`;
           return isTv
             ? `https://player.videasy.net/tv/${id}/${s}/${e}?${easy}`
             : `https://player.videasy.net/movie/${id}?${easy}`;
+        }
 
         default:
           return isTv
