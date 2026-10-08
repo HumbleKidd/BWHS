@@ -5362,13 +5362,10 @@
                     <div class="server-bar" id="serverBar">
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
-                      <button class="srv-btn" id="btn-vidlink" onclick="manualSwitchServer('vidlink')">VidLink</button>
-                      <button class="srv-btn" id="btn-vidsrc" onclick="manualSwitchServer('vidsrc')">VidSrc</button>
-                      <button class="srv-btn" id="btn-vidcore" onclick="manualSwitchServer('vidcore')">VidCore</button>
-                      <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
-                      <button class="srv-btn" id="btn-moviesapi" onclick="manualSwitchServer('moviesapi')">MoviesAPI</button>
-                      <button class="srv-btn" id="btn-vidbolt" onclick="manualSwitchServer('vidbolt')">VidBolt (multi-language)</button>
-                      <button class="srv-btn" id="btn-upcloud" onclick="manualSwitchServer('upcloud')">UpCloud</button>
+                      <button class="srv-btn" id="btn-twoembed" onclick="manualSwitchServer('twoembed')">2Embed</button>
+                      <button class="srv-btn" id="btn-cypher" onclick="manualSwitchServer('cypher')">Cypher</button>
+                      <button class="srv-btn" id="btn-breach" onclick="manualSwitchServer('breach')">Breach</button>
+                      <button class="srv-btn" id="btn-vyse" onclick="manualSwitchServer('vyse')">Vyse</button>
                     </div>
                     <div class="row-slider-track" id="sliderServerTrack">
                       <div class="row-slider-thumb" id="sliderServerThumb"></div>
@@ -5994,26 +5991,17 @@
       <button class="sheet-nav-item active" id="sheet-vixsrc" onclick="selectServerFromSheet('vixsrc')">
         <span>VixSrc</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidlink" onclick="selectServerFromSheet('vidlink')">
-        <span>VidLink</span>
+      <button class="sheet-nav-item" id="sheet-twoembed" onclick="selectServerFromSheet('twoembed')">
+        <span>2Embed</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidsrc" onclick="selectServerFromSheet('vidsrc')">
-        <span>VidSrc</span>
+      <button class="sheet-nav-item" id="sheet-cypher" onclick="selectServerFromSheet('cypher')">
+        <span>Cypher</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidcore" onclick="selectServerFromSheet('vidcore')">
-        <span>VidCore</span>
+      <button class="sheet-nav-item" id="sheet-breach" onclick="selectServerFromSheet('breach')">
+        <span>Breach</span>
       </button>
-      <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
-        <span>VidAPI</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-moviesapi" onclick="selectServerFromSheet('moviesapi')">
-        <span>MoviesAPI</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-vidbolt" onclick="selectServerFromSheet('vidbolt')">
-        <span>VidBolt (multi-language)</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-upcloud" onclick="selectServerFromSheet('upcloud')">
-        <span>UpCloud</span>
+      <button class="sheet-nav-item" id="sheet-vyse" onclick="selectServerFromSheet('vyse')">
+        <span>Vyse</span>
       </button>
     </div>
   </div>
@@ -6190,17 +6178,14 @@
     const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w185';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'vidlink', 'vidsrc', 'vidcore', 'vidapi', 'moviesapi', 'vidbolt', 'upcloud'];
+    const PROVIDERS = ['vixsrc', 'twoembed', 'cypher', 'breach', 'vyse'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
       vixsrc: 'VixSrc',
-      vidbolt: 'VidBolt (multi-language)',
-      vidapi: 'VidAPI',
-      vidsrc: 'VidSrc',
-      vidlink: 'VidLink',
-      vidcore: 'VidCore',
-      moviesapi: 'MoviesAPI',
-      upcloud: 'UpCloud'
+      twoembed: '2Embed',
+      cypher: 'Cypher',
+      breach: 'Breach',
+      vyse: 'Vyse'
     };
     let currentProviderIndex = 0;
     const warmedEmbeds = new Set();
@@ -12880,10 +12865,24 @@
             ? `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}?${hdQuery()}`
             : `https://vidsrc.cc/v2/embed/movie/${id}?${hdQuery()}`;
 
+        case 'twoembed':
+          return isTv
+            ? `https://www.2embed.online/embed/tv/${id}/${s}/${e}?autoplay=1&autonext=1`
+            : `https://www.2embed.online/embed/movie/${id}?autoplay=1`;
+
+        case 'cypher':
+        case 'breach':
+        case 'vyse':
+          const serverName = provider.charAt(0).toUpperCase() + provider.slice(1);
+          const easy = `server=${serverName}&autoplay=1&autonext=1&nextEpisode=true&episodeSelector=true&overlay=true&ds_lang=en`;
+          return isTv
+            ? `https://player.videasy.net/tv/${id}/${s}/${e}?${easy}`
+            : `https://player.videasy.net/movie/${id}?${easy}`;
+
         default:
           return isTv
-            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&muted=false&mute=0&volume=1&quality=2160`
-            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&muted=false&mute=0&volume=1&quality=2160`;
+            ? `https://vixsrc.to/tv/${id}/${s}/${e}?${buildVixsrcParams()}`
+            : `https://vixsrc.to/movie/${id}?${buildVixsrcParams()}`;
       }
     }
 
