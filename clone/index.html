@@ -5363,11 +5363,8 @@
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
+                      <button class="srv-btn" id="btn-vidrock" onclick="manualSwitchServer('vidrock')">Vidrock</button>
                       <button class="srv-btn" id="btn-twoembed" onclick="manualSwitchServer('twoembed')">2Embed</button>
-                      <button class="srv-btn" id="btn-videm" onclick="manualSwitchServer('videm')">Videm</button>
-                      <button class="srv-btn" id="btn-cypher" onclick="manualSwitchServer('cypher')">Cypher</button>
-                      <button class="srv-btn" id="btn-breach" onclick="manualSwitchServer('breach')">Breach</button>
-                      <button class="srv-btn" id="btn-vyse" onclick="manualSwitchServer('vyse')">Vyse</button>
                     </div>
                     <div class="row-slider-track" id="sliderServerTrack">
                       <div class="row-slider-thumb" id="sliderServerThumb"></div>
@@ -5996,20 +5993,11 @@
       <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
         <span>VidAPI</span>
       </button>
+      <button class="sheet-nav-item" id="sheet-vidrock" onclick="selectServerFromSheet('vidrock')">
+        <span>Vidrock</span>
+      </button>
       <button class="sheet-nav-item" id="sheet-twoembed" onclick="selectServerFromSheet('twoembed')">
         <span>2Embed</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-videm" onclick="selectServerFromSheet('videm')">
-        <span>Videm</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-cypher" onclick="selectServerFromSheet('cypher')">
-        <span>Cypher</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-breach" onclick="selectServerFromSheet('breach')">
-        <span>Breach</span>
-      </button>
-      <button class="sheet-nav-item" id="sheet-vyse" onclick="selectServerFromSheet('vyse')">
-        <span>Vyse</span>
       </button>
     </div>
   </div>
@@ -6186,16 +6174,13 @@
     const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w185';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'vidapi', 'twoembed', 'videm', 'cypher', 'breach', 'vyse'];
+    const PROVIDERS = ['vixsrc', 'vidapi', 'vidrock', 'twoembed'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
       vixsrc: 'VixSrc',
       vidapi: 'VidAPI',
       twoembed: '2Embed',
-      videm: 'Videm',
-      cypher: 'Cypher',
-      breach: 'Breach',
-      vyse: 'Vyse'
+      vidrock: 'Vidrock'
     };
     let currentProviderIndex = 0;
     const warmedEmbeds = new Set();
@@ -6203,11 +6188,41 @@
     const VIXSRC_PRIMARY = '4f46e5';
     const VIXSRC_SECONDARY = '0f172a';
 
+    
+    function progressKey() {
+      if (!activeMedia) return '';
+      const kind = activeMedia.computedType === 'tv' ? 'tv' : 'movie';
+      const s = kind === 'tv' ? (activeSeason || 1) : 0;
+      const e = kind === 'tv' ? (activeEpisode || 1) : 0;
+      return 'bwhs-pos-' + kind + '-' + activeMedia.id + '-' + s + '-' + e;
+    }
+    function savedSeconds() {
+      try {
+        const n = Number(localStorage.getItem(progressKey()) || 0);
+        return n > 15 ? Math.floor(n) : 0;
+      } catch (_) { return 0; }
+    }
+    function saveSeconds(n) {
+      if (!n || n < 15) return;
+      try { localStorage.setItem(progressKey(), String(Math.floor(n))); } catch (_) {}
+    }
+    window.addEventListener('message', (event) => {
+      const data = event.data || {};
+      const inner = data.data || data;
+      const status = inner.player_status || data.event || '';
+      const pos = Number(inner.player_progress || data.currentTime || data.time || 0);
+      if (pos > 15) saveSeconds(pos);
+      if (status === 'completed' && (PROVIDERS[currentProviderIndex] || '') === 'vidapi' && activeMedia && activeMedia.computedType === 'tv') {
+        activeEpisode = (activeEpisode || 1) + 1;
+        executeStreamLoad();
+      }
+    });
+
     function buildVixsrcParams() {
       return [
         'autoplay=1',
         'autoPlay=true',
-        'startAt=0',
+        'startAt=' + savedSeconds(),
         'lang=en',
         'primaryColor=' + VIXSRC_PRIMARY,
         'secondaryColor=' + VIXSRC_SECONDARY,
@@ -12821,10 +12836,16 @@
 
       switch (providerName) {
         case 'vidapi': {
-          const look = 'theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&ds_lang=en&showTitle=true';
+          const look = 'theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&ds_lang=en&showTitle=true&resumeAt=' + savedSeconds() + '&startAt=' + savedSeconds();
           return isTv
             ? `https://vaplayer.ru/embed/tv/${id}/${s}/${e}?${look}`
             : `https://vaplayer.ru/embed/movie/${id}?${look}`;
+        }
+        case 'vidrock': {
+          const rock = 'autoplay=1&lang=en&theme=disney&color=0063e5&startAt=' + savedSeconds() + '&progress=' + savedSeconds() + '&t=' + savedSeconds();
+          return isTv
+            ? `https://vidrock.net/tv/${id}/${s}/${e}?${rock}`
+            : `https://vidrock.net/movie/${id}?${rock}`;
         }
 
         case 'vidsrc':
@@ -13529,15 +13550,6 @@
     }
 
     
-    window.addEventListener('message', (event) => {
-      const data = event.data;
-      if (!data || data.type !== 'PLAYER_EVENT') return;
-      if (!data.data || data.data.player_status !== 'completed') return;
-      if ((PROVIDERS[currentProviderIndex] || '') !== 'vidapi') return;
-      if (!activeMedia || activeMedia.computedType !== 'tv') return;
-      activeEpisode = (activeEpisode || 1) + 1;
-      executeStreamLoad();
-    });
 
     function executeStreamLoad() {
       if (!playerFrame || !activeMedia) return;
