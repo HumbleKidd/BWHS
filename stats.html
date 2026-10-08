@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BWHS stats</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #0c0f14; color: #e8eef7; }
+    main { max-width: 880px; margin: 0 auto; padding: 28px 18px 60px; }
+    h1 { font-size: 1.4rem; margin: 0 0 6px; }
+    p { color: #9aabc0; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin: 18px 0; }
+    .card { background: #161c27; border: 1px solid #263044; border-radius: 14px; padding: 16px 18px; min-width: 150px; }
+    .card b { display: block; font-size: 1.8rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    td, th { text-align: left; padding: 8px 6px; border-bottom: 1px solid #243044; }
+    a { color: #8eb6ff; }
+    .note { font-size: .9rem; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>BWHS traffic</h1>
+  <p class="note">Live watchers drop off about 90 seconds after a tab closes. Visits are one per browser per day. Page loads count every open.</p>
+  <div class="row">
+    <div class="card">Watching now<b id="live">–</b></div>
+    <div class="card">Visits all time<b id="visits">–</b></div>
+    <div class="card">Page loads<b id="loads">–</b></div>
+    <div class="card">Today visits<b id="today">–</b></div>
+  </div>
+  <h2>Last 30 days</h2>
+  <table><thead><tr><th>Day</th><th>Visits</th><th>Page loads</th></tr></thead><tbody id="days"></tbody></table>
+  <p><a href="index.html">Back to BWHS</a></p>
+  <p class="note">Database rules to paste in Firebase Realtime Database → Rules:</p>
+  <pre>{
+  "rules": {
+    "presence": { ".read": true, "$id": { ".write": true } },
+    "stats": { ".read": true, ".write": true }
+  }
+}</pre>
+</main>
+<script src="bwhs-stats.js"></script>
+<script>
+  function paint() {
+    if (!window.BWHSStats || !window.BWHSStats.ready) {
+      document.getElementById("live").textContent = "config";
+      return;
+    }
+    var db = window.BWHSStats.db;
+    window.BWHSStats.liveCount(function (n) { document.getElementById("live").textContent = n; });
+    db.ref("stats/totals").on("value", function (s) {
+      var v = s.val() || {};
+      document.getElementById("visits").textContent = v.visits || 0;
+      document.getElementById("loads").textContent = v.pageLoads || 0;
+    });
+    db.ref("stats/days").limitToLast(30).on("value", function (s) {
+      var rows = [], map = s.val() || {};
+      Object.keys(map).sort().reverse().forEach(function (k) {
+        var d = map[k] || {};
+        rows.push("<tr><td>" + k + "</td><td>" + (d.visits || 0) + "</td><td>" + (d.pageLoads || 0) + "</td></tr>");
+      });
+      var now = new Date();
+      var key = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
+      document.getElementById("today").textContent = (map[key] && map[key].visits) || 0;
+      document.getElementById("days").innerHTML = rows.join("") || "<tr><td colspan=3>No data yet</td></tr>";
+    });
+  }
+  setTimeout(paint, 600);
+</script>
+</body>
+</html>
