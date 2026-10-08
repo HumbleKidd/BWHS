@@ -5364,6 +5364,8 @@
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
                       <button class="srv-btn" id="btn-vidrock" onclick="manualSwitchServer('vidrock')">Vidrock</button>
+                      <button class="srv-btn" id="btn-cinesrc" onclick="manualSwitchServer('cinesrc')">CineSrc</button>
+                      <select id="bwhs-quality" class="srv-btn" onchange="setSavedQuality(this.value)"><option>2160</option><option selected>1080</option><option>720</option><option>480</option></select>
                       <button class="srv-btn" id="btn-twoembed" onclick="manualSwitchServer('twoembed')">2Embed</button>
                     </div>
                     <div class="row-slider-track" id="sliderServerTrack">
@@ -5996,6 +5998,9 @@
       <button class="sheet-nav-item" id="sheet-vidrock" onclick="selectServerFromSheet('vidrock')">
         <span>Vidrock</span>
       </button>
+      <button class="sheet-nav-item" id="sheet-cinesrc" onclick="selectServerFromSheet('cinesrc')">
+        <span>CineSrc</span>
+      </button>
       <button class="sheet-nav-item" id="sheet-twoembed" onclick="selectServerFromSheet('twoembed')">
         <span>2Embed</span>
       </button>
@@ -6174,13 +6179,14 @@
     const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w185';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'vidapi', 'vidrock', 'twoembed'];
+    const PROVIDERS = ['vixsrc', 'vidapi', 'vidrock', 'cinesrc', 'twoembed'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
       vixsrc: 'VixSrc',
       vidapi: 'VidAPI',
       twoembed: '2Embed',
-      vidrock: 'Vidrock'
+      vidrock: 'Vidrock',
+      cinesrc: 'CineSrc'
     };
     let currentProviderIndex = 0;
     const warmedEmbeds = new Set();
@@ -6228,13 +6234,30 @@
         'secondaryColor=' + VIXSRC_SECONDARY,
         'skin=vixsrc',
         'canPlayFHD=1',
-        'quality=2160',
-        'maxQuality=2160',
-        'res=2160'
+        'quality=' + savedQuality(),
+        'maxQuality=' + savedQuality(),
+        'res=' + savedQuality()
       ].join('&');
     }
+    
+    function setSavedQuality(q) {
+      try { localStorage.setItem('bwhs-quality', q); } catch (_) {}
+      if (typeof executeStreamLoad === 'function') executeStreamLoad();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const sel = document.getElementById('bwhs-quality');
+      if (sel) sel.value = savedQuality();
+    });
+
+    function savedQuality() {
+      try {
+        const q = localStorage.getItem('bwhs-quality') || '1080';
+        return ['2160', '1080', '720', '480'].includes(q) ? q : '1080';
+      } catch (_) { return '1080'; }
+    }
     function hdQuery(extra) {
-      const base = ['autoplay=1', 'autoPlay=true', 'quality=2160', 'maxQuality=2160', 'res=2160', 'q=2160'];
+      const q = savedQuality();
+      const base = ['autoplay=1', 'autoPlay=true', 'quality=' + q, 'maxQuality=' + q, 'res=' + q, 'q=' + q];
       if (extra) base.push(extra);
       return base.join('&');
     }
@@ -12842,10 +12865,16 @@
             : `https://vaplayer.ru/embed/movie/${id}?${look}`;
         }
         case 'vidrock': {
-          const rock = 'autoplay=1&lang=en&theme=disney&color=0063e5&startAt=' + savedSeconds() + '&progress=' + savedSeconds() + '&t=' + savedSeconds();
+          const rock = 'autoplay=1&lang=en&theme=disney&color=0063e5&quality=' + savedQuality() + '&startAt=' + savedSeconds() + '&progress=' + savedSeconds() + '&t=' + savedSeconds();
           return isTv
             ? `https://vidrock.net/tv/${id}/${s}/${e}?${rock}`
             : `https://vidrock.net/movie/${id}?${rock}`;
+        }
+        case 'cinesrc': {
+          const cine = 'autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=' + savedQuality() + '&t=' + savedSeconds() + '&continueprompt=true';
+          return isTv
+            ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&${cine}`
+            : `https://cinesrc.st/embed/movie/${id}?${cine}`;
         }
 
         case 'vidsrc':
