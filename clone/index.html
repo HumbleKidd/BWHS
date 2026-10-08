@@ -5365,6 +5365,9 @@
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-cinesrc" onclick="manualSwitchServer('cinesrc')">CineSrc</button>
+                      <button class="srv-btn" id="btn-vidnest" onclick="manualSwitchServer('vidnest')">VidNest</button>
+                      <button class="srv-btn" id="btn-audio-dub" onclick="setAudioPref('dub')">Dub</button>
+                      <button class="srv-btn" id="btn-audio-sub" onclick="setAudioPref('sub')">Sub</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
                       <button class="srv-btn" id="btn-vidrock" onclick="manualSwitchServer('vidrock')">Vidrock</button>
                       <button class="srv-btn" id="btn-twoembed" onclick="manualSwitchServer('twoembed')">2Embed</button>
@@ -5996,6 +5999,9 @@
       <button class="sheet-nav-item" id="sheet-cinesrc" onclick="selectServerFromSheet('cinesrc')">
         <span>CineSrc</span>
       </button>
+      <button class="sheet-nav-item" id="sheet-vidnest" onclick="selectServerFromSheet('vidnest')">
+        <span>VidNest</span>
+      </button>
       <button class="sheet-nav-item" id="sheet-vidapi" onclick="selectServerFromSheet('vidapi')">
         <span>VidAPI</span>
       </button>
@@ -6180,7 +6186,7 @@
     const IMAGE_THUMB = 'https://image.tmdb.org/t/p/w185';
     const apiKey = '129637a8869a61522af21b80f6eb5129';
 
-    const PROVIDERS = ['vixsrc', 'cinesrc', 'vidapi', 'vidrock', 'twoembed'];
+    const PROVIDERS = ['vixsrc', 'cinesrc', 'vidnest', 'vidapi', 'vidrock', 'twoembed'];
     let mediaSessionId = 0;
     const PROVIDER_NAMES = {
       vixsrc: 'VixSrc',
@@ -11802,7 +11808,7 @@
       }
       activeSeason = season;
       activeEpisode = episode;
-      currentProviderIndex = 0;
+      currentProviderIndex = currentType === 'anime' ? PROVIDERS.indexOf('vidnest') : 0;
       similarCurrentPage = 1;
       similarSeenSet.clear();
       if (playerPageView) playerPageView.classList.add('active');
@@ -12863,7 +12869,16 @@
       } catch(_) {}
     }
 
-        function getProviderUrl(providerName) {
+        
+    window.bwhsAudioPref = 'dub';
+    function setAudioPref(mode) {
+      window.bwhsAudioPref = mode === 'sub' ? 'sub' : 'dub';
+      document.getElementById('btn-audio-dub')?.classList.toggle('active', window.bwhsAudioPref === 'dub');
+      document.getElementById('btn-audio-sub')?.classList.toggle('active', window.bwhsAudioPref === 'sub');
+      if (typeof executeStreamLoad === 'function' && activeMedia) executeStreamLoad();
+    }
+
+    function getProviderUrl(providerName) {
       if (!activeMedia) return '';
       const id = activeMedia.id;
       const isTv = activeMedia.computedType === 'tv';
@@ -12871,6 +12886,16 @@
       const e = activeEpisode || 1;
 
       switch (providerName) {
+        case 'vidnest': {
+          const audio = (window.bwhsAudioPref || 'dub') === 'sub' ? 'sub' : 'dub';
+          const q = 'autoplay=1&autonext=1&lang=en&quality=1080&audio=' + audio;
+          if (currentType === 'anime') {
+            return `https://vidnest.fun/anime/${id}/${e}/${audio}?${q}`;
+          }
+          return isTv
+            ? `https://vidnest.fun/tv/${id}/${s}/${e}?${q}`
+            : `https://vidnest.fun/movie/${id}?${q}`;
+        }
         case 'vidapi': {
           const look = 'theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&ds_lang=en&showTitle=true&resumeAt=' + savedSeconds() + '&startAt=' + savedSeconds();
           return isTv
