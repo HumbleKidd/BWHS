@@ -2588,6 +2588,12 @@
       object-fit: cover !important;
     }
 
+
+    .cinesrc-info { position:absolute; left:0; right:0; bottom:0; z-index:40; display:none; padding:22px 18px 16px; background:linear-gradient(transparent, rgba(0,0,0,.88)); color:#fff; pointer-events:none; }
+    .cinesrc-info.show { display:block; }
+    .cinesrc-info strong { display:block; font-size:22px; margin-bottom:6px; }
+    .cinesrc-info p { margin:0; max-width:760px; font-size:14px; line-height:1.4; opacity:.9; }
+
     .player-dock {
       padding: 14px 18px;
       display: flex;
@@ -13593,6 +13599,33 @@
     }
 
     
+
+    
+    function showCineInfo(on) {
+      const vp = document.getElementById('videoViewport');
+      if (!vp) return;
+      let card = document.getElementById('cinesrcInfo');
+      if (!card) {
+        card = document.createElement('div');
+        card.id = 'cinesrcInfo';
+        card.className = 'cinesrc-info';
+        vp.appendChild(card);
+      }
+      if (!on || (PROVIDERS[currentProviderIndex] || '') !== 'cinesrc') {
+        card.classList.remove('show');
+        return;
+      }
+      const m = activeMedia || {};
+      const title = m.title || m.name || 'Now playing';
+      const about = m.overview || m.description || '';
+      card.innerHTML = '<strong>' + title + '</strong>' + (about ? '<p>' + about + '</p>' : '');
+      card.classList.add('show');
+    }
+    window.addEventListener('message', (event) => {
+      const data = event.data || {};
+      if (data.type === 'cinesrc:pause') showCineInfo(true);
+      if (data.type === 'cinesrc:play' || data.type === 'cinesrc:ended') showCineInfo(false);
+    });
 
     function executeStreamLoad() {
       if (!playerFrame || !activeMedia) return;
