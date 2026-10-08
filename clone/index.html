@@ -2588,8 +2588,6 @@
       object-fit: cover !important;
     }
 
-
-
     .player-dock {
       padding: 14px 18px;
       display: flex;
@@ -6205,38 +6203,27 @@
       const e = kind === 'tv' ? (activeEpisode || 1) : 0;
       return 'bwhs-pos-' + kind + '-' + activeMedia.id + '-' + s + '-' + e;
     }
-    let resumeChoice = '';
-    let livePos = 0;
     function savedSeconds() {
-      if (resumeChoice === 'restart') return 0;
       try {
         const n = Number(localStorage.getItem(progressKey()) || 0);
         return n > 15 ? Math.floor(n) : 0;
       } catch (_) { return 0; }
     }
-    function rememberLeave() {
-      if (!livePos || livePos < 15) return;
-      try { localStorage.setItem(progressKey(), String(Math.floor(livePos))); } catch (_) {}
-    }
-    function clearLeave() {
-      try { localStorage.removeItem(progressKey()); } catch (_) {}
-      livePos = 0;
+    function saveSeconds(n) {
+      if (!n || n < 15) return;
+      try { localStorage.setItem(progressKey(), String(Math.floor(n))); } catch (_) {}
     }
     window.addEventListener('message', (event) => {
       const data = event.data || {};
       const inner = data.data || data;
-      const status = String(inner.player_status || data.type || data.event || '');
+      const status = inner.player_status || data.event || '';
       const pos = Number(inner.player_progress || data.currentTime || data.time || 0);
-      if (pos > 15 && (status.includes('seek') || pos + 2 >= livePos)) livePos = pos;
-      if (status === 'paused' || status === 'cinesrc:pause' || status === 'completed' || status === 'cinesrc:ended') rememberLeave();
-      if (status === 'completed' || status === 'cinesrc:ended') clearLeave();
+      if (pos > 15) saveSeconds(pos);
       if (status === 'completed' && (PROVIDERS[currentProviderIndex] || '') === 'vidapi' && activeMedia && activeMedia.computedType === 'tv') {
         activeEpisode = (activeEpisode || 1) + 1;
         executeStreamLoad();
       }
     });
-    window.addEventListener('pagehide', rememberLeave);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') rememberLeave(); });
 
     function buildVixsrcParams() {
       return [
@@ -6304,8 +6291,8 @@
           const warm = document.createElement('link');
           warm.rel = 'prefetch';
           warm.href = type === 'tv'
-            ? `https://cinesrc.st/embed/tv/${id}?s=${season || 1}&e=${episode || 1}&autoplay=true`
-            : `https://cinesrc.st/embed/movie/${id}?autoplay=true`;
+            ? `https://cinesrc.st/embed/tv/${id}?s=${season || 1}&e=${episode || 1}&autoplay=true&subtitles=false`
+            : `https://cinesrc.st/embed/movie/${id}?autoplay=true&subtitles=false`;
           document.head.appendChild(warm);
         } catch (_) {}
       }
@@ -12898,7 +12885,7 @@
         }
         case 'cinesrc': {
           const start = savedSeconds();
-          const cine = 'autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&subtitles=off&color=%230063e5&quality=' + savedQuality() + (start ? '&t=' + start + '&continueprompt=true' : '');
+          const cine = 'autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&subtitles=false&subs=0&color=%230063e5&quality=' + savedQuality() + (start ? '&t=' + start + '&continueprompt=false' : '');
           return isTv
             ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&${cine}`
             : `https://cinesrc.st/embed/movie/${id}?${cine}`;
@@ -13607,7 +13594,6 @@
 
     
 
-    
     function executeStreamLoad() {
       if (!playerFrame || !activeMedia) return;
       const currentProvider = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
