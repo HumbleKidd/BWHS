@@ -1,0 +1,105 @@
+/* Realistic Flying Butterflies and Hover Synopsis Pop-out */
+#butterfly-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  overflow: hidden;
+}
+.butterfly {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.18));
+  will-change: transform, opacity;
+  animation: butterfly-flap 0.22s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes butterfly-flap {
+  0% { transform: scaleX(1); }
+  100% { transform: scaleX(0.88); }
+}
+.butterfly.bf1 { background-image: url("https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Danaus_plexippus-transparent.png/240px-Danaus_plexippus-transparent.png"); }
+.butterfly.bf2 { background-image: url("https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Papilio_machaon_-_Schwalbenschwanz_-_Swallowtail_butterfly.jpg/240px-Papilio_machaon_-_Schwalbenschwanz_-_Swallowtail_butterfly.jpg"); }
+.butterfly.bf3 { background-image: url("https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Vanessa_atalanta_-_Admiral.jpg/240px-Vanessa_atalanta_-_Admiral.jpg"); }
+.butterfly.bf4 { background-image: url("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Pieris_rapae_-_Small_white_butterfly.jpg/240px-Pieris_rapae_-_Small_white_butterfly.jpg"); }
+
+.synopsis-popup {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.9) translateY(10px);
+  transition: opacity 0.16s ease, transform 0.2s cubic-bezier(.18,.89,.32,1.28);
+  filter: drop-shadow(0 24px 48px rgba(15,23,42,0.22));
+}
+.synopsis-popup.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+.synopsis-popup .sp-poster {
+  width: 200px;
+  aspect-ratio: 2/3;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  background: #f1f5f9;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+.synopsis-popup .sp-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.synopsis-popup .sp-info {
+  width: 200px;
+  background: #ffffff;
+  border-radius: 0 0 16px 16px;
+  padding: 12px 14px 14px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+  border: 1px solid #f1f5f9;
+  border-top: none;
+}
+.synopsis-popup .sp-synopsis {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #1e293b;
+  margin: 0 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-weight: 500;
+}
+.synopsis-popup .sp-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+.synopsis-popup .sp-rating {
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.synopsis-popup .sp-casts {
+  font-size: 0.68rem;
+  color: #475569;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.synopsis-popup .sp-casts span {
+  display: inline-block;
+  background: #f8fafc;
+  padding: 3px 8px;
+  border-radius: 8px;
+  margin: 3px 5px 0 0;
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+}
