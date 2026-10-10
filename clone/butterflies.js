@@ -2,7 +2,7 @@
   const TMDB_KEY = '129637a8869a61522af21b80f6eb5129';
   const IMG_BASE = 'https://image.tmdb.org/t/p/w342';
 
-  // ===== Elevate ALL cards + horizontal info popup (butterflies removed) =====
+  // ===== Elevate ALL cards + horizontal info popup with hover support =====
   let popup = null;
   let hideTimer = null;
   let currentCard = null;
@@ -31,6 +31,15 @@
       </div>
     `;
     document.body.appendChild(popup);
+
+    // Keep popup open while hovering it
+    popup.addEventListener('mouseenter', () => {
+      clearTimeout(hideTimer);
+    });
+    popup.addEventListener('mouseleave', () => {
+      hidePopup();
+    });
+
     return popup;
   }
 
@@ -120,7 +129,7 @@
       if (popup) popup.classList.remove('visible');
       currentCard = null;
       clearElevate();
-    }, 160);
+    }, 200);
   }
 
   // Elevate EVERY matching card on hover, popup only when data exists
@@ -137,7 +146,7 @@
     const card = e.target.closest && e.target.closest(CARD_SEL);
     if (!card) return;
     const related = e.relatedTarget;
-    if (related && card.contains(related)) return;
+    if (related && (card.contains(related) || (popup && popup.contains(related)))) return;
     if (card === elevatedCard) clearElevate();
     if (card === currentCard) hidePopup();
   }, true);
