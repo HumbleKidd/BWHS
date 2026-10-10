@@ -2,71 +2,7 @@
   const TMDB_KEY = '129637a8869a61522af21b80f6eb5129';
   const IMG_BASE = 'https://image.tmdb.org/t/p/w342';
 
-  // ===== Flying Butterflies (larger, brighter, always on top) =====
-  function initButterflies() {
-    if (document.getElementById('butterfly-layer')) return;
-    const layer = document.createElement('div');
-    layer.id = 'butterfly-layer';
-    document.body.appendChild(layer);
-
-    const butterflies = [];
-    const classes = ['bf1','bf2','bf3','bf4','bf5','bf6'];
-    const count = 12;
-
-    for (let i = 0; i < count; i++) {
-      const el = document.createElement('div');
-      el.className = 'butterfly ' + classes[i % classes.length];
-      el.innerHTML = `
-        <div class="wing left"></div>
-        <div class="body"></div>
-        <div class="wing right"></div>
-      `;
-      layer.appendChild(el);
-      butterflies.push({
-        el,
-        x: Math.random() * (window.innerWidth || 1400),
-        y: Math.random() * (window.innerHeight || 900),
-        vx: (Math.random() - 0.5) * 2.8,
-        vy: (Math.random() - 0.5) * 1.8,
-        depth: 0.6 + Math.random() * 1.2,
-        phase: Math.random() * Math.PI * 2
-      });
-    }
-
-    function animateButterflies() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      butterflies.forEach((b) => {
-        b.phase += 0.018 + Math.random() * 0.007;
-        b.x += b.vx + Math.sin(b.phase) * 1.1;
-        b.y += b.vy + Math.cos(b.phase * 0.65) * 0.7;
-        if (b.x < -120) b.x = w + 50;
-        if (b.x > w + 120) b.x = -50;
-        if (b.y < -100) b.y = h + 40;
-        if (b.y > h + 100) b.y = -40;
-        if (Math.random() < 0.004) {
-          b.vx = (Math.random() - 0.5) * 3.2;
-          b.vy = (Math.random() - 0.5) * 2.0;
-        }
-        b.depth += (Math.random() - 0.5) * 0.01;
-        b.depth = Math.max(0.5, Math.min(1.8, b.depth));
-        const scale = b.depth;
-        const rot = Math.sin(b.phase * 1.3) * 20 + (b.vx > 0 ? 10 : -10);
-        b.el.style.transform = `translate3d(${b.x}px, ${b.y}px, 0) scale(${scale}) rotate(${rot}deg)`;
-        b.el.style.zIndex = Math.round(10000 + b.depth * 10);
-      });
-      requestAnimationFrame(animateButterflies);
-    }
-    requestAnimationFrame(animateButterflies);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initButterflies);
-  } else {
-    initButterflies();
-  }
-
-  // ===== Elevate ALL cards + horizontal info popup =====
+  // ===== Elevate ALL cards + horizontal info popup (butterflies removed) =====
   let popup = null;
   let hideTimer = null;
   let currentCard = null;
