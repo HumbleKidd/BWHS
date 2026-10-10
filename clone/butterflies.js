@@ -2,68 +2,78 @@
   const TMDB_KEY = '129637a8869a61522af21b80f6eb5129';
   const IMG_BASE = 'https://image.tmdb.org/t/p/w342';
 
-  // ===== Flying Butterflies (pure CSS/SVG art — no external images) =====
-  const layer = document.createElement('div');
-  layer.id = 'butterfly-layer';
-  document.body.appendChild(layer);
+  // ===== Flying Butterflies (larger, brighter, always on top) =====
+  function initButterflies() {
+    if (document.getElementById('butterfly-layer')) return;
+    const layer = document.createElement('div');
+    layer.id = 'butterfly-layer';
+    document.body.appendChild(layer);
 
-  const butterflies = [];
-  const classes = ['bf1','bf2','bf3','bf4','bf5','bf6'];
-  const count = 7;
+    const butterflies = [];
+    const classes = ['bf1','bf2','bf3','bf4','bf5','bf6'];
+    const count = 12;
 
-  for (let i = 0; i < count; i++) {
-    const el = document.createElement('div');
-    el.className = 'butterfly ' + classes[i % classes.length];
-    el.innerHTML = `
-      <div class="wing left"></div>
-      <div class="body"></div>
-      <div class="wing right"></div>
-    `;
-    layer.appendChild(el);
-    butterflies.push({
-      el,
-      x: Math.random() * (window.innerWidth || 1200),
-      y: Math.random() * (window.innerHeight || 800),
-      vx: (Math.random() - 0.5) * 2.2,
-      vy: (Math.random() - 0.5) * 1.4,
-      depth: 0.5 + Math.random() * 1.1,
-      phase: Math.random() * Math.PI * 2,
-      colorClass: classes[i % classes.length]
-    });
-  }
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'butterfly ' + classes[i % classes.length];
+      el.innerHTML = `
+        <div class="wing left"></div>
+        <div class="body"></div>
+        <div class="wing right"></div>
+      `;
+      layer.appendChild(el);
+      butterflies.push({
+        el,
+        x: Math.random() * (window.innerWidth || 1400),
+        y: Math.random() * (window.innerHeight || 900),
+        vx: (Math.random() - 0.5) * 2.8,
+        vy: (Math.random() - 0.5) * 1.8,
+        depth: 0.6 + Math.random() * 1.2,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
 
-  function animateButterflies() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    butterflies.forEach((b) => {
-      b.phase += 0.016 + Math.random() * 0.006;
-      b.x += b.vx + Math.sin(b.phase) * 0.9;
-      b.y += b.vy + Math.cos(b.phase * 0.7) * 0.55;
-      if (b.x < -100) b.x = w + 40;
-      if (b.x > w + 100) b.x = -40;
-      if (b.y < -80) b.y = h + 30;
-      if (b.y > h + 80) b.y = -30;
-      if (Math.random() < 0.0035) {
-        b.vx = (Math.random() - 0.5) * 2.6;
-        b.vy = (Math.random() - 0.5) * 1.7;
-      }
-      b.depth += (Math.random() - 0.5) * 0.008;
-      b.depth = Math.max(0.45, Math.min(1.6, b.depth));
-      const scale = b.depth;
-      const rot = Math.sin(b.phase * 1.2) * 18 + (b.vx > 0 ? 8 : -8);
-      b.el.style.transform = `translate3d(${b.x}px, ${b.y}px, 0) scale(${scale}) rotate(${rot}deg)`;
-      b.el.style.opacity = Math.min(0.92, 0.45 + b.depth * 0.35);
-      b.el.style.zIndex = Math.round(b.depth * 15);
-    });
+    function animateButterflies() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      butterflies.forEach((b) => {
+        b.phase += 0.018 + Math.random() * 0.007;
+        b.x += b.vx + Math.sin(b.phase) * 1.1;
+        b.y += b.vy + Math.cos(b.phase * 0.65) * 0.7;
+        if (b.x < -120) b.x = w + 50;
+        if (b.x > w + 120) b.x = -50;
+        if (b.y < -100) b.y = h + 40;
+        if (b.y > h + 100) b.y = -40;
+        if (Math.random() < 0.004) {
+          b.vx = (Math.random() - 0.5) * 3.2;
+          b.vy = (Math.random() - 0.5) * 2.0;
+        }
+        b.depth += (Math.random() - 0.5) * 0.01;
+        b.depth = Math.max(0.5, Math.min(1.8, b.depth));
+        const scale = b.depth;
+        const rot = Math.sin(b.phase * 1.3) * 20 + (b.vx > 0 ? 10 : -10);
+        b.el.style.transform = `translate3d(${b.x}px, ${b.y}px, 0) scale(${scale}) rotate(${rot}deg)`;
+        b.el.style.zIndex = Math.round(10000 + b.depth * 10);
+      });
+      requestAnimationFrame(animateButterflies);
+    }
     requestAnimationFrame(animateButterflies);
   }
-  requestAnimationFrame(animateButterflies);
 
-  // ===== 3D Flip Synopsis Popup =====
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initButterflies);
+  } else {
+    initButterflies();
+  }
+
+  // ===== Elevate ALL cards + horizontal info popup =====
   let popup = null;
   let hideTimer = null;
   let currentCard = null;
+  let elevatedCard = null;
   const creditsCache = new Map();
+
+  const CARD_SEL = '.media-card, .shelf-card, .upcoming-card, .panel-item-card, .sidebar-rec-card, .hero-mini-poster';
 
   function ensurePopup() {
     if (popup) return popup;
@@ -105,13 +115,32 @@
     }
   }
 
+  function elevateCard(card) {
+    if (elevatedCard && elevatedCard !== card) {
+      elevatedCard.classList.remove('bwhs-elevated');
+    }
+    if (card) {
+      card.classList.add('bwhs-elevated');
+      elevatedCard = card;
+    }
+  }
+
+  function clearElevate() {
+    if (elevatedCard) {
+      elevatedCard.classList.remove('bwhs-elevated');
+      elevatedCard = null;
+    }
+  }
+
   async function showPopup(card) {
     if (!card || !card._bwhsItem) return;
     const item = card._bwhsItem;
     const type = card._bwhsType || (item.title ? 'movie' : 'tv');
-    if (type === 'person' || !item.overview && !item.title && !item.name) return;
+    if (type === 'person') return;
     clearTimeout(hideTimer);
     currentCard = card;
+    elevateCard(card);
+
     const p = ensurePopup();
     const posterEl = p.querySelector('.sp-poster img');
     const synEl = p.querySelector('.sp-synopsis');
@@ -128,13 +157,12 @@
     dateEl.textContent = date ? date.slice(0, 4) : '—';
 
     const rect = card.getBoundingClientRect();
-    const pw = 220;
+    const pw = 360;
     let left = rect.left + rect.width / 2 - pw / 2;
-    let top = rect.top - 8;
-    if (left < 10) left = 10;
-    if (left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
-    if (top < 10) top = rect.bottom + 8;
-    if (top + 320 > window.innerHeight) top = Math.max(10, window.innerHeight - 340);
+    let top = rect.bottom + 8;
+    if (left < 12) left = 12;
+    if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
+    if (top + 180 > window.innerHeight) top = Math.max(12, rect.top - 180);
     p.style.left = left + 'px';
     p.style.top = top + 'px';
     p.style.width = pw + 'px';
@@ -155,43 +183,46 @@
     hideTimer = setTimeout(() => {
       if (popup) popup.classList.remove('visible');
       currentCard = null;
-    }, 180);
+      clearElevate();
+    }, 160);
   }
 
-  // Desktop hover
+  // Elevate EVERY matching card on hover, popup only when data exists
   document.addEventListener('mouseover', (e) => {
-    const card = e.target.closest && e.target.closest('.media-card, .shelf-card, .upcoming-card, .panel-item-card');
-    if (card && card._bwhsItem && card !== currentCard) {
+    const card = e.target.closest && e.target.closest(CARD_SEL);
+    if (!card) return;
+    elevateCard(card);
+    if (card._bwhsItem && card !== currentCard) {
       showPopup(card);
     }
   }, true);
 
   document.addEventListener('mouseout', (e) => {
-    const card = e.target.closest && e.target.closest('.media-card, .shelf-card, .upcoming-card, .panel-item-card');
-    if (card && card === currentCard) {
-      // Check if still over the card
-      const related = e.relatedTarget;
-      if (!related || !card.contains(related)) hidePopup();
-    }
+    const card = e.target.closest && e.target.closest(CARD_SEL);
+    if (!card) return;
+    const related = e.relatedTarget;
+    if (related && card.contains(related)) return;
+    if (card === elevatedCard) clearElevate();
+    if (card === currentCard) hidePopup();
   }, true);
 
-  // Mobile / touch: tap to show briefly
+  // Touch: tap elevates + shows info briefly
   document.addEventListener('click', (e) => {
-    const card = e.target.closest && e.target.closest('.media-card, .shelf-card, .upcoming-card');
-    if (card && card._bwhsItem && window.matchMedia('(hover: none)').matches) {
+    const card = e.target.closest && e.target.closest(CARD_SEL);
+    if (!card) return;
+    elevateCard(card);
+    if (card._bwhsItem && window.matchMedia('(hover: none)').matches) {
       showPopup(card);
-      setTimeout(hidePopup, 3200);
+      setTimeout(() => {
+        hidePopup();
+        clearElevate();
+      }, 3400);
     }
   }, true);
 
   window.addEventListener('scroll', () => {
     if (popup) popup.classList.remove('visible');
     currentCard = null;
+    clearElevate();
   }, { passive: true });
-
-  // Re-bind on dynamic cards via MutationObserver (helps if cards are added after load)
-  const obs = new MutationObserver(() => {
-    // Nothing heavy — events are delegated so this is just a light touch
-  });
-  obs.observe(document.body, { childList: true, subtree: true });
 })();
