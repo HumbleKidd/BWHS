@@ -1,4 +1,4 @@
-/* Realistic Flying Butterflies and Hover Synopsis Pop-out */
+/* Flying Butterflies + 3D Flip Synopsis Popup for BWHS clone */
 #butterfly-layer {
   position: fixed;
   inset: 0;
@@ -6,65 +6,137 @@
   z-index: 9998;
   overflow: hidden;
 }
+
 .butterfly {
   position: absolute;
-  width: 90px;
-  height: 90px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.18));
-  will-change: transform, opacity;
-  animation: butterfly-flap 0.22s ease-in-out infinite alternate;
+  width: 70px;
+  height: 50px;
   pointer-events: none;
+  will-change: transform;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
 }
-@keyframes butterfly-flap {
-  0% { transform: scaleX(1); }
-  100% { transform: scaleX(0.88); }
-}
-.butterfly.bf1 { background-image: url("https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Danaus_plexippus-transparent.png/240px-Danaus_plexippus-transparent.png"); }
-.butterfly.bf2 { background-image: url("https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Papilio_machaon_-_Schwalbenschwanz_-_Swallowtail_butterfly.jpg/240px-Papilio_machaon_-_Schwalbenschwanz_-_Swallowtail_butterfly.jpg"); }
-.butterfly.bf3 { background-image: url("https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Vanessa_atalanta_-_Admiral.jpg/240px-Vanessa_atalanta_-_Admiral.jpg"); }
-.butterfly.bf4 { background-image: url("https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Pieris_rapae_-_Small_white_butterfly.jpg/240px-Pieris_rapae_-_Small_white_butterfly.jpg"); }
 
+.butterfly .body {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 28px;
+  margin-left: -3px;
+  margin-top: -14px;
+  background: #1a1a1a;
+  border-radius: 3px;
+  z-index: 2;
+}
+
+.butterfly .wing {
+  position: absolute;
+  top: 50%;
+  width: 32px;
+  height: 36px;
+  margin-top: -18px;
+  transform-origin: center right;
+  animation: wing-flap 0.18s ease-in-out infinite alternate;
+}
+
+.butterfly .wing.left {
+  left: 0;
+  transform-origin: right center;
+  background: linear-gradient(135deg, #ff6b35, #f7931e, #ffcc00);
+  clip-path: polygon(100% 50%, 20% 10%, 0% 40%, 15% 70%, 40% 95%, 70% 80%, 100% 50%);
+  border-radius: 50% 0 50% 50%;
+}
+
+.butterfly .wing.right {
+  right: 0;
+  transform-origin: left center;
+  background: linear-gradient(225deg, #ff6b35, #f7931e, #ffcc00);
+  clip-path: polygon(0% 50%, 80% 10%, 100% 40%, 85% 70%, 60% 95%, 30% 80%, 0% 50%);
+  border-radius: 0 50% 50% 50%;
+  animation-delay: 0.09s;
+}
+
+.butterfly.bf2 .wing.left { background: linear-gradient(135deg, #4a90e2, #7b68ee, #ff69b4); }
+.butterfly.bf2 .wing.right { background: linear-gradient(225deg, #4a90e2, #7b68ee, #ff69b4); }
+.butterfly.bf3 .wing.left { background: linear-gradient(135deg, #2ecc71, #27ae60, #f1c40f); }
+.butterfly.bf3 .wing.right { background: linear-gradient(225deg, #2ecc71, #27ae60, #f1c40f); }
+.butterfly.bf4 .wing.left { background: linear-gradient(135deg, #e74c3c, #c0392b, #f39c12); }
+.butterfly.bf4 .wing.right { background: linear-gradient(225deg, #e74c3c, #c0392b, #f39c12); }
+.butterfly.bf5 .wing.left { background: linear-gradient(135deg, #9b59b6, #8e44ad, #e91e63); }
+.butterfly.bf5 .wing.right { background: linear-gradient(225deg, #9b59b6, #8e44ad, #e91e63); }
+.butterfly.bf6 .wing.left { background: linear-gradient(135deg, #1abc9c, #16a085, #f39c12); }
+.butterfly.bf6 .wing.right { background: linear-gradient(225deg, #1abc9c, #16a085, #f39c12); }
+
+@keyframes wing-flap {
+  0% { transform: rotateY(0deg) scaleY(1); }
+  100% { transform: rotateY(55deg) scaleY(0.75); }
+}
+
+/* 3D Flip Synopsis Popup */
 .synopsis-popup {
   position: fixed;
   z-index: 9999;
   pointer-events: none;
+  width: 220px;
+  perspective: 1000px;
   opacity: 0;
-  transform: scale(0.9) translateY(10px);
-  transition: opacity 0.16s ease, transform 0.2s cubic-bezier(.18,.89,.32,1.28);
-  filter: drop-shadow(0 24px 48px rgba(15,23,42,0.22));
+  transform: scale(0.85) translateY(12px);
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(.18,.89,.32,1.28);
+  filter: drop-shadow(0 20px 40px rgba(15,23,42,0.28));
 }
+
 .synopsis-popup.visible {
   opacity: 1;
   transform: scale(1) translateY(0);
 }
-.synopsis-popup .sp-poster {
-  width: 200px;
-  aspect-ratio: 2/3;
-  border-radius: 16px 16px 0 0;
-  overflow: hidden;
-  background: #f1f5f9;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+
+.synopsis-popup .flip-inner {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(.2,.8,.2,1);
+  transform: rotateY(-90deg);
 }
+
+.synopsis-popup.visible .flip-inner {
+  transform: rotateY(0deg);
+}
+
+.synopsis-popup .sp-front,
+.synopsis-popup .sp-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.synopsis-popup .sp-front {
+  background: #fff;
+}
+
+.synopsis-popup .sp-poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
 .synopsis-popup .sp-poster img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
+
 .synopsis-popup .sp-info {
-  width: 200px;
-  background: #ffffff;
-  border-radius: 0 0 16px 16px;
   padding: 12px 14px 14px;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
-  border: 1px solid #f1f5f9;
-  border-top: none;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
 }
+
 .synopsis-popup .sp-synopsis {
-  font-size: 0.75rem;
-  line-height: 1.4;
+  font-size: 0.74rem;
+  line-height: 1.42;
   color: #1e293b;
   margin: 0 0 10px;
   display: -webkit-box;
@@ -73,6 +145,7 @@
   overflow: hidden;
   font-weight: 500;
 }
+
 .synopsis-popup .sp-meta {
   display: flex;
   justify-content: space-between;
@@ -82,18 +155,21 @@
   color: #64748b;
   margin-bottom: 8px;
 }
+
 .synopsis-popup .sp-rating {
   color: #f59e0b;
   display: flex;
   align-items: center;
   gap: 4px;
 }
+
 .synopsis-popup .sp-casts {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   color: #475569;
   font-weight: 600;
   line-height: 1.35;
 }
+
 .synopsis-popup .sp-casts span {
   display: inline-block;
   background: #f8fafc;
@@ -102,4 +178,9 @@
   margin: 3px 5px 0 0;
   border: 1px solid #e2e8f0;
   font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .synopsis-popup { width: 180px; }
+  .butterfly { width: 56px; height: 40px; }
 }
