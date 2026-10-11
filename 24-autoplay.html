@@ -160,23 +160,6 @@
     }
     .viewport iframe.front { opacity: 1; z-index: 2; }
     .shield { position: absolute; inset: 0; z-index: 3; }
-
-    /* Hide third-party player ad bars at the bottom */
-    .viewport .player-ad-cover {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 58px;
-      background: #000;
-      z-index: 6;
-      pointer-events: none;
-    }
-    .viewport iframe {
-      height: calc(100% + 6px);
-      top: -3px;
-    }
-
     .fs-exit, #fsBtn.floating {
       position: absolute; top: 12px; right: 12px; z-index: 5;
       border: none; color: #fff; background: rgba(15,23,42,0.78);
@@ -315,7 +298,6 @@
         <div class="shield" id="shield"></div>
         <button class="fs-exit" id="fsExit" type="button"><i class="fa-solid fa-compress"></i> Theatre</button>
         <div class="boot" id="boot">Catching the live film…</div>
-        <div class="player-ad-cover" aria-hidden="true"></div>
       </div>
     </section>
 
