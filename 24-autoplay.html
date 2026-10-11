@@ -437,52 +437,206 @@
       try { localStorage.setItem(cacheKey, JSON.stringify(reel)); } catch (_) {}
       return reel;
     }
-    function findNow(list) {
-      const sec = secondsIntoDay();
-      for (const f of list) if (sec >= f.start && sec < f.start + f.dur) return f;
-      return list[list.length - 1] || null;
+    function liveSpot() {
+      const t = secondsIntoDay();
+      const total = playlist.reduce((n, f) => n + f.dur, 0) || 1;
+      const pos = t % total;
+      let film = playlist[0];
+      for (const item of playlist) {
+        if (pos >= item.start && pos < item.start + item.dur) { film = item; break; }
+      }
+      return { film, into: Math.max(0, pos - film.start), pos };
     }
-    function paintNow(f) {
-      if (!f) return;
-      $('nowTitle').textContent = f.title;
-      $('nowSub').textContent = (f.year ? f.year + ' · ' : '') + (f.runtime ? f.runtime + ' min' : '');
-      $('nowSyn').textContent = shortSyn(f.overview);
-      $('nowPoster').src = f.poster || '';
-      $('aura').style.backgroundImage = f.backdrop ? `url(${f.backdrop})` : '';
-      const sec = secondsIntoDay();
-      const pct = Math.max(0, Math.min(100, ((sec - f.start) / f.dur) * 100));
-      $('progressBar').style.width = pct + '%';
-      $('startLabel').textContent = 'Started ' + clock12(f.start);
-      $('endLabel').textContent = 'Ends ' + clock12(f.start + f.dur);
+    function vixUrl(id, startAt) {
+      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
     }
-    function loadPlayer(id) {
-      if (!id || id === loadedId) return;
-      loadedId = id;
-      const url = `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&lang=en`;
-      $('player').src = url;
-      setTimeout(() => { $('player').classList.add('front'); $('boot').classList.add('hidden'); }, 800);
+    function paint(spot) {
+      const film = spot.film;
+      $('nowKicker').textContent = 'Now playing';
+      $('nowTitle').textContent = film.title;
+      document.title = film.title + ' · 24/7 PLAY';
+      $('nowSub').textContent = [film.year, prettyDate(film.date)].filter(Boolean).join(' · ');
+      $('nowSyn').textContent = shortSyn(film.overview);
+      if (film.poster) $('nowPoster').src = film.poster;
+      if (film.backdrop) $('aura').style.backgroundImage = `url("${film.backdrop}")`;
+      $('progressBar').style.width = Math.min(100, (spot.into / film.dur) * 100).toFixed(2) + '%';
+      $('startLabel').textContent = 'Started ' + clock12(film.start);
+      $('endLabel').textContent = 'Ends ' + clock12(film.start + film.dur);
+      $('clockPill').textContent = nowClock();
+    }
+    function paintMissed(spot) {
+      const missed = playlist.filter(f => f.start + f.dur <= spot.film.start + 1).slice(-6);
+      const rail = $('missedRail');
+      rail.innerHTML = '';
+      $('missedHint').textContent = missed.length ? ('You just missed ' + missed[missed.length - 1].title) : 'The first film of the day is still on';
+      missed.forEach(film => {
+        const a = document.createElement('a');
+        a.className = 'miss-card';
+        a.href = HOME + '/#/watch/movie/' + film.id;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.innerHTML = `<img alt="" src="${film.poster || ''}" /><div><strong>${film.title}</strong><em>Ended ${clock12(film.start + film.dur)}</em></div>`;
+        rail.appendChild(a);
+      });
+      rail.scrollLeft = rail.scrollWidth;
+    }
+    let front = null, back = null, primedId = 0, priming = false;
+    function armPlayers() {
+      front = $('player');
+      back = $('playerB');
+      [front, back].forEach(frame => {
+        frame.addEventListener('load', () => {
+          if (!frame.src || frame.src === 'about:blank') return;
+          frame.dataset.ready = '1';
+          if (frame === back && primedId && primedId === liveSpot().film.id) swapToBack();
+        });
+      });
+    }
+    function nextFilm(spot) {
+      const i = Math.max(0, playlist.findIndex(f => f.id === spot.film.id));
+      return playlist[(i + 1) % playlist.length];
+    }
+    function warm(frame, film, startAt) {
+      const url = vixUrl(film.id, startAt);
+      if (frame.dataset.url === url) return;
+      frame.dataset.ready = '';
+      frame.dataset.url = url;
+      frame.src = url;
+    }
+    function swapToBack() {
+      if (!back || back.dataset.ready !== '1') return false;
+      back.classList.add('front');
+      front.classList.remove('front');
+      const old = front;
+      front = back;
+      back = old;
+      loadedId = primedId || loadedId;
+      primedId = 0;
+      priming = false;
+      setTimeout(() => {
+        back.classList.remove('front');
+        back.dataset.ready = '';
+        back.dataset.url = '';
+        back.src = 'about:blank';
+      }, 700);
+      return true;
+    }
+    function remember(film, startAt) {
+      try { sessionStorage.setItem('bwhs247-live', JSON.stringify({ id: film.id, title: film.title, startAt, saved: Date.now() })); } catch (_) {}
+    }
+    function restoreInstant() {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('bwhs247-live') || 'null');
+        if (!saved || !saved.id) return;
+        const elapsed = Math.max(0, Math.floor((Date.now() - (saved.saved || Date.now())) / 1000));
+        const startAt = (saved.startAt || 0) + elapsed;
+        warm($('player'), {id: saved.id}, startAt);
+        $('nowTitle').textContent = saved.title || 'Back on air';
+        $('boot').classList.add('hidden');
+        loadedId = saved.id;
+      } catch (_) {}
+    }
+    function loadLive() {
+      if (!playlist.length || !front) return;
+      const spot = liveSpot();
+      paint(spot);
+      paintMissed(spot);
+      const startAt = Math.min(Math.floor(spot.into), Math.max(0, spot.film.dur - 12));
+      const remain = spot.film.dur - spot.into;
+      if (loadedId === spot.film.id) {
+        remember(spot.film, startAt);
+        if (remain < 45) {
+          const nxt = nextFilm(spot);
+          if (nxt && primedId !== nxt.id) {
+            primedId = nxt.id;
+            priming = true;
+            warm(back, nxt, 0);
+          }
+        }
+        return;
+      }
+      if (primedId === spot.film.id && swapToBack()) {
+        remember(spot.film, startAt);
+        $('boot').classList.add('hidden');
+        return;
+      }
+      warm(front, spot.film, startAt);
+      loadedId = spot.film.id;
+      remember(spot.film, startAt);
+      $('boot').classList.add('hidden');
+      clearTimeout(handoff);
+      handoff = setTimeout(() => { loadedId = 0; loadLive(); }, Math.max(8000, remain * 1000));
     }
     function tick() {
       $('clockPill').textContent = nowClock();
-      const f = findNow(playlist);
-      if (f) { paintNow(f); loadPlayer(f.id); }
+      if (!playlist.length) return;
+      if (dayStamp() !== dayKey) { loadedId = 0; boot(); return; }
+      const spot = liveSpot();
+      paint(spot);
+      if (spot.film.id !== loadedId) loadLive();
     }
-    async function init() {
+    function showChrome() {
+      document.body.classList.add('fs-chrome');
+      $('viewport').classList.add('fs-chrome');
+      clearTimeout(chromeTimer);
+      chromeTimer = setTimeout(() => {
+        document.body.classList.remove('fs-chrome');
+        $('viewport').classList.remove('fs-chrome');
+      }, 1600);
+    }
+    function toggleFs() {
+      const vp = $('viewport');
+      const active = document.fullscreenElement || document.webkitFullscreenElement;
+      if (active) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        return;
+      }
+      (vp.requestFullscreen || vp.webkitRequestFullscreen).call(vp);
+      showChrome();
+    }
+    async function boot() {
       playlist = await buildPlaylist();
-      tick();
-      setInterval(tick, 15000);
+      loadLive(true);
     }
-    $('fsBtn').onclick = () => {
-      const v = $('viewport');
-      if (!document.fullscreenElement) v.requestFullscreen().catch(()=>{});
-      else document.exitFullscreen();
-    };
-    $('fsExit').onclick = () => document.exitFullscreen();
-    $('reloadLive').onclick = () => location.reload();
-    document.addEventListener('fullscreenchange', () => {
-      document.body.classList.toggle('fs-chrome', !!document.fullscreenElement);
+    $('fsBtn').addEventListener('click', toggleFs);
+    $('reloadLive').addEventListener('click', () => location.reload());
+    $('fsExit').addEventListener('click', toggleFs);
+    $('shield').addEventListener('click', () => {
+      const now = Date.now();
+      if (now - lastTap < 320) toggleFs();
+      lastTap = now;
+      showChrome();
     });
-    init();
+    $('viewport').addEventListener('mousemove', showChrome);
+    document.addEventListener('keydown', (e) => {
+      if (['ArrowLeft','ArrowRight',' ','MediaTrackNext','MediaTrackPrevious'].includes(e.key)) e.preventDefault();
+      if (e.key === 'f' || e.key === 'F') toggleFs();
+      showChrome();
+    });
+    document.addEventListener('fullscreenchange', showChrome);
+
+    let screenWakeLock = null;
+    let wakeWanted = true;
+    async function keepScreenAwake() {
+      wakeWanted = true;
+      try {
+        if (!navigator.wakeLock || !navigator.wakeLock.request) return;
+        if (screenWakeLock && !screenWakeLock.released) return;
+        screenWakeLock = await navigator.wakeLock.request("screen");
+        screenWakeLock.addEventListener("release", () => {
+          screenWakeLock = null;
+          if (wakeWanted && document.visibilityState === "visible") setTimeout(keepScreenAwake, 400);
+        });
+      } catch (_) {}
+    }
+    armPlayers();
+    setInterval(tick, 1000);
+    keepScreenAwake();
+    restoreInstant();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepScreenAwake(); if (playlist.length) loadLive(); } });
+    window.addEventListener('pageshow', () => { keepScreenAwake(); if (playlist.length) loadLive(); });
+    window.addEventListener('focus', keepScreenAwake);
+    boot();
   </script>
 </body>
 </html>
