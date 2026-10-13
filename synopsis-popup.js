@@ -2,7 +2,6 @@
   const TMDB_KEY = '129637a8869a61522af21b80f6eb5129';
   const IMG_BASE = 'https://image.tmdb.org/t/p/w342';
 
-  // ===== Elevate ALL cards + horizontal info popup with hover support =====
   let popup = null;
   let hideTimer = null;
   let currentCard = null;
@@ -32,13 +31,18 @@
     `;
     document.body.appendChild(popup);
 
-    // Keep popup open while hovering it
     popup.addEventListener('mouseenter', () => {
       clearTimeout(hideTimer);
     });
     popup.addEventListener('mouseleave', () => {
       hidePopup();
     });
+
+    document.addEventListener('click', (e) => {
+      if (popup && popup.classList.contains('visible') && !popup.contains(e.target)) {
+        hidePopup();
+      }
+    }, true);
 
     return popup;
   }
@@ -77,14 +81,27 @@
     }
   }
 
-  async function showPopup(card) {
-    if (!card || !card._bwhsItem) return;
-    const item = card._bwhsItem;
-    const type = card._bwhsType || (item.title ? 'movie' : 'tv');
+  async function showPopup(cardOrItem, typeHint) {
+    let card = null;
+    let item = null;
+    let type = typeHint;
+
+    if (cardOrItem && cardOrItem._bwhsItem) {
+      card = cardOrItem;
+      item = card._bwhsItem;
+      type = card._bwhsType || (item.title ? 'movie' : 'tv');
+    } else if (cardOrItem && cardOrItem.id) {
+      item = cardOrItem;
+      type = type || (item.title ? 'movie' : 'tv');
+    } else {
+      return;
+    }
+
     if (type === 'person') return;
     clearTimeout(hideTimer);
     currentCard = card;
-    elevateCard(card);
+
+    if (card) elevateCard(card);
 
     const p = ensurePopup();
     const posterEl = p.querySelector('.sp-poster img');
@@ -101,21 +118,27 @@
     const date = item.release_date || item.first_air_date || '';
     dateEl.textContent = date ? date.slice(0, 4) : '—';
 
-    const rect = card.getBoundingClientRect();
-    const pw = 360;
-    let left = rect.left + rect.width / 2 - pw / 2;
-    let top = rect.bottom + 8;
-    if (left < 12) left = 12;
-    if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
-    if (top + 180 > window.innerHeight) top = Math.max(12, rect.top - 180);
+    let left, top;
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      const pw = 360;
+      left = rect.left + rect.width / 2 - pw / 2;
+      top = rect.bottom + 8;
+      if (left < 12) left = 12;
+      if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
+      if (top + 180 > window.innerHeight) top = Math.max(12, rect.top - 180);
+    } else {
+      left = Math.max(12, (window.innerWidth - 360) / 2);
+      top = Math.max(12, window.innerHeight * 0.25);
+    }
     p.style.left = left + 'px';
     p.style.top = top + 'px';
-    p.style.width = pw + 'px';
+    p.style.width = '360px';
     p.classList.add('visible');
 
     castsEl.innerHTML = '<span style="opacity:.55">Loading cast…</span>';
     const casts = await loadCredits(item, type);
-    if (currentCard !== card) return;
+    if (currentCard !== card && card) return;
     if (casts.length) {
       castsEl.innerHTML = casts.map(n => `<span>${n}</span>`).join('');
     } else {
@@ -129,40 +152,27 @@
       if (popup) popup.classList.remove('visible');
       currentCard = null;
       clearElevate();
-    }, 200);
+    }, 120);
   }
 
-  // Elevate EVERY matching card on hover, popup only when data exists
+  window.BWHS_showSynopsis = function(itemOrCard, type) {
+    showPopup(itemOrCard, type);
+  };
+
+  window.BWHS_hideSynopsis = hidePopup;
+
   document.addEventListener('mouseover', (e) => {
     const card = e.target.closest && e.target.closest(CARD_SEL);
     if (!card) return;
     elevateCard(card);
-    if (card._bwhsItem && card !== currentCard) {
-      showPopup(card);
-    }
   }, true);
 
   document.addEventListener('mouseout', (e) => {
     const card = e.target.closest && e.target.closest(CARD_SEL);
     if (!card) return;
     const related = e.relatedTarget;
-    if (related && (card.contains(related) || (popup && popup.contains(related)))) return;
+    if (related && card.contains(related)) return;
     if (card === elevatedCard) clearElevate();
-    if (card === currentCard) hidePopup();
-  }, true);
-
-  // Touch: tap elevates + shows info briefly
-  document.addEventListener('click', (e) => {
-    const card = e.target.closest && e.target.closest(CARD_SEL);
-    if (!card) return;
-    elevateCard(card);
-    if (card._bwhsItem && window.matchMedia('(hover: none)').matches) {
-      showPopup(card);
-      setTimeout(() => {
-        hidePopup();
-        clearElevate();
-      }, 3400);
-    }
   }, true);
 
   window.addEventListener('scroll', () => {
