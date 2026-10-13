@@ -7,6 +7,7 @@
   let currentCard = null;
   let elevatedCard = null;
   const creditsCache = new Map();
+  const detailsCache = new Map();
 
   const CARD_SEL = '.media-card, .shelf-card, .upcoming-card, .panel-item-card, .sidebar-rec-card, .hero-mini-poster';
 
@@ -31,15 +32,11 @@
     `;
     document.body.appendChild(popup);
 
-    popup.addEventListener('mouseenter', () => {
-      clearTimeout(hideTimer);
-    });
-    popup.addEventListener('mouseleave', () => {
-      hidePopup();
-    });
+    popup.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+    popup.addEventListener('mouseleave', () => hidePopup());
 
     document.addEventListener('click', (e) => {
-      if (popup && popup.classList.contains('visible') && !popup.contains(e.target)) {
+      if (popup && popup.classList.contains('visible') && !popup.contains(e.target) && !e.target.closest('.ctx-menu')) {
         hidePopup();
       }
     }, true);
@@ -64,6 +61,24 @@
     }
   }
 
+  async function ensureFullDetails(item, type) {
+    if (item.overview && item.vote_average) return item;
+    const key = type + '_' + item.id;
+    if (detailsCache.has(key)) return detailsCache.get(key);
+    try {
+      const url = `https://api.themoviedb.org/3/${type}/${item.id}?api_key=${TMDB_KEY}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('details fail');
+      const data = await res.json();
+      const full = { ...item, ...data };
+      detailsCache.set(key, full);
+      return full;
+    } catch {
+      detailsCache.set(key, item);
+      return item;
+    }
+  }
+
   function elevateCard(card) {
     if (elevatedCard && elevatedCard !== card) {
       elevatedCard.classList.remove('bwhs-elevated');
@@ -81,7 +96,36 @@
     }
   }
 
-  async function showPopup(cardOrItem, typeHint) {
+  function positionPopup(p, x, y, card) {
+    const pw = 360;
+    const ph = 180;
+    let left, top;
+
+    if (typeof x === 'number' && typeof y === 'number') {
+      // Position near the click point
+      left = x - pw / 2;
+      top = y + 12;
+      if (left < 12) left = 12;
+      if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
+      if (top + ph > window.innerHeight - 12) top = Math.max(12, y - ph - 12);
+    } else if (card) {
+      const rect = card.getBoundingClientRect();
+      left = rect.left + rect.width / 2 - pw / 2;
+      top = rect.bottom + 8;
+      if (left < 12) left = 12;
+      if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
+      if (top + ph > window.innerHeight) top = Math.max(12, rect.top - ph);
+    } else {
+      left = Math.max(12, (window.innerWidth - pw) / 2);
+      top = Math.max(12, window.innerHeight * 0.25);
+    }
+
+    p.style.left = left + 'px';
+    p.style.top = top + 'px';
+    p.style.width = pw + 'px';
+  }
+
+  async function showPopup(cardOrItem, typeHint, clickX, clickY) {
     let card = null;
     let item = null;
     let type = typeHint;
@@ -110,34 +154,31 @@
     const dateEl = p.querySelector('.sp-date');
     const castsEl = p.querySelector('.sp-casts');
 
-    const poster = item.poster_path ? IMG_BASE + item.poster_path : (item.profile_path ? IMG_BASE + item.profile_path : '');
-    posterEl.src = poster || '';
-    posterEl.style.display = poster ? 'block' : 'none';
-    synEl.textContent = item.overview || item.name || 'No synopsis available.';
-    ratingEl.textContent = item.vote_average ? Number(item.vote_average).toFixed(1) : 'NR';
+    // Show immediately with what we have, then enrich
+    synEl.textContent = item.overview || 'Loading synopsis…';
+    ratingEl.textContent = item.vote_average ? Number(item.vote_average).toFixed(1) : '…';
     const date = item.release_date || item.first_air_date || '';
     dateEl.textContent = date ? date.slice(0, 4) : '—';
 
-    let left, top;
-    if (card) {
-      const rect = card.getBoundingClientRect();
-      const pw = 360;
-      left = rect.left + rect.width / 2 - pw / 2;
-      top = rect.bottom + 8;
-      if (left < 12) left = 12;
-      if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
-      if (top + 180 > window.innerHeight) top = Math.max(12, rect.top - 180);
-    } else {
-      left = Math.max(12, (window.innerWidth - 360) / 2);
-      top = Math.max(12, window.innerHeight * 0.25);
-    }
-    p.style.left = left + 'px';
-    p.style.top = top + 'px';
-    p.style.width = '360px';
+    const poster = item.poster_path ? IMG_BASE + item.poster_path : (item.profile_path ? IMG_BASE + item.profile_path : '');
+    posterEl.src = poster || '';
+    posterEl.style.display = poster ? 'block' : 'none';
+
+    positionPopup(p, clickX, clickY, card);
     p.classList.add('visible');
 
     castsEl.innerHTML = '<span style="opacity:.55">Loading cast…</span>';
-    const casts = await loadCredits(item, type);
+
+    // Enrich if needed
+    const fullItem = await ensureFullDetails(item, type);
+    if (currentCard !== card && card) return;
+
+    synEl.textContent = fullItem.overview || fullItem.name || 'No synopsis available.';
+    ratingEl.textContent = fullItem.vote_average ? Number(fullItem.vote_average).toFixed(1) : 'NR';
+    const fullDate = fullItem.release_date || fullItem.first_air_date || '';
+    dateEl.textContent = fullDate ? fullDate.slice(0, 4) : '—';
+
+    const casts = await loadCredits(fullItem, type);
     if (currentCard !== card && card) return;
     if (casts.length) {
       castsEl.innerHTML = casts.map(n => `<span>${n}</span>`).join('');
@@ -152,11 +193,12 @@
       if (popup) popup.classList.remove('visible');
       currentCard = null;
       clearElevate();
-    }, 120);
+    }, 150);
   }
 
-  window.BWHS_showSynopsis = function(itemOrCard, type) {
-    showPopup(itemOrCard, type);
+  // Accept optional click coordinates
+  window.BWHS_showSynopsis = function(itemOrCard, type, clickX, clickY) {
+    showPopup(itemOrCard, type, clickX, clickY);
   };
 
   window.BWHS_hideSynopsis = hidePopup;
