@@ -9,19 +9,44 @@
   <meta charset="UTF-8" />
   <meta name="referrer" content="origin">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>BWHS - Binge Watch Humble Streams</title>
-  <meta name="description" content="BWHS — binge popular movies and shows with a cinematic player, trending catalogs, and instant playback." />
+  <title>BWHS - Binge Watch Humble Streams | Free Movies & TV</title>
+  <meta name="description" content="Watch trending movies and TV shows free on BWHS. Instant cinematic player, multiple servers, 24/7 live channel, trailers, and full catalogs. No signup required." />
+  <meta name="keywords" content="BWHS, binge watch, free movies, free TV shows, stream movies online, watch movies free, trending movies, 24/7 movies" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="canonical" href="https://bwhs.online/" />
+
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="BWHS" />
-  <meta property="og:title" content="BWHS - Binge Watch Humble Streams" />
-  <meta property="og:description" content="Stream trending movies and TV in a fast cinematic player. Popular titles, instant playback." />
-  <meta property="og:image" content="./apple-touch-icon.png" />
-  <meta property="og:image:width" content="1280" />
-  <meta property="og:image:height" content="720" />
+  <meta property="og:title" content="BWHS - Binge Watch Humble Streams | Free Movies & TV" />
+  <meta property="og:description" content="Stream trending movies and TV shows instantly. Cinematic player, multiple servers, 24/7 live channel. Free to browse." />
+  <meta property="og:url" content="https://bwhs.online/" />
+  <meta property="og:image" content="https://bwhs.online/apple-touch-icon.png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta property="og:image:alt" content="BWHS logo" />
+
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="BWHS - Binge Watch Humble Streams" />
-  <meta name="twitter:description" content="Stream trending movies and TV in a fast cinematic player." />
-  <meta name="twitter:image" content="./apple-touch-icon.png" />
+  <meta name="twitter:description" content="Stream trending movies and TV shows instantly on BWHS." />
+  <meta name="twitter:image" content="https://bwhs.online/apple-touch-icon.png" />
+  <meta name="twitter:image:alt" content="BWHS" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "BWHS",
+    "alternateName": "Binge Watch Humble Streams",
+    "url": "https://bwhs.online/",
+    "description": "Watch trending movies and TV shows free with a cinematic player and multiple servers.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://bwhs.online/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13097,6 +13122,7 @@
       const item = ctxMenuItem;
       const type = ctxMenuType || item.media_type || (item.title ? 'movie' : 'tv');
       closeContextMenu();
+      if (window.BWHS_updateShareMeta) window.BWHS_updateShareMeta(item, type);
       const hash = type === 'tv'
         ? `#/watch/tv/${item.id}/1/1`
         : `#/watch/movie/${item.id}`;
@@ -13778,6 +13804,7 @@
 })();
 </script>
   <script src="./synopsis-popup.js"></script>
+  <script src="./bwhs-seo.js"></script>
 </body>
 </html>
 
