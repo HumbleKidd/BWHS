@@ -10660,6 +10660,8 @@
       ctxMenuItem = item;
       ctxMenuType = type || item.media_type || (item.title ? 'movie' : 'tv');
       ctxHoverMode = !!hoverMode;
+      window._ctxClickX = x;
+      window._ctxClickY = y;
       const menu = document.getElementById('ctxMenu');
       const backdrop = document.getElementById('ctxMenuBackdrop');
       const titleEl = document.getElementById('ctxMenuTitle');
@@ -10746,7 +10748,7 @@
             ctxActionTrailer();
           } else if (action === 'synopsis') {
             if (window.BWHS_showSynopsis) {
-              window.BWHS_showSynopsis(item, type);
+              window.BWHS_showSynopsis(item, type, window._ctxClickX, window._ctxClickY);
             }
           } else if (action === 'opentab') {
             ctxMenuItem = item; ctxMenuType = type;
