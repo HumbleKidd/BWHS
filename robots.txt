@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Main pages
+Allow: /index.html
+Allow: /24-autoplay.html
+Allow: /stats.html
+
+# Discourage crawling of clone or temporary folders if any
+Disallow: /clone/
+
+Sitemap: https://bwhs.online/sitemap.xml
