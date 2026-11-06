@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="referrer" content="origin" />
   <title>24/7 PLAY · BWHS</title>
-  <meta name="description" content="Live 24/7 channel. Movies keep playing, even after a reload." />
+  <meta name="description" content="Live 24/7 channel. Fresh genre every 6 hours. Never repeats recent films." />
   <link rel="icon" href="./apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -293,8 +293,8 @@
     <section class="theatre">
       <div class="aura" id="aura"></div>
       <div class="viewport" id="viewport">
-        <iframe id="player" class="front" title="BWHS 24/7 PLAY" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
-        <iframe id="playerB" title="BWHS 24/7 PLAY next" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *" allowfullscreen referrerpolicy="origin"></iframe>
+        <iframe id="player" class="front" title="BWHS 24/7 PLAY" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *" allowfullscreen referrerpolicy="origin"></iframe>
+        <iframe id="playerB" title="BWHS 24/7 PLAY next" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *" allowfullscreen referrerpolicy="origin"></iframe>
         <div class="shield" id="shield"></div>
         <button class="fs-exit" id="fsExit" type="button"><i class="fa-solid fa-compress"></i> Theatre</button>
         <div class="boot" id="boot">Catching the live film…</div>
@@ -308,7 +308,7 @@
       </div>
       <div class="rail" id="missedRail"></div>
     </section>
-    <p class="note">Live 24/7 channel. Movies keep playing, even after a reload.</p>
+    <p class="note">Live 24/7 channel. Fresh genre every 6 hours. Never repeats recent films.</p>
   </div>
   <script>
     const TMDB = 'https://api.themoviedb.org/3';
@@ -317,24 +317,29 @@
     const BACK = 'https://image.tmdb.org/t/p/w780';
     const SHIFT = 5 * 3600 * 1000;
     const HOME = 'https://bwhs.online';
+    const SLOT_SEC = 6 * 3600;
     const GENRES = [
       { id: 28, name: 'Action' }, { id: 12, name: 'Adventure' }, { id: 16, name: 'Animation' },
       { id: 35, name: 'Comedy' }, { id: 80, name: 'Crime' }, { id: 18, name: 'Drama' },
       { id: 14, name: 'Fantasy' }, { id: 27, name: 'Horror' }, { id: 9648, name: 'Mystery' },
       { id: 10749, name: 'Romance' }, { id: 878, name: 'Science Fiction' }, { id: 53, name: 'Thriller' },
-      { id: 10752, name: 'War' }, { id: 37, name: 'Western' }
+      { id: 10752, name: 'War' }, { id: 37, name: 'Western' },
+      { id: 10751, name: 'Family' }, { id: 36, name: 'History' }, { id: 10402, name: 'Music' },
+      { id: 99, name: 'Documentary' }
     ];
     const FALLBACK = {
-      28: [155,603,27205,245891,76341,299536], 12: [122,120,671,329,122917,11],
-      16: [129,585,10681,12477,12,808], 35: [13,773,18785,120467,546554,49519],
-      80: [769,111,680,807,103,1422], 18: [278,238,424,550,389,73],
-      14: [671,122,120,121,122917,76338], 27: [694,948,539,9552,419430,493922],
-      9648: [745,807,77,11324,146,1949], 10749: [11036,597,4348,313369,152601,332562],
-      878: [603,27205,157336,78,62,335984], 53: [550,680,745,807,694,146233],
-      10752: [857,424,600,228150,374720,1271], 37: [68718,5176,33,11969,9360,336]
+      28: [155,603,27205,245891,76341,299536,550,680], 12: [122,120,671,329,122917,11,19995],
+      16: [129,585,10681,12477,12,808,862], 35: [13,773,18785,120467,546554,49519,120],
+      80: [769,111,680,807,103,1422,274], 18: [278,238,424,550,389,73,637],
+      14: [671,122,120,121,122917,76338,120], 27: [694,948,539,9552,419430,493922,694],
+      9648: [745,807,77,11324,146,1949,807], 10749: [11036,597,4348,313369,152601,332562],
+      878: [603,27205,157336,78,62,335984,603], 53: [550,680,745,807,694,146233],
+      10752: [857,424,600,228150,374720,1271], 37: [68718,5176,33,11969,9360,336],
+      10751: [862,12,129,585,10681], 36: [424,857,1271,228150], 10402: [313369,152601],
+      99: [424,857]
     };
     const $ = id => document.getElementById(id);
-    let playlist = [], genre = GENRES[0], dayKey = '', loadedId = 0, handoff = null, chromeTimer = null, lastTap = 0;
+    let playlist = [], genre = GENRES[0], dayKey = '', slotKey = '', loadedId = 0, handoff = null, chromeTimer = null, lastTap = 0;
 
     function jam() { return new Date(Date.now() - SHIFT); }
     function dayStamp() { return jam().toISOString().slice(0, 10); }
@@ -342,6 +347,8 @@
       const j = jam();
       return j.getUTCHours() * 3600 + j.getUTCMinutes() * 60 + j.getUTCSeconds() + j.getUTCMilliseconds() / 1000;
     }
+    function slotIndex() { return Math.floor(secondsIntoDay() / SLOT_SEC); }
+    function currentSlotKey() { return dayStamp() + ':s' + slotIndex(); }
     function hash(str) {
       let h = 2166136261;
       for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
@@ -382,6 +389,19 @@
       if (clean.length <= 140) return clean;
       return clean.slice(0, 137).replace(/\s+\S*$/, '') + '…';
     }
+    function getRecentIds() {
+      try {
+        const raw = JSON.parse(localStorage.getItem('bwhs24recent') || '[]');
+        return new Set(Array.isArray(raw) ? raw.map(Number).filter(Boolean) : []);
+      } catch (_) { return new Set(); }
+    }
+    function addToRecent(ids) {
+      try {
+        const cur = Array.from(getRecentIds());
+        const next = [...new Set([...cur, ...ids.map(Number)])].slice(-480);
+        localStorage.setItem('bwhs24recent', JSON.stringify(next));
+      } catch (_) {}
+    }
     async function getJSON(url) {
       const res = await fetch(url);
       if (!res.ok) throw new Error('tmdb');
@@ -391,7 +411,7 @@
       try {
         const d = await getJSON(`${TMDB}/movie/${id}?api_key=${KEY}&language=en-US`);
         const runtime = Number(d.runtime) || 0;
-        if (runtime < 75 || runtime > 210 || d.adult || !d.title) return null;
+        if (runtime < 70 || runtime > 220 || d.adult || !d.title) return null;
         return {
           id: d.id, title: d.title, year: (d.release_date || '').slice(0, 4),
           date: d.release_date || '', runtime, overview: d.overview || '',
@@ -402,43 +422,58 @@
     }
     async function buildPlaylist() {
       dayKey = dayStamp();
-      genre = GENRES[hash(dayKey) % GENRES.length];
-      $('genrePill').textContent = genre.name;
-      const cacheKey = 'bwhs24v4:' + dayKey;
+      slotKey = currentSlotKey();
+      const slot = slotIndex();
+      // pick genre that rotates every 6h and avoids the previous slot when possible
+      let gIdx = hash(slotKey) % GENRES.length;
+      const prevSlot = slot === 0 ? 3 : slot - 1;
+      const prevKey = dayKey + ':s' + prevSlot;
+      if (hash(prevKey) % GENRES.length === gIdx) gIdx = (gIdx + 3) % GENRES.length;
+      genre = GENRES[gIdx];
+      const ranges = ['00–06', '06–12', '12–18', '18–24'];
+      $('genrePill').textContent = genre.name + ' · ' + ranges[slot];
+      const cacheKey = 'bwhs24v6:' + slotKey;
       try {
         const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-        if (cached && cached.length >= 8) return cached;
+        if (cached && cached.length >= 4) return cached;
       } catch (_) {}
-      const lte = new Date(Date.now() - 50 * 86400000).toISOString().slice(0, 10);
-      const page = (hash(dayKey + ':p') % 2) + 1;
-      let results = [];
-      try {
-        const data = await getJSON(`${TMDB}/discover/movie?api_key=${KEY}&include_adult=false&include_video=false&without_genres=10770&with_genres=${genre.id}&with_original_language=en&sort_by=vote_count.desc&vote_count.gte=900&vote_average.gte=6.2&primary_release_date.lte=${lte}&page=${page}`);
-        results = data.results || [];
-      } catch (_) {}
-      const ids = [];
-      shuffle(results, hash(dayKey + ':' + genre.id)).forEach(m => { if (m && m.id && !ids.includes(m.id)) ids.push(m.id); });
-      (FALLBACK[genre.id] || []).forEach(id => { if (!ids.includes(id)) ids.push(id); });
-      const picked = [];
-      for (let i = 0; i < ids.length && picked.length < 14; i += 4) {
-        const rows = await Promise.all(ids.slice(i, i + 4).map(hydrate));
-        rows.forEach(row => { if (row) picked.push(row); });
+      const recent = getRecentIds();
+      const lte = new Date(Date.now() - 40 * 86400000).toISOString().slice(0, 10);
+      const all = [];
+      const pages = [1, 2, 3, 4, 5];
+      for (const page of pages) {
+        try {
+          const data = await getJSON(`${TMDB}/discover/movie?api_key=${KEY}&include_adult=false&include_video=false&without_genres=10770&with_genres=${genre.id}&with_original_language=en&sort_by=popularity.desc&vote_count.gte=400&vote_average.gte=6.0&primary_release_date.lte=${lte}&page=${page}`);
+          (data.results || []).forEach(m => { if (m && m.id && !recent.has(Number(m.id))) all.push(m); });
+        } catch (_) {}
       }
-      const ordered = shuffle(picked, hash('reel:' + dayKey));
+      const seen = new Set();
+      const unique = [];
+      shuffle(all, hash(slotKey + ':pool')).forEach(m => {
+        if (m && m.id && !seen.has(m.id)) { seen.add(m.id); unique.push(m.id); }
+      });
+      (FALLBACK[genre.id] || []).forEach(id => { if (!recent.has(Number(id)) && !seen.has(id)) { seen.add(id); unique.push(id); } });
+      const picked = [];
+      for (let i = 0; i < unique.length && picked.length < 16; i += 5) {
+        const rows = await Promise.all(unique.slice(i, i + 5).map(hydrate));
+        rows.forEach(row => { if (row && !recent.has(row.id)) picked.push(row); });
+      }
+      const ordered = shuffle(picked, hash('reel:' + slotKey));
       let cursor = 0;
       const reel = [];
-      while (ordered.length && cursor < 26 * 3600 && reel.length < 36) {
-        const film = ordered[reel.length % ordered.length];
-        const dur = film.runtime * 60;
+      for (const film of ordered) {
+        const dur = Math.max(70, film.runtime) * 60;
+        if (cursor + dur > 7.2 * 3600) break;
         reel.push({ ...film, start: cursor, dur });
         cursor += dur;
-        if (reel.length >= ordered.length && cursor >= 24 * 3600) break;
+        if (reel.length >= 12) break;
       }
+      if (reel.length) addToRecent(reel.map(f => f.id));
       try { localStorage.setItem(cacheKey, JSON.stringify(reel)); } catch (_) {}
       return reel;
     }
     function liveSpot() {
-      const t = secondsIntoDay();
+      const t = secondsIntoDay() % SLOT_SEC;
       const total = playlist.reduce((n, f) => n + f.dur, 0) || 1;
       const pos = t % total;
       let film = playlist[0];
@@ -448,7 +483,8 @@
       return { film, into: Math.max(0, pos - film.start), pos };
     }
     function vixUrl(id, startAt) {
-      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
+      // clean 1080p, low-latency start, no forced mute
+      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&mute=0&volume=1&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&maxQuality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
     }
     function paint(spot) {
       const film = spot.film;
@@ -468,7 +504,7 @@
       const missed = playlist.filter(f => f.start + f.dur <= spot.film.start + 1).slice(-6);
       const rail = $('missedRail');
       rail.innerHTML = '';
-      $('missedHint').textContent = missed.length ? ('You just missed ' + missed[missed.length - 1].title) : 'The first film of the day is still on';
+      $('missedHint').textContent = missed.length ? ('You just missed ' + missed[missed.length - 1].title) : 'Fresh block just started';
       missed.forEach(film => {
         const a = document.createElement('a');
         a.className = 'miss-card';
@@ -485,6 +521,7 @@
       front = $('player');
       back = $('playerB');
       [front, back].forEach(frame => {
+        frame.setAttribute('allow', 'autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *');
         frame.addEventListener('load', () => {
           if (!frame.src || frame.src === 'about:blank') return;
           frame.dataset.ready = '1';
@@ -518,7 +555,7 @@
         back.dataset.ready = '';
         back.dataset.url = '';
         back.src = 'about:blank';
-      }, 700);
+      }, 600);
       return true;
     }
     function remember(film, startAt) {
@@ -541,11 +578,11 @@
       const spot = liveSpot();
       paint(spot);
       paintMissed(spot);
-      const startAt = Math.min(Math.floor(spot.into), Math.max(0, spot.film.dur - 12));
+      const startAt = Math.min(Math.floor(spot.into), Math.max(0, spot.film.dur - 8));
       const remain = spot.film.dur - spot.into;
       if (loadedId === spot.film.id) {
         remember(spot.film, startAt);
-        if (remain < 45) {
+        if (remain < 55) {
           const nxt = nextFilm(spot);
           if (nxt && primedId !== nxt.id) {
             primedId = nxt.id;
@@ -565,12 +602,12 @@
       remember(spot.film, startAt);
       $('boot').classList.add('hidden');
       clearTimeout(handoff);
-      handoff = setTimeout(() => { loadedId = 0; loadLive(); }, Math.max(8000, remain * 1000));
+      handoff = setTimeout(() => { loadedId = 0; loadLive(); }, Math.max(6000, remain * 1000));
     }
     function tick() {
       $('clockPill').textContent = nowClock();
       if (!playlist.length) return;
-      if (dayStamp() !== dayKey) { loadedId = 0; boot(); return; }
+      if (currentSlotKey() !== slotKey) { loadedId = 0; boot(); return; }
       const spot = liveSpot();
       paint(spot);
       if (spot.film.id !== loadedId) loadLive();
