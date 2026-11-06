@@ -379,6 +379,13 @@
       const j = jam();
       return clock12(j.getUTCHours() * 3600 + j.getUTCMinutes() * 60 + j.getUTCSeconds());
     }
+    function absTime(offsetInCycle) {
+      const slotStart = slotIndex() * SLOT_SEC;
+      const t = secondsIntoDay() % SLOT_SEC;
+      const total = playlist.reduce((n, f) => n + f.dur, 0) || 1;
+      const cycleStart = Math.floor(t / total) * total;
+      return slotStart + cycleStart + offsetInCycle;
+    }
     function prettyDate(iso) {
       if (!iso) return '';
       const d = new Date(iso + 'T00:00:00');
@@ -435,39 +442,48 @@
       const cacheKey = 'bwhs24v6:' + slotKey;
       try {
         const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-        if (cached && cached.length >= 4) return cached;
+        if (Array.isArray(cached) && cached.length >= 4) {
+          playlist = cached;
+          return playlist;
+        }
       } catch (_) {}
       const recent = getRecentIds();
-      const lte = new Date(Date.now() - 40 * 86400000).toISOString().slice(0, 10);
-      const all = [];
-      const pages = [1, 2, 3, 4, 5];
+      const seed = hash(slotKey);
+      const pages = shuffle([1,2,3,4,5,6,7,8,9,10,11,12], seed).slice(0, 4);
+      const ids = new Set();
       for (const page of pages) {
         try {
-          const data = await getJSON(`${TMDB}/discover/movie?api_key=${KEY}&include_adult=false&include_video=false&without_genres=10770&with_genres=${genre.id}&with_original_language=en&sort_by=popularity.desc&vote_count.gte=400&vote_average.gte=6.0&primary_release_date.lte=${lte}&page=${page}`);
-          (data.results || []).forEach(m => { if (m && m.id && !recent.has(Number(m.id))) all.push(m); });
+          const data = await getJSON(`${TMDB}/discover/movie?api_key=${KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_genres=${genre.id}&vote_count.gte=50&vote_average.gte=5.5&with_runtime.gte=70&with_runtime.lte=180`);
+          for (const m of (data.results || [])) {
+            if (m.id && !recent.has(m.id) && m.vote_count >= 50) ids.add(m.id);
+          }
         } catch (_) {}
       }
-      const seen = new Set();
-      const unique = [];
-      shuffle(all, hash(slotKey + ':pool')).forEach(m => {
-        if (m && m.id && !seen.has(m.id)) { seen.add(m.id); unique.push(m.id); }
-      });
-      (FALLBACK[genre.id] || []).forEach(id => { if (!recent.has(Number(id)) && !seen.has(id)) { seen.add(id); unique.push(id); } });
-      const picked = [];
-      for (let i = 0; i < unique.length && picked.length < 16; i += 5) {
-        const rows = await Promise.all(unique.slice(i, i + 5).map(hydrate));
-        rows.forEach(row => { if (row && !recent.has(row.id)) picked.push(row); });
+      if (ids.size < 8) {
+        for (const id of (FALLBACK[genre.id] || FALLBACK[28])) if (!recent.has(id)) ids.add(id);
       }
-      const ordered = shuffle(picked, hash('reel:' + slotKey));
+      const pool = shuffle(Array.from(ids), seed).slice(0, 18);
+      const hydrated = [];
+      for (const id of pool) {
+        const film = await hydrate(id);
+        if (film) hydrated.push(film);
+        if (hydrated.length >= 12) break;
+      }
+      if (hydrated.length < 4) {
+        for (const id of (FALLBACK[genre.id] || FALLBACK[28])) {
+          if (hydrated.find(f => f.id === id)) continue;
+          const film = await hydrate(id);
+          if (film) hydrated.push(film);
+          if (hydrated.length >= 6) break;
+        }
+      }
       let cursor = 0;
-      const reel = [];
-      for (const film of ordered) {
-        const dur = Math.max(70, film.runtime) * 60;
-        if (cursor + dur > 7.2 * 3600) break;
-        reel.push({ ...film, start: cursor, dur });
+      const reel = hydrated.map(f => {
+        const dur = f.runtime * 60;
+        const item = Object.assign({}, f, { start: cursor, dur });
         cursor += dur;
-        if (reel.length >= 12) break;
-      }
+        return item;
+      });
       if (reel.length) addToRecent(reel.map(f => f.id));
       try { localStorage.setItem(cacheKey, JSON.stringify(reel)); } catch (_) {}
       return reel;
@@ -496,8 +512,8 @@
       if (film.poster) $('nowPoster').src = film.poster;
       if (film.backdrop) $('aura').style.backgroundImage = `url("${film.backdrop}")`;
       $('progressBar').style.width = Math.min(100, (spot.into / film.dur) * 100).toFixed(2) + '%';
-      $('startLabel').textContent = 'Started ' + clock12(film.start);
-      $('endLabel').textContent = 'Ends ' + clock12(film.start + film.dur);
+      $('startLabel').textContent = 'Started ' + clock12(absTime(film.start));
+      $('endLabel').textContent = 'Ends ' + clock12(absTime(film.start + film.dur));
       $('clockPill').textContent = nowClock();
     }
     function paintMissed(spot) {
@@ -511,7 +527,7 @@
         a.href = HOME + '/#/watch/movie/' + film.id;
         a.target = '_blank';
         a.rel = 'noopener';
-        a.innerHTML = `<img alt="" src="${film.poster || ''}" /><div><strong>${film.title}</strong><em>Ended ${clock12(film.start + film.dur)}</em></div>`;
+        a.innerHTML = `<img alt="" src="${film.poster || ''}" /><div><strong>${film.title}</strong><em>Ended ${clock12(absTime(film.start + film.dur))}</em></div>`;
         rail.appendChild(a);
       });
       rail.scrollLeft = rail.scrollWidth;
@@ -520,43 +536,22 @@
     function armPlayers() {
       front = $('player');
       back = $('playerB');
-      [front, back].forEach(frame => {
-        frame.setAttribute('allow', 'autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *');
-        frame.addEventListener('load', () => {
-          if (!frame.src || frame.src === 'about:blank') return;
-          frame.dataset.ready = '1';
-          if (frame === back && primedId && primedId === liveSpot().film.id) swapToBack();
-        });
-      });
-    }
-    function nextFilm(spot) {
-      const i = Math.max(0, playlist.findIndex(f => f.id === spot.film.id));
-      return playlist[(i + 1) % playlist.length];
     }
     function warm(frame, film, startAt) {
+      if (!frame || !film) return;
       const url = vixUrl(film.id, startAt);
-      if (frame.dataset.url === url) return;
-      frame.dataset.ready = '';
-      frame.dataset.url = url;
-      frame.src = url;
+      if (frame.src !== url) frame.src = url;
     }
     function swapToBack() {
-      if (!back || back.dataset.ready !== '1') return false;
-      back.classList.add('front');
+      if (!back || !front) return false;
       front.classList.remove('front');
-      const old = front;
-      front = back;
-      back = old;
-      loadedId = primedId || loadedId;
-      primedId = 0;
-      priming = false;
-      setTimeout(() => {
-        back.classList.remove('front');
-        back.dataset.ready = '';
-        back.dataset.url = '';
-        back.src = 'about:blank';
-      }, 600);
+      back.classList.add('front');
+      [front, back] = [back, front];
       return true;
+    }
+    function nextFilm(spot) {
+      const idx = playlist.findIndex(f => f.id === spot.film.id);
+      return playlist[(idx + 1) % playlist.length] || playlist[0];
     }
     function remember(film, startAt) {
       try { sessionStorage.setItem('bwhs247-live', JSON.stringify({ id: film.id, title: film.title, startAt, saved: Date.now() })); } catch (_) {}
