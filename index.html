@@ -6188,11 +6188,12 @@
     const VIXSRC_PRIMARY = '4f46e5';
     const VIXSRC_SECONDARY = '0f172a';
 
-    function buildVixsrcParams() {
+    function buildVixsrcParams(startAt) {
+      const start = Math.max(0, Math.floor(Number(startAt) || 0));
       return [
         'autoplay=1',
         'autoPlay=true',
-        'startAt=0',
+        'startAt=' + start,
         'lang=en',
         'primaryColor=' + VIXSRC_PRIMARY,
         'secondaryColor=' + VIXSRC_SECONDARY,
@@ -6268,6 +6269,7 @@
 
 
     window.addEventListener('load', warmupPlayerOrigin);
+    scheduleEmbedKeepAlive();
 
 
     const sessionCache = {};
@@ -12851,8 +12853,8 @@
 
         case 'vixsrc':
           return isTv
-            ? `https://vixsrc.to/tv/${id}/${s}/${e}?${buildVixsrcParams()}`
-            : `https://vixsrc.to/movie/${id}?${buildVixsrcParams()}`;
+            ? `https://vixsrc.to/tv/${id}/${s}/${e}?${buildVixsrcParams(window.__bwhsEmbedTime||0)}`
+            : `https://vixsrc.to/movie/${id}?${buildVixsrcParams(window.__bwhsEmbedTime||0)}`;
 
         case 'vidcore':
           return isTv
@@ -12876,8 +12878,8 @@
 
         default:
           return isTv
-            ? `https://vixsrc.to/tv/${id}/${s}/${e}?${buildVixsrcParams()}`
-            : `https://vixsrc.to/movie/${id}?${buildVixsrcParams()}`;
+            ? `https://vixsrc.to/tv/${id}/${s}/${e}?${buildVixsrcParams(window.__bwhsEmbedTime||0)}`
+            : `https://vixsrc.to/movie/${id}?${buildVixsrcParams(window.__bwhsEmbedTime||0)}`;
       }
     }
 
@@ -13214,6 +13216,7 @@
 
     function handleEmbedPlayerMessage(ev) {
       const info = flattenEmbedPayload(ev && ev.data);
+      if (info.current > 0) noteEmbedTime(info.current);
       const evName = info.event || '';
       if (evName.includes('end') || evName.includes('complete') || evName.includes('finish') || evName === 'ended' || evName === 'video_ended') {
         maybeAutoNextEpisode();
@@ -13503,6 +13506,32 @@
       updateLeftOffBanner();
     }
 
+    
+    window.__bwhsEmbedTime = 0;
+    let lastEmbedKeepAlive = 0;
+    function noteEmbedTime(t) {
+      const n = Number(t);
+      if (n > 0 && isFinite(n)) window.__bwhsEmbedTime = n;
+    }
+    function softRefreshVixsrc() {
+      if (!playerFrame || !activeMedia) return;
+      const current = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
+      if (current !== 'vixsrc' && current !== undefined) return;
+      // Force a reload with current time to refresh session/token and avoid error screens
+      const url = getProviderUrl('vixsrc');
+      if (!url) return;
+      playerFrame.src = 'about:blank';
+      setTimeout(() => { playerFrame.src = url; }, 80);
+      lastEmbedKeepAlive = Date.now();
+    }
+    function scheduleEmbedKeepAlive() {
+      setInterval(() => {
+        if (Date.now() - lastEmbedKeepAlive < 10 * 60 * 1000) return;
+        if (!document.getElementById('playerPageView')?.classList.contains('active')) return;
+        softRefreshVixsrc();
+      }, 45 * 1000);
+    }
+
     function executeStreamLoad() {
       if (!playerFrame || !activeMedia) return;
       const currentProvider = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
@@ -13775,5 +13804,6 @@
   <script src="./synopsis-popup.js"></script>
 </body>
 </html>
+
 
 
