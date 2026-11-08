@@ -13973,7 +13973,6 @@ body.player-fs-active.fs-chrome-on [role="button"] {
   const LATER = document.getElementById('myuiLater');
   const APPLY = document.getElementById('myuiApply');
   const OPTIONS = Array.from(MODAL.querySelectorAll('.myui-option'));
-  const LS_SEEN = 'bwhs_myui_seen';
   const LS_DEVICE = 'bwhs_device_mode';
 
   function detectDevice() {
@@ -14049,12 +14048,7 @@ body.player-fs-active.fs-chrome-on [role="button"] {
   // Apply on load
   applyDevice(localStorage.getItem(LS_DEVICE) || 'auto');
 
-  // First-time popup
-  try {
-    if (!localStorage.getItem(LS_SEEN)) {
-      setTimeout(() => openMyUI(true), 1800);
-    }
-  } catch(_){}
+  // First-time popup disabled — only open via "myui" shortcut
 
   // myui shortcut
   let seq = '', seqTimer = null;
