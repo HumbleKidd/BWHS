@@ -13804,127 +13804,129 @@
 </script>
   <script src="./synopsis-popup.js"></script>
 
+
+
+
 <style>
+/* ===== MyUI Device Modes ===== */
 .myui-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(9, 9, 11, 0.72);
-  backdrop-filter: blur(8px);
+  position: fixed; inset: 0;
+  background: rgba(9,9,11,0.78);
+  backdrop-filter: blur(10px);
   z-index: 99999;
-  display: none;
-  align-items: center;
-  justify-content: center;
+  display: none; align-items: center; justify-content: center;
   padding: 20px;
 }
-.myui-modal-backdrop.active {
-  display: flex;
-}
+.myui-modal-backdrop.active { display: flex; }
 .myui-modal-card {
   background: var(--surface, #121216);
   color: var(--text-main, #f8fafc);
-  border-radius: 20px;
-  padding: 28px 24px 22px;
-  max-width: 440px;
-  width: 100%;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,.5);
+  border-radius: 22px;
+  padding: 28px 22px 20px;
+  max-width: 480px; width: 100%;
+  box-shadow: 0 30px 60px -12px rgba(0,0,0,.55);
   position: relative;
   border: 1px solid rgba(255,255,255,0.08);
 }
 .myui-close {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  background: none;
-  border: 0;
-  color: var(--text-muted, #94a3b8);
-  font-size: 1.6rem;
-  cursor: pointer;
-  line-height: 1;
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: 0; color: var(--text-muted, #94a3b8);
+  font-size: 1.7rem; cursor: pointer; line-height: 1;
 }
-.myui-kicker {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  color: var(--primary, #4f46e5);
-  margin-bottom: 6px;
-}
-.myui-modal-card h3 {
-  margin: 0 0 10px;
-  font-size: 1.35rem;
-  font-weight: 800;
-}
-.myui-modal-card p {
-  margin: 0 0 18px;
-  color: var(--text-muted, #94a3b8);
-  font-size: 0.92rem;
-  line-height: 1.45;
-}
-.myui-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 18px;
-}
+.myui-kicker { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; color: var(--primary, #4f46e5); margin-bottom: 4px; }
+.myui-modal-card h3 { margin: 0 0 8px; font-size: 1.4rem; font-weight: 800; }
+.myui-modal-card p { margin: 0 0 16px; color: var(--text-muted, #94a3b8); font-size: 0.9rem; line-height: 1.45; }
+.myui-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 .myui-option {
   background: var(--surface-subtle, #1c1c24);
-  border: 2px solid transparent;
-  border-radius: 14px;
-  padding: 14px 10px;
-  color: inherit;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  transition: border-color .15s, background .15s;
+  border: 2px solid transparent; border-radius: 14px;
+  padding: 14px 8px; color: inherit; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-size: 0.82rem; font-weight: 600; transition: all .15s;
 }
-.myui-option i {
-  font-size: 1.4rem;
-  color: var(--primary, #4f46e5);
-}
-.myui-option.selected,
-.myui-option:hover {
-  border-color: var(--primary, #4f46e5);
-  background: rgba(79,70,229,0.12);
-}
-.myui-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
+.myui-option i { font-size: 1.45rem; color: var(--primary, #4f46e5); }
+.myui-option.selected, .myui-option:hover { border-color: var(--primary, #4f46e5); background: rgba(79,70,229,0.15); }
+.myui-actions { display: flex; gap: 10px; justify-content: flex-end; }
 .myui-btn-primary, .myui-btn-secondary {
-  border: 0;
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-weight: 700;
-  cursor: pointer;
-  font-size: 0.88rem;
+  border: 0; border-radius: 12px; padding: 10px 16px; font-weight: 700; cursor: pointer; font-size: 0.88rem;
 }
-.myui-btn-primary {
-  background: linear-gradient(135deg, #4f46e5, #ec4899);
-  color: #fff;
-}
-.myui-btn-secondary {
-  background: var(--surface-subtle, #1c1c24);
-  color: var(--text-main, #f8fafc);
-}
+.myui-btn-primary { background: linear-gradient(135deg, #4f46e5, #ec4899); color: #fff; }
+.myui-btn-secondary { background: var(--surface-subtle, #1c1c24); color: var(--text-main, #f8fafc); }
 @media (max-width: 480px) {
   .myui-options { grid-template-columns: 1fr; }
-  .myui-modal-card { padding: 24px 16px 16px; }
+  .myui-modal-card { padding: 22px 14px 14px; }
 }
-/* Device mode tweaks */
-body.device-tv {
-  font-size: 1.08em;
-}
-body.device-tv .player-page-heading,
-body.device-tv .shelf-title {
-  font-size: 1.15em;
-}
+
+/* Force mobile layout even on large screens */
 body.device-mobile .desktop-sidebar,
-body.device-mobile .desktop-right-panel {
-  /* already handled by media queries mostly */
+body.device-mobile .desktop-right-panel,
+body.device-mobile .desktop-year-scroll-wrapper,
+body.device-mobile .desktop-theme-wrapper {
+  display: none !important;
+}
+body.device-mobile .mobile-nav,
+body.device-mobile .mobile-year-dropdown-wrap,
+body.device-mobile .mobile-header-share,
+body.device-mobile .mobile-server-selector {
+  display: flex !important;
+}
+body.device-mobile .player-split-layout { flex-direction: column !important; }
+body.device-mobile .player-also-watch-sidebar { width: 100% !important; max-width: none !important; }
+body.device-mobile { --sidebar-w: 0px; }
+
+/* Tablet: slightly tighter */
+body.device-tablet .desktop-sidebar { width: 64px !important; }
+body.device-tablet .desktop-right-panel { width: 240px !important; }
+
+/* Desktop: ensure desktop elements visible */
+body.device-desktop .mobile-nav { display: none !important; }
+body.device-desktop .desktop-sidebar { display: flex !important; }
+
+/* ===== TV Leanback ===== */
+body.device-tv {
+  font-size: 1.12em;
+  cursor: none;
+}
+body.device-tv .desktop-sidebar,
+body.device-tv .mobile-nav,
+body.device-tv .desktop-right-panel { display: none !important; }
+body.device-tv .player-page-heading,
+body.device-tv .shelf-title,
+body.device-tv h1, body.device-tv h2, body.device-tv h3 {
+  font-size: 1.25em;
+}
+body.device-tv button, body.device-tv a, body.device-tv .media-card,
+body.device-tv .ep-named-card, body.device-tv .m-nav-item,
+body.device-tv [tabindex="0"], body.device-tv .myui-option {
+  outline: 3px solid transparent;
+  outline-offset: 3px;
+  transition: outline-color .12s, transform .12s;
+}
+body.device-tv :focus-visible, body.device-tv .leanback-focus {
+  outline: 4px solid #4f46e5 !important;
+  outline-offset: 4px;
+  transform: scale(1.04);
+  z-index: 5;
+  box-shadow: 0 0 0 6px rgba(79,70,229,0.35);
+}
+body.device-tv .media-card:focus-visible,
+body.device-tv .ep-named-card:focus-visible {
+  transform: scale(1.06);
+}
+
+/* Fullscreen cursor hide when chrome is off */
+body.player-fs-active:not(.fs-chrome-on),
+body.player-fs-active:not(.fs-chrome-on) * {
+  cursor: none !important;
+}
+body.player-fs-active.fs-chrome-on,
+body.player-fs-active.fs-chrome-on * {
+  cursor: default;
+}
+body.player-fs-active.fs-chrome-on button,
+body.player-fs-active.fs-chrome-on a,
+body.player-fs-active.fs-chrome-on [role="button"] {
+  cursor: pointer;
 }
 </style>
 
@@ -13933,8 +13935,12 @@ body.device-mobile .desktop-right-panel {
     <button class="myui-close" id="myuiClose" aria-label="Close">&times;</button>
     <div class="myui-kicker">MYUI</div>
     <h3 id="myuiTitle">Choose Your Device</h3>
-    <p>Select the device you're using so BWHS can optimize the experience for you. You can always open this again by typing <strong>myui</strong> on your keyboard.</p>
+    <p>Select how you want BWHS to look and behave. Default is the auto-detected device. Type <strong>myui</strong> anytime to reopen.</p>
     <div class="myui-options">
+      <button class="myui-option" data-device="auto">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>Auto (Detected)</span>
+      </button>
       <button class="myui-option" data-device="mobile">
         <i class="fa-solid fa-mobile-screen"></i>
         <span>Mobile / Phone</span>
@@ -13949,7 +13955,7 @@ body.device-mobile .desktop-right-panel {
       </button>
       <button class="myui-option" data-device="tv">
         <i class="fa-solid fa-tv"></i>
-        <span>Smart TV / Android TV / Firestick</span>
+        <span>Smart TV / Leanback</span>
       </button>
     </div>
     <div class="myui-actions">
@@ -13966,26 +13972,51 @@ body.device-mobile .desktop-right-panel {
   const CLOSE = document.getElementById('myuiClose');
   const LATER = document.getElementById('myuiLater');
   const APPLY = document.getElementById('myuiApply');
-  const OPTIONS = MODAL.querySelectorAll('.myui-option');
+  const OPTIONS = Array.from(MODAL.querySelectorAll('.myui-option'));
   const LS_SEEN = 'bwhs_myui_seen';
   const LS_DEVICE = 'bwhs_device_mode';
-  let selected = localStorage.getItem(LS_DEVICE) || 'desktop';
+
+  function detectDevice() {
+    const ua = (navigator.userAgent || '').toLowerCase();
+    const w = window.innerWidth || 0;
+    if (/smart-tv|smarttv|android tv|googletv|aft[a-z]|firetv|hbbtv|netcast|webos|tizen|leanback/.test(ua)) return 'tv';
+    if (w >= 1600 && /tv|android/.test(ua)) return 'tv';
+    if (w < 700) return 'mobile';
+    if (w < 1100) return 'tablet';
+    return 'desktop';
+  }
+
+  function currentMode() {
+    const saved = localStorage.getItem(LS_DEVICE);
+    if (!saved || saved === 'auto') return detectDevice();
+    return saved;
+  }
 
   function applyDevice(mode) {
-    document.body.classList.remove('device-mobile', 'device-tablet', 'device-desktop', 'device-tv');
-    if (mode) document.body.classList.add('device-' + mode);
-    try { localStorage.setItem(LS_DEVICE, mode); } catch(_){}
+    const actual = (mode === 'auto' || !mode) ? detectDevice() : mode;
+    document.body.classList.remove('device-auto','device-mobile','device-tablet','device-desktop','device-tv');
+    document.body.classList.add('device-' + actual);
+    document.body.dataset.deviceMode = actual;
+    try { localStorage.setItem(LS_DEVICE, mode || 'auto'); } catch(_){}
+    // TV: make key elements focusable
+    if (actual === 'tv') setupLeanback();
   }
 
   function openMyUI(isFirst) {
+    const saved = localStorage.getItem(LS_DEVICE) || 'auto';
+    OPTIONS.forEach(btn => {
+      btn.classList.toggle('selected', btn.getAttribute('data-device') === saved);
+    });
     MODAL.classList.add('active');
     MODAL.setAttribute('aria-hidden', 'false');
-    OPTIONS.forEach(btn => {
-      btn.classList.toggle('selected', btn.getAttribute('data-device') === selected);
-    });
     if (isFirst) {
       try { localStorage.setItem(LS_SEEN, '1'); } catch(_){}
     }
+    // focus first option for keyboard/TV
+    setTimeout(() => {
+      const sel = MODAL.querySelector('.myui-option.selected') || OPTIONS[0];
+      if (sel) sel.focus();
+    }, 50);
   }
 
   function closeMyUI() {
@@ -13994,41 +14025,46 @@ body.device-mobile .desktop-right-panel {
   }
 
   OPTIONS.forEach(btn => {
+    btn.setAttribute('tabindex', '0');
     btn.addEventListener('click', () => {
-      selected = btn.getAttribute('data-device');
-      OPTIONS.forEach(b => b.classList.toggle('selected', b === btn));
+      OPTIONS.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
     });
   });
 
   APPLY.addEventListener('click', () => {
-    applyDevice(selected);
+    const sel = MODAL.querySelector('.myui-option.selected');
+    const mode = sel ? sel.getAttribute('data-device') : 'auto';
+    applyDevice(mode);
     closeMyUI();
-    if (typeof showToast === 'function') showToast('UI optimized for ' + selected);
+    if (typeof showToast === 'function') {
+      const label = sel ? sel.textContent.trim() : mode;
+      showToast('UI set to ' + label);
+    }
   });
   CLOSE.addEventListener('click', closeMyUI);
   LATER.addEventListener('click', closeMyUI);
   MODAL.addEventListener('click', (e) => { if (e.target === MODAL) closeMyUI(); });
 
-  // Apply saved device on load
-  applyDevice(selected);
+  // Apply on load
+  applyDevice(localStorage.getItem(LS_DEVICE) || 'auto');
 
-  // First-time visitor
+  // First-time popup
   try {
     if (!localStorage.getItem(LS_SEEN)) {
-      setTimeout(() => openMyUI(true), 2200);
+      setTimeout(() => openMyUI(true), 1800);
     }
   } catch(_){}
 
-  // "myui" shortcut (sequential keys, case-insensitive, 2s window)
-  let seq = '';
-  let seqTimer = null;
+  // myui shortcut
+  let seq = '', seqTimer = null;
   document.addEventListener('keydown', (e) => {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
     const k = (e.key || '').toLowerCase();
-    if (!k || k.length !== 1) return;
+    if (k.length !== 1) return;
     seq += k;
     if (seqTimer) clearTimeout(seqTimer);
-    seqTimer = setTimeout(() => { seq = ''; }, 1800);
+    seqTimer = setTimeout(() => { seq = ''; }, 1600);
     if (seq.endsWith('myui')) {
       seq = '';
       e.preventDefault();
@@ -14036,66 +14072,67 @@ body.device-mobile .desktop-right-panel {
     }
   });
 
-  // Expose for debugging
   window.openMyUI = () => openMyUI(false);
-})();
-</script>
+  window.applyDeviceMode = applyDevice;
 
-
-<script>
-(function(){
-  // Smarter resume on tab return for embeds that restart
-  let lastKnownTime = 0;
-  let visibleSince = 0;
-  let restartCheckTimer = null;
-
-  function currentTime() {
-    return (typeof window.__bwhsEmbedTime === 'number') ? window.__bwhsEmbedTime : 0;
+  // ===== TV Leanback / DPAD =====
+  function getFocusables() {
+    return Array.from(document.querySelectorAll(
+      'button, a[href], [tabindex="0"], .media-card, .ep-named-card, .m-nav-item, .myui-option, .theme-option-btn'
+    )).filter(el => el.offsetParent !== null && !el.disabled && el.tabIndex !== -1);
   }
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-      lastKnownTime = currentTime();
-      if (restartCheckTimer) { clearTimeout(restartCheckTimer); restartCheckTimer = null; }
-    } else if (document.visibilityState === 'visible') {
-      visibleSince = Date.now();
-      const saved = lastKnownTime;
-      if (saved < 15) return; // too early to care
+  function setupLeanback() {
+    if (document.body.dataset.leanbackBound) return;
+    document.body.dataset.leanbackBound = '1';
 
-      // Watch for a sudden drop in reported time (restart)
-      const check = () => {
-        const now = currentTime();
-        if (now > 0 && now < saved - 12 && now < 20) {
-          // Likely restarted — force resume with known time
-          if (typeof softRefreshVixsrc === 'function') {
-            try { softRefreshVixsrc(); } catch(_){}
-          } else if (typeof window.softRefreshVixsrc === 'function') {
-            try { window.softRefreshVixsrc(); } catch(_){}
-          }
+    document.addEventListener('keydown', (e) => {
+      if (!document.body.classList.contains('device-tv')) return;
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
+      const keys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' ','Escape','Backspace'];
+      if (!keys.includes(e.key)) return;
+
+      const focusables = getFocusables();
+      if (!focusables.length) return;
+      let idx = focusables.indexOf(document.activeElement);
+      if (idx < 0) idx = 0;
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = focusables[(idx + 1) % focusables.length];
+        next.focus();
+        next.classList.add('leanback-focus');
+        setTimeout(() => next.classList.remove('leanback-focus'), 400);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = focusables[(idx - 1 + focusables.length) % focusables.length];
+        prev.focus();
+        prev.classList.add('leanback-focus');
+        setTimeout(() => prev.classList.remove('leanback-focus'), 400);
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        if (document.activeElement && document.activeElement.click) {
+          e.preventDefault();
+          document.activeElement.click();
         }
-      };
-      if (restartCheckTimer) clearTimeout(restartCheckTimer);
-      restartCheckTimer = setTimeout(check, 1800);
-      // Also check a bit later
-      setTimeout(check, 3500);
-    }
-  });
+      } else if (e.key === 'Escape' || e.key === 'Backspace') {
+        if (MODAL.classList.contains('active')) {
+          closeMyUI();
+        } else if (typeof handlePlayerBackNavigation === 'function') {
+          e.preventDefault();
+          handlePlayerBackNavigation();
+        }
+      }
+    });
 
-  // Keep the in-memory time updated more aggressively from messages (already done, but reinforce)
-  window.addEventListener('message', (ev) => {
-    try {
-      const data = ev.data;
-      if (!data) return;
-      let t = 0;
-      if (typeof data === 'object') {
-        t = Number(data.currentTime || data.current_time || data.time || (data.data && data.data.currentTime) || 0);
-      }
-      if (t > 0 && isFinite(t)) {
-        window.__bwhsEmbedTime = t;
-        lastKnownTime = Math.max(lastKnownTime, t);
-      }
-    } catch(_){}
-  });
+    // Auto-focus something useful on TV
+    setTimeout(() => {
+      const first = getFocusables()[0];
+      if (first) first.focus();
+    }, 600);
+  }
+
+  if (document.body.classList.contains('device-tv')) setupLeanback();
 })();
 </script>
 
