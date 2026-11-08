@@ -6232,20 +6232,6 @@
         : `https://vixsrc.to/movie/${id}?${qs}`;
     }
 
-    const preloadFrames = [];
-    function getOrCreatePreloadFrame() {
-      if (preloadFrames.length < 3) {
-        const f = document.createElement('iframe');
-        f.style.cssText = 'position:absolute;width:1px;height:1px;left:-9999px;top:-9999px;opacity:0;pointer-events:none;';
-        f.setAttribute('loading', 'eager');
-        f.setAttribute('referrerpolicy', 'origin');
-        f.setAttribute('allow', 'autoplay *; encrypted-media *;');
-        document.body.appendChild(f);
-        preloadFrames.push(f);
-        return f;
-      }
-      return preloadFrames[Math.floor(Math.random() * preloadFrames.length)];
-    }
     function prefetchEmbed(id, type, season, episode) {
       if (!id) return;
       const url = vixsrcUrlFor(id, type, season, episode);
@@ -6256,15 +6242,6 @@
         link.rel = 'preconnect';
         link.href = 'https://vixsrc.to';
         document.head.appendChild(link);
-        const plink = document.createElement('link');
-        plink.rel = 'prefetch';
-        plink.href = url;
-        plink.as = 'document';
-        document.head.appendChild(plink);
-      } catch (_) {}
-      try {
-        const frame = getOrCreatePreloadFrame();
-        if (frame.src !== url) frame.src = url;
       } catch (_) {}
     }
 
@@ -6294,16 +6271,13 @@
       } catch (_) {}
     }
 
-    function tryPrefetchFromCard(ev) {
+    document.addEventListener('pointerover', (ev) => {
       const card = ev.target && ev.target.closest && ev.target.closest('.media-card, .shelf-card, .panel-item-card, .upcoming-card, .sidebar-rec-card');
       if (!card) return;
       const id = card.dataset && (card.dataset.mediaId || card.dataset.id);
       const type = (card.dataset && (card.dataset.mediaType || card.dataset.type)) || 'movie';
       if (id) prefetchEmbed(id, type);
-    }
-    document.addEventListener('pointerover', tryPrefetchFromCard, { passive: true });
-    document.addEventListener('pointerdown', tryPrefetchFromCard, { passive: true });
-    document.addEventListener('touchstart', tryPrefetchFromCard, { passive: true });
+    }, { passive: true });
 
 
     window.addEventListener('load', warmupPlayerOrigin);
@@ -13554,8 +13528,15 @@
       if (n > 0 && isFinite(n)) window.__bwhsEmbedTime = n;
     }
     function softRefreshVixsrc() {
-      // Disabled to prevent any hitch or spinner — user wants uninterrupted playback
-      return;
+      if (!playerFrame || !activeMedia) return;
+      const current = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
+      if (current !== 'vixsrc' && current !== undefined) return;
+      // Force a reload with current time to refresh session/token and avoid error screens
+      const url = getProviderUrl('vixsrc');
+      if (!url) return;
+      playerFrame.src = 'about:blank';
+      setTimeout(() => { playerFrame.src = url; }, 80);
+      lastEmbedKeepAlive = Date.now();
     }
     window.softRefreshVixsrc = softRefreshVixsrc;
     function scheduleEmbedKeepAlive() {
@@ -13602,9 +13583,9 @@
         }
         return;
       }
-      // Instant swap — no blanking, no delay
       playerFrame.src = url;
-      setTimeout(unmuteVidLinkIfNeeded, 300);
+      setTimeout(unmuteVidLinkIfNeeded, 900);
+      setTimeout(unmuteVidLinkIfNeeded, 2200);
 
       let markedReady = false;
       const markReady = () => {
@@ -13620,12 +13601,11 @@
       };
 
       // Only swap sources on a hard load failure, not mid-buffer.
-      // Very long timeout — do not interrupt playback for spinner/hitch avoidance
       playerFailoverTimer = setTimeout(() => {
-        if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active') && currentProvider !== 'vixsrc') {
+        if (!markedReady && document.getElementById('playerPageView')?.classList.contains('active')) {
           autoFailoverPlayer();
         }
-      }, 180000);
+      }, 90000);
     }
 
     function autoFailoverPlayer() {
