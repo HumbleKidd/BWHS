@@ -13246,18 +13246,10 @@
       const info = flattenEmbedPayload(ev && ev.data);
       if (info.current > 0) noteEmbedTime(info.current);
       const evName = info.event || '';
-      if (evName.includes('end') || evName.includes('complete') || evName.includes('finish') || evName === 'ended' || evName === 'video_ended') {
+      // Only react to a real end event. Do not thrash on every timeupdate.
+      if (evName === 'ended' || evName === 'video_ended' || evName === 'complete' || evName === 'finish') {
         maybeAutoNextEpisode();
         return;
-      }
-      const dur = info.duration;
-      const cur = info.current;
-      if (dur > 20 && cur > 0 && (dur - cur) <= 2.8) {
-        maybeAutoNextEpisode();
-        return;
-      }
-      if (info.progress >= 0.97) {
-        maybeAutoNextEpisode();
       }
     }
 
@@ -13277,7 +13269,7 @@
       if (isTv && !autoNextOn) return;
       if (isMovie && !movieAutoNextOn) return;
       if (!isTv && !isMovie) return;
-      if (Date.now() - lastAutoNextAt < 2500) return;
+      if (Date.now() - lastAutoNextAt < 8000) return;
       lastAutoNextAt = Date.now();
       lastAutoNextWasSilent = true;
       userExitedFullscreen = false;
@@ -13491,12 +13483,6 @@
           if (!ignoreNextFsExit) {
             userExitedFullscreen = true;
             clearAutoFsTimer();
-          } else {
-            setTimeout(() => {
-              if (ignoreNextFsExit && autoFullscreenOn && !userExitedFullscreen) {
-                requestPlayerFullscreen();
-              }
-            }, 400);
           }
           document.body.classList.remove('fs-chrome-on');
         } else {
