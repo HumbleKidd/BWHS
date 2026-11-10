@@ -1,19 +1,15 @@
 /* BWHS live viewers + views over time.
-   Paste your Firebase web config into BWHS_FIREBASE below.
-   Needs Realtime Database (not Firestore) and the rules in stats.html. */
+   Realtime Database presence system. */
 (function () {
   var BWHS_FIREBASE = {
-    apiKey: "PASTE_API_KEY",
-    authDomain: "PASTE_PROJECT.firebaseapp.com",
-    databaseURL: "https://PASTE_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "PASTE_PROJECT",
-    appId: "PASTE_APP_ID"
+    apiKey: "AIzaSyBZhtlZRaWQPxFPEP02toZnsFQWOPvbUJA",
+    authDomain: "bwhs-audience.firebaseapp.com",
+    databaseURL: "https://bwhs-audience-default-rtdb.firebaseio.com",
+    projectId: "bwhs-audience",
+    storageBucket: "bwhs-audience.firebasestorage.app",
+    messagingSenderId: "481701919126",
+    appId: "1:481701919126:web:bc6cf2c0dc5d61f4ff85b7"
   };
-
-  if (!BWHS_FIREBASE.apiKey || BWHS_FIREBASE.apiKey.indexOf("PASTE_") === 0) {
-    window.BWHSStats = { ready: false, reason: "missing-config" };
-    return;
-  }
 
   var s = document.createElement("script");
   s.src = "https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js";
@@ -40,10 +36,11 @@
     ref.set({
       page: page,
       at: firebase.database.ServerValue.TIMESTAMP,
+      startedAt: firebase.database.ServerValue.TIMESTAMP,
       title: document.title || "BWHS"
     });
     setInterval(function () {
-      ref.update({ at: firebase.database.ServerValue.TIMESTAMP, page: page });
+      ref.update({ at: firebase.database.ServerValue.TIMESTAMP, page: page, title: document.title || "BWHS" });
     }, 25000);
 
     function bump(path, by) {
