@@ -14341,7 +14341,14 @@ body.player-fs-active.fs-chrome-on [role="button"] {
     .social-popup-btn.telegram { background: #0088cc; }
     .social-popup-btn.share { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
     .social-qr-wrap {
-      margin-top: 6px;
+      margin-top: 8px;
+    }
+    .social-qr-headline {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #c4b5fd;
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
     }
     .social-qr-wrap img {
       width: 140px;
@@ -14574,14 +14581,15 @@ body.player-fs-active.fs-chrome-on [role="button"] {
       <div class="social-popup-title">Follow BWHS</div>
       <p class="social-popup-cta">Stay in the loop for new drops, exclusive updates, and help grow the community. Join us on socials!</p>
       <div class="social-popup-buttons">
-        <a href="https://discord.gg/m94XkyPWm" target="_blank" rel="noopener" class="social-popup-btn discord"><i class="fa-brands fa-discord"></i> Discord</a>
-        <a href="https://www.facebook.com/share/1E9amRZgGi/" target="_blank" rel="noopener" class="social-popup-btn facebook"><i class="fa-brands fa-facebook-f"></i> Facebook</a>
-        <a href="https://t.me/+L0JIIwByOBFiZGEx" target="_blank" rel="noopener" class="social-popup-btn telegram"><i class="fa-brands fa-telegram"></i> Telegram</a>
+        <button type="button" class="social-popup-btn discord" data-social-url="https://discord.gg/m94XkyPWm"><i class="fa-brands fa-discord"></i> Discord</button>
+        <button type="button" class="social-popup-btn facebook" data-social-url="https://www.facebook.com/share/1E9amRZgGi/"><i class="fa-brands fa-facebook-f"></i> Facebook</button>
+        <button type="button" class="social-popup-btn telegram" data-social-url="https://t.me/+L0JIIwByOBFiZGEx"><i class="fa-brands fa-telegram"></i> Telegram</button>
         <button type="button" class="social-popup-btn share" id="socialPopupShare"><i class="fa-solid fa-share-nodes"></i> Share with the World</button>
       </div>
       <div class="social-qr-wrap">
+        <div class="social-qr-headline">Share everywhere!</div>
         <img id="socialQrImg" alt="QR code for BWHS" />
-        <div class="social-qr-label">BWHS</div>
+        <div class="social-qr-label">Scan to open BWHS on another device</div>
       </div>
     </div>
   </div>
@@ -14647,6 +14655,17 @@ body.player-fs-active.fs-chrome-on [role="button"] {
           if (e.target === backdrop) hidePopup();
         });
       }
+      // Wire social buttons (bypass the site's external-link blocker)
+      document.querySelectorAll('.social-popup-btn[data-social-url]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const url = btn.getAttribute('data-social-url');
+          if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        });
+      });
     });
   })();
   </script>
