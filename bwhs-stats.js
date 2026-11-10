@@ -22,7 +22,6 @@
     document.head.appendChild(s);
   }
 
-  // Load Firebase App first, then Database
   loadScript("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js", function() {
     loadScript("https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js", start);
   });
@@ -49,34 +48,53 @@
       var ref = db.ref("presence/" + id);
       var today = dayKey();
 
-      console.log("BWHS: attempting presence write for", id);
-
       ref.onDisconnect().remove().catch(function(e) {
         console.warn("onDisconnect failed", e);
       });
+
+      function currentWatching() {
+        var t = document.title || "";
+        if (t && t !== "BWHS - Binge Watch Humble Streams" && t !== "BWHS") return t.replace(/^BWHS\s*[-\u2013\u2014]\s*/i, "").slice(0, 80);
+        var el = document.querySelector(".hero-title, .player-title, #playerTitle, .now-playing-title, .film-title");
+        if (el && el.textContent) return el.textContent.trim().slice(0, 80);
+        return "";
+      }
+
+      function writePresence() {
+        var watching = currentWatching();
+        var data = {
+          page: page,
+          at: firebase.database.ServerValue.TIMESTAMP,
+          title: document.title || "BWHS",
+          userAgent: navigator.userAgent.slice(0, 120)
+        };
+        if (watching) data.watching = watching;
+        return ref.update(data);
+      }
 
       ref.set({
         page: page,
         at: firebase.database.ServerValue.TIMESTAMP,
         startedAt: firebase.database.ServerValue.TIMESTAMP,
         title: document.title || "BWHS",
-        userAgent: navigator.userAgent.slice(0, 120),
-        test: true
+        userAgent: navigator.userAgent.slice(0, 120)
       }).then(function() {
-        console.log("BWHS presence written successfully for", id);
         if (window.onBWHSSuccess) window.onBWHSSuccess(id);
+        writePresence();
       }).catch(function(e) {
         console.error("Presence write failed", e);
         if (window.onBWHSError) window.onBWHSError(e.message || String(e));
       });
 
       setInterval(function () {
-        ref.update({
-          at: firebase.database.ServerValue.TIMESTAMP,
-          page: page,
-          title: document.title || "BWHS"
-        }).catch(function() {});
-      }, 25000);
+        writePresence().catch(function() {});
+      }, 20000);
+
+      var titleObserver = new MutationObserver(function() {
+        writePresence().catch(function() {});
+      });
+      var titleEl = document.querySelector("title");
+      if (titleEl) titleObserver.observe(titleEl, { childList: true, characterData: true, subtree: true });
 
       function bump(path, by) {
         db.ref(path).transaction(function (cur) { return (cur || 0) + (by || 1); });
@@ -97,7 +115,7 @@
           if (!name) return;
           var slug = String(name).slice(0, 80).replace(/[.#$\/\[\]]/g, "_");
           bump("stats/titles/" + slug, 1);
-          ref.update({ watching: slug });
+          ref.update({ watching: name.slice(0, 80), at: firebase.database.ServerValue.TIMESTAMP });
         },
         liveCount: function (cb) {
           db.ref("presence").on("value", function (snap) {
