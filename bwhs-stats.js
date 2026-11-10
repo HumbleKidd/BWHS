@@ -129,19 +129,14 @@
         }
       };
 
-      // Auto-inject floating live badge if none exists
+      // Only update an existing badge if one is already on the page (admin pages only).
+      // Do not inject any public-facing "watching" indicator.
       var badge = document.getElementById("bwhs-live-badge");
-      if (!badge) {
-        badge = document.createElement("a");
-        badge.id = "bwhs-live-badge";
-        badge.href = "audience.html";
-        badge.style.cssText = "position:fixed;bottom:16px;right:16px;z-index:9999;background:#4f46e5;color:#fff;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 4px 14px rgba(79,70,229,.4);font-family:system-ui,sans-serif;";
-        badge.textContent = "… watching";
-        document.body.appendChild(badge);
+      if (badge) {
+        window.BWHSStats.liveCount(function (n) {
+          badge.textContent = n + " watching";
+        });
       }
-      window.BWHSStats.liveCount(function (n) {
-        badge.textContent = n + " watching";
-      });
     } catch (err) {
       console.error("BWHS stats init error", err);
       if (window.onBWHSError) window.onBWHSError(err.message || String(err));
