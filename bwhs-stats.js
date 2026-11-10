@@ -11,14 +11,21 @@
     appId: "1:481701919126:web:bc6cf2c0dc5d61f4ff85b7"
   };
 
-  var s = document.createElement("script");
-  s.src = "https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js";
-  s.onload = start;
-  s.onerror = function() {
-    console.error("Failed to load Firebase");
-    if (window.onBWHSError) window.onBWHSError("Failed to load Firebase script");
-  };
-  document.head.appendChild(s);
+  function loadScript(src, callback) {
+    var s = document.createElement("script");
+    s.src = src;
+    s.onload = callback;
+    s.onerror = function() {
+      console.error("Failed to load", src);
+      if (window.onBWHSError) window.onBWHSError("Failed to load " + src);
+    };
+    document.head.appendChild(s);
+  }
+
+  // Load Firebase App first, then Database
+  loadScript("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js", function() {
+    loadScript("https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js", start);
+  });
 
   function dayKey(d) {
     d = d || new Date();
@@ -29,6 +36,11 @@
 
   function start() {
     try {
+      if (typeof firebase === "undefined") {
+        if (window.onBWHSError) window.onBWHSError("firebase is still not defined after loading scripts");
+        return;
+      }
+
       if (!firebase.apps.length) firebase.initializeApp(BWHS_FIREBASE);
       var db = firebase.database();
       var id = sessionStorage.getItem("bwhs_vid") || ("v_" + Math.random().toString(36).slice(2) + Date.now().toString(36));
