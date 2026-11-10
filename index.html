@@ -5383,7 +5383,7 @@
             <span class="live-dot"></span>
             <span class="btn-24-label">24/7 PLAY</span>
           </a>
-          <button class="btn-circle mobile-header-share" id="mobileHeaderShareBtn" onclick="shareCurrentTitle(event)" title="Share this title" aria-label="Share">
+          <button class="btn-circle mobile-header-share" id="mobileHeaderShareBtn" onclick="openSocialPopup(event)" title="Share & Follow BWHS" aria-label="Share">
             <i class="fa-solid fa-share-nodes"></i>
           </button>
           <div class="desktop-theme-wrapper">
@@ -14609,17 +14609,23 @@ body.player-fs-active.fs-chrome-on [role="button"] {
     function markShown() {
       try { localStorage.setItem(KEY, String(Date.now())); } catch {}
     }
-    function showPopup() {
+    function showPopup(force) {
       const backdrop = document.getElementById('socialPopupBackdrop');
       const qr = document.getElementById('socialQrImg');
       if (!backdrop) return;
-      if (qr) {
+      if (qr && !qr.src) {
         const url = encodeURIComponent('https://bwhs.online');
         qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data=' + url;
       }
       backdrop.classList.add('visible');
-      markShown();
+      if (!force) markShown();
     }
+    // Allow the top-corner Share button (or anything else) to reopen the popup anytime
+    window.openSocialPopup = function(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (e && e.stopPropagation) e.stopPropagation();
+      showPopup(true);
+    };
     function hidePopup() {
       const backdrop = document.getElementById('socialPopupBackdrop');
       if (backdrop) backdrop.classList.remove('visible');
@@ -14642,9 +14648,7 @@ body.player-fs-active.fs-chrome-on [role="button"] {
       }
     }
     document.addEventListener('DOMContentLoaded', () => {
-      if (!shouldShow()) return;
-      // Small delay so page loads first
-      setTimeout(showPopup, 1200);
+      // Always wire the buttons so the popup works when opened manually too
       const closeBtn = document.getElementById('socialPopupClose');
       const shareBtn = document.getElementById('socialPopupShare');
       const backdrop = document.getElementById('socialPopupBackdrop');
@@ -14655,17 +14659,18 @@ body.player-fs-active.fs-chrome-on [role="button"] {
           if (e.target === backdrop) hidePopup();
         });
       }
-      // Wire social buttons (bypass the site's external-link blocker)
       document.querySelectorAll('.social-popup-btn[data-social-url]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           const url = btn.getAttribute('data-social-url');
-          if (url) {
-            window.open(url, '_blank', 'noopener,noreferrer');
-          }
+          if (url) window.open(url, '_blank', 'noopener,noreferrer');
         });
       });
+
+      if (!shouldShow()) return;
+      // Small delay so page loads first
+      setTimeout(() => showPopup(false), 1200);
     });
   })();
   </script>
