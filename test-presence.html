@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>BWHS Presence Test</title></head>
+<body>
+  <h1>Testing presence...</h1>
+  <p id="status">Loading...</p>
+  <script src="bwhs-stats.js"></script>
+  <script>
+    setTimeout(function() {
+      document.getElementById("status").textContent = window.BWHSStats && window.BWHSStats.ready 
+        ? "Presence script loaded. Check Firebase data view and the live portal." 
+        : "Script not ready — check console.";
+    }, 2000);
+  </script>
+</body>
+</html>
