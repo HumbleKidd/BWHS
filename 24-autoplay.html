@@ -435,261 +435,138 @@
       let gIdx = hash(slotKey) % GENRES.length;
       const prevSlot = slot === 0 ? 3 : slot - 1;
       const prevKey = dayKey + ':s' + prevSlot;
-      if (hash(prevKey) % GENRES.length === gIdx) gIdx = (gIdx + 3) % GENRES.length;
+      if (hash(prevKey) % GENRES.length === gIdx) gIdx = (gIdx + 1) % GENRES.length;
       genre = GENRES[gIdx];
-      const ranges = ['00–06', '06–12', '12–18', '18–24'];
-      $('genrePill').textContent = genre.name + ' · ' + ranges[slot];
-      const cacheKey = 'bwhs24v6:' + slotKey;
-      try {
-        const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-        if (Array.isArray(cached) && cached.length >= 4) {
-          playlist = cached;
-          return playlist;
-        }
-      } catch (_) {}
       const recent = getRecentIds();
       const seed = hash(slotKey);
-      const pages = shuffle([1,2,3,4,5,6,7,8,9,10,11,12], seed).slice(0, 4);
-      const ids = new Set();
-      for (const page of pages) {
-        try {
-          const data = await getJSON(`${TMDB}/discover/movie?api_key=${KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_genres=${genre.id}&vote_count.gte=50&vote_average.gte=5.5&with_runtime.gte=70&with_runtime.lte=180`);
-          for (const m of (data.results || [])) {
-            if (m.id && !recent.has(m.id) && m.vote_count >= 50) ids.add(m.id);
-          }
-        } catch (_) {}
-      }
-      if (ids.size < 8) {
-        for (const id of (FALLBACK[genre.id] || FALLBACK[28])) if (!recent.has(id)) ids.add(id);
-      }
-      const pool = shuffle(Array.from(ids), seed).slice(0, 18);
-      const hydrated = [];
-      for (const id of pool) {
+      let candidates = [];
+      try {
+        const page = 1 + (seed % 5);
+        const data = await getJSON(`${TMDB}/discover/movie?api_key=${KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_genres=${genre.id}&vote_count.gte=80`);
+        candidates = (data.results || []).map(r => r.id);
+      } catch (_) {}
+      if (candidates.length < 12) candidates = candidates.concat(FALLBACK[genre.id] || FALLBACK[28]);
+      candidates = [...new Set(candidates)].filter(id => !recent.has(Number(id)));
+      if (candidates.length < 8) candidates = [...new Set([...(FALLBACK[genre.id] || []), ...candidates])];
+      candidates = shuffle(candidates, seed).slice(0, 18);
+      const films = [];
+      for (const id of candidates) {
         const film = await hydrate(id);
-        if (film) hydrated.push(film);
-        if (hydrated.length >= 12) break;
+        if (film) films.push(film);
+        if (films.length >= 10) break;
       }
-      if (hydrated.length < 4) {
-        for (const id of (FALLBACK[genre.id] || FALLBACK[28])) {
-          if (hydrated.find(f => f.id === id)) continue;
+      if (!films.length) {
+        for (const id of FALLBACK[genre.id] || FALLBACK[28]) {
           const film = await hydrate(id);
-          if (film) hydrated.push(film);
-          if (hydrated.length >= 6) break;
+          if (film) films.push(film);
+          if (films.length >= 6) break;
         }
       }
-      let cursor = 0;
-      const reel = hydrated.map(f => {
-        const dur = f.runtime * 60;
-        const item = Object.assign({}, f, { start: cursor, dur });
-        cursor += dur;
-        return item;
-      });
-      if (reel.length) addToRecent(reel.map(f => f.id));
-      try { localStorage.setItem(cacheKey, JSON.stringify(reel)); } catch (_) {}
-      return reel;
+      playlist = films.map(f => ({ ...f, dur: Math.max(90, Math.min(180, f.runtime || 110)) * 60 }));
+      addToRecent(playlist.map(f => f.id));
     }
-    function liveSpot() {
-      const t = secondsIntoDay() % SLOT_SEC;
-      const total = playlist.reduce((n, f) => n + f.dur, 0) || 1;
-      const pos = t % total;
-      let film = playlist[0];
-      for (const item of playlist) {
-        if (pos >= item.start && pos < item.start + item.dur) { film = item; break; }
+    function currentFilm() {
+      if (!playlist.length) return null;
+      const total = playlist.reduce((n, f) => n + f.dur, 0);
+      let t = secondsIntoDay() % SLOT_SEC;
+      t = t % total;
+      let acc = 0;
+      for (let i = 0; i < playlist.length; i++) {
+        if (t < acc + playlist[i].dur) return { film: playlist[i], index: i, offset: t - acc, total };
+        acc += playlist[i].dur;
       }
-      return { film, into: Math.max(0, pos - film.start), pos };
+      return { film: playlist[0], index: 0, offset: 0, total };
     }
-    function vixUrl(id, startAt) {
-      // clean 1080p, low-latency start, no forced mute
-      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&mute=0&volume=1&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&maxQuality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
+    function missedFilms() {
+      const cur = currentFilm();
+      if (!cur) return [];
+      const list = [];
+      for (let n = 1; n <= 6; n++) {
+        const i = (cur.index - n + playlist.length) % playlist.length;
+        list.push(playlist[i]);
+      }
+      return list;
     }
-    function paint(spot) {
-      const film = spot.film;
-      $('nowKicker').textContent = 'Now playing';
-      $('nowTitle').textContent = film.title;
-      document.title = film.title + ' · 24/7 PLAY';
-      $('nowSub').textContent = [film.year, prettyDate(film.date)].filter(Boolean).join(' · ');
-      $('nowSyn').textContent = shortSyn(film.overview);
-      if (film.poster) $('nowPoster').src = film.poster;
-      if (film.backdrop) $('aura').style.backgroundImage = `url("${film.backdrop}")`;
-      $('progressBar').style.width = Math.min(100, (spot.into / film.dur) * 100).toFixed(2) + '%';
-      $('startLabel').textContent = 'Started ' + clock12(absTime(film.start));
-      $('endLabel').textContent = 'Ends ' + clock12(absTime(film.start + film.dur));
-      $('clockPill').textContent = nowClock();
-    }
-    function paintMissed(spot) {
-      const missed = playlist.filter(f => f.start + f.dur <= spot.film.start + 1).slice(-6);
+    function renderMissed() {
       const rail = $('missedRail');
-      rail.innerHTML = '';
-      $('missedHint').textContent = missed.length ? ('You just missed ' + missed[missed.length - 1].title) : 'Fresh block just started';
-      missed.forEach(film => {
-        const a = document.createElement('a');
-        a.className = 'miss-card';
-        a.href = HOME + '/#/watch/movie/' + film.id;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        a.innerHTML = `<img alt="" src="${film.poster || ''}" /><div><strong>${film.title}</strong><em>Ended ${clock12(absTime(film.start + film.dur))}</em></div>`;
-        rail.appendChild(a);
-      });
-      rail.scrollLeft = rail.scrollWidth;
+      const films = missedFilms();
+      rail.innerHTML = films.map(f => `
+        <a class="miss-card" href="${HOME}/?movie=${f.id}" title="${f.title}">
+          <img src="${f.poster || ''}" alt="" />
+          <div><strong>${f.title}</strong><em>${f.year || ''}</em></div>
+        </a>
+      `).join('');
     }
-    let front = null, back = null, primedId = 0, priming = false;
-    function armPlayers() {
-      front = $('player');
-      back = $('playerB');
+    function updateNow() {
+      const cur = currentFilm();
+      if (!cur) return;
+      const f = cur.film;
+      $('nowTitle').textContent = f.title;
+      $('nowSub').textContent = [f.year, genre.name, f.runtime ? f.runtime + ' min' : ''].filter(Boolean).join(' · ');
+      $('nowSyn').textContent = shortSyn(f.overview);
+      $('nowPoster').src = f.poster || '';
+      $('aura').style.backgroundImage = f.backdrop ? `url(${f.backdrop})` : '';
+      $('genrePill').textContent = genre.name;
+      $('clockPill').textContent = nowClock();
+      const start = absTime(cur.offset - cur.offset);
+      const end = absTime(cur.offset - cur.offset + cur.film.dur);
+      $('startLabel').textContent = 'Started ' + clock12(start);
+      $('endLabel').textContent = 'Ends ' + clock12(end);
+      const pct = Math.max(0, Math.min(100, (cur.offset / cur.film.dur) * 100));
+      $('progressBar').style.width = pct + '%';
     }
-    function warm(frame, film, startAt) {
-      if (!frame || !film) return;
-      const url = vixUrl(film.id, startAt);
-      if (frame.src !== url) frame.src = url;
+    function loadLive() {
+      const cur = currentFilm();
+      if (!cur) return;
+      const f = cur.film;
+      if (loadedId === f.id) return;
+      loadedId = f.id;
+      const url = `https://vixsrc.to/movie/${f.id}`;
+      const player = $('player');
+      player.src = url;
+      $('boot').classList.add('hidden');
+      if (window.BWHSStats && window.BWHSStats.watchTitle) {
+        window.BWHSStats.watchTitle(f.title + ' (24/7)');
+      }
     }
-    function swapToBack() {
-      if (!back || !front) return false;
-      front.classList.remove('front');
-      back.classList.add('front');
-      [front, back] = [back, front];
-      return true;
-    }
-    function nextFilm(spot) {
-      const idx = playlist.findIndex(f => f.id === spot.film.id);
-      return playlist[(idx + 1) % playlist.length] || playlist[0];
-    }
-    function remember(film, startAt) {
-      try { sessionStorage.setItem('bwhs247-live', JSON.stringify({ id: film.id, title: film.title, startAt, saved: Date.now() })); } catch (_) {}
-    }
-    function restoreInstant() {
-      try {
-        const saved = JSON.parse(sessionStorage.getItem('bwhs247-live') || 'null');
-        if (!saved || !saved.id) return;
-        const elapsed = Math.max(0, Math.floor((Date.now() - (saved.saved || Date.now())) / 1000));
-        const startAt = (saved.startAt || 0) + elapsed;
-        warm($('player'), {id: saved.id}, startAt);
-        $('nowTitle').textContent = saved.title || 'Back on air';
-        $('boot').classList.add('hidden');
-        loadedId = saved.id;
-      } catch (_) {}
-    }
-    
-    let lastKeepAlive = 0;
-    let lastKnownInto = 0;
-    function softRefreshPlayer() {
-      if (!playlist.length || !front || !loadedId) return;
-      const spot = liveSpot();
-      if (!spot.film || spot.film.id !== loadedId) return;
-      lastKnownInto = Math.max(0, Math.floor(spot.into));
-      // Re-warm the front player with current position to refresh vixsrc session/token
-      warm(front, spot.film, lastKnownInto);
-      lastKeepAlive = Date.now();
+    function keepScreenAwake() {
+      if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
     }
     function scheduleKeepAlive() {
       setInterval(() => {
-        if (Date.now() - lastKeepAlive < 8 * 60 * 1000) return;
-        softRefreshPlayer();
-      }, 60 * 1000);
-    }
-
-    function loadLive() {
-      if (!playlist.length || !front) return;
-      const spot = liveSpot();
-      paint(spot);
-      paintMissed(spot);
-      const startAt = Math.min(Math.floor(spot.into), Math.max(0, spot.film.dur - 8));
-      const remain = spot.film.dur - spot.into;
-      if (loadedId === spot.film.id) {
-        remember(spot.film, startAt);
-        if (remain < 55) {
-          const nxt = nextFilm(spot);
-          if (nxt && primedId !== nxt.id) {
-            primedId = nxt.id;
-            priming = true;
-            warm(back, nxt, 0);
-          }
-        }
-        return;
-      }
-      if (primedId === spot.film.id && swapToBack()) {
-        remember(spot.film, startAt);
-        $('boot').classList.add('hidden');
-        return;
-      }
-      warm(front, spot.film, startAt);
-      loadedId = spot.film.id;
-      remember(spot.film, startAt);
-      $('boot').classList.add('hidden');
-      clearTimeout(handoff);
-      handoff = setTimeout(() => { loadedId = 0; loadLive(); }, Math.max(6000, remain * 1000));
-    }
-    function tick() {
-      $('clockPill').textContent = nowClock();
-      if (!playlist.length) return;
-      if (currentSlotKey() !== slotKey) { loadedId = 0; boot(); return; }
-      const spot = liveSpot();
-      paint(spot);
-      if (spot.film.id !== loadedId) loadLive();
-    }
-    function showChrome() {
-      document.body.classList.add('fs-chrome');
-      $('viewport').classList.add('fs-chrome');
-      clearTimeout(chromeTimer);
-      chromeTimer = setTimeout(() => {
-        document.body.classList.remove('fs-chrome');
-        $('viewport').classList.remove('fs-chrome');
-      }, 1600);
-    }
-    function toggleFs() {
-      const vp = $('viewport');
-      const active = document.fullscreenElement || document.webkitFullscreenElement;
-      if (active) {
-        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-        return;
-      }
-      (vp.requestFullscreen || vp.webkitRequestFullscreen).call(vp);
-      showChrome();
+        updateNow();
+        const cur = currentFilm();
+        if (cur && cur.film.id !== loadedId) loadLive();
+      }, 15000);
     }
     async function boot() {
-      playlist = await buildPlaylist();
-      loadLive(true);
-    }
-    $('fsBtn').addEventListener('click', toggleFs);
-    $('reloadLive').addEventListener('click', () => location.reload());
-    $('fsExit').addEventListener('click', toggleFs);
-    $('shield').addEventListener('click', () => {
-      const now = Date.now();
-      if (now - lastTap < 320) toggleFs();
-      lastTap = now;
-      showChrome();
-    });
-    $('viewport').addEventListener('mousemove', showChrome);
-    document.addEventListener('keydown', (e) => {
-      if (['ArrowLeft','ArrowRight',' ','MediaTrackNext','MediaTrackPrevious'].includes(e.key)) e.preventDefault();
-      if (e.key === 'f' || e.key === 'F') toggleFs();
-      showChrome();
-    });
-    document.addEventListener('fullscreenchange', showChrome);
-
-    let screenWakeLock = null;
-    let wakeWanted = true;
-    async function keepScreenAwake() {
-      wakeWanted = true;
       try {
-        if (!navigator.wakeLock || !navigator.wakeLock.request) return;
-        if (screenWakeLock && !screenWakeLock.released) return;
-        screenWakeLock = await navigator.wakeLock.request("screen");
-        screenWakeLock.addEventListener("release", () => {
-          screenWakeLock = null;
-          if (wakeWanted && document.visibilityState === "visible") setTimeout(keepScreenAwake, 400);
-        });
-      } catch (_) {}
+        await buildPlaylist();
+        updateNow();
+        renderMissed();
+        loadLive();
+      } catch (e) {
+        $('nowTitle').textContent = 'Channel busy…';
+        $('boot').textContent = 'Retrying…';
+        setTimeout(boot, 8000);
+      }
     }
-    armPlayers();
-    setInterval(tick, 1000);
-    keepScreenAwake();
-    restoreInstant();
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepScreenAwake(); if (playlist.length) loadLive(); } });
-    window.addEventListener('pageshow', () => { keepScreenAwake(); if (playlist.length) loadLive(); });
+    $('fsBtn').addEventListener('click', () => {
+      const el = $('viewport');
+      if (el.requestFullscreen) el.requestFullscreen();
+    });
+    $('fsExit').addEventListener('click', () => {
+      if (document.exitFullscreen) document.exitFullscreen();
+    });
+    document.addEventListener('fullscreenchange', () => {
+      document.body.classList.toggle('fs-chrome', !!document.fullscreenElement);
+    });
+    $('reloadLive').addEventListener('click', () => location.reload());
     window.addEventListener('focus', keepScreenAwake);
     scheduleKeepAlive();
     boot();
   </script>
+
+<script src="bwhs-stats.js"></script>
 </body>
 </html>
-
