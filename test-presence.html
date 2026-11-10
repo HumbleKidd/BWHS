@@ -13,37 +13,32 @@
 </head>
 <body>
   <h1>BWHS Presence Test</h1>
-  <div id="status">Loading Firebase...</div>
+  <div id="status">Loading...</div>
   <pre id="log"></pre>
 
-  <script src="bwhs-stats.js"></script>
   <script>
     const statusEl = document.getElementById("status");
     const logEl = document.getElementById("log");
 
     function log(msg, isError) {
       const line = document.createElement("div");
-      line.textContent = msg;
+      line.textContent = new Date().toLocaleTimeString() + " — " + msg;
       if (isError) line.className = "err";
+      else line.className = "ok";
       logEl.appendChild(line);
-      console.log(msg);
     }
 
-    setTimeout(function() {
-      if (window.BWHSStats && window.BWHSStats.ready) {
-        statusEl.innerHTML = '<span class="ok">Script loaded successfully.</span><br>Check Firebase data view for a "presence" node.';
-        log("BWHSStats.ready = true");
-        log("If you still see nothing in Firebase, the rules or databaseURL are wrong.");
-      } else {
-        statusEl.innerHTML = '<span class="err">Script did not become ready.</span>';
-        log("BWHSStats not ready after 3s", true);
-      }
-    }, 3000);
+    window.onBWHSSuccess = function(id) {
+      statusEl.innerHTML = '<span class="ok">Success! Presence written for ' + id + '</span><br>Refresh the Firebase data view — you should see a presence node.';
+      log("Write succeeded for " + id);
+    };
 
-    // Capture any errors
-    window.addEventListener("error", function(e) {
-      log("Page error: " + e.message, true);
-    });
+    window.onBWHSError = function(msg) {
+      statusEl.innerHTML = '<span class="err">Error: ' + msg + '</span>';
+      log("Error: " + msg, true);
+    };
   </script>
+
+  <script src="bwhs-stats.js"></script>
 </body>
 </html>
