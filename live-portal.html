@@ -43,6 +43,17 @@
   </div>
 
   <script>
+    function loadScript(src, callback) {
+      var s = document.createElement("script");
+      s.src = src;
+      s.onload = callback;
+      s.onerror = function() {
+        document.getElementById("status").textContent = "Failed to load " + src;
+        document.getElementById("status").style.color = "#f85149";
+      };
+      document.head.appendChild(s);
+    }
+
     function loadLive() {
       const statusEl = document.getElementById("status");
       const BWHS_FIREBASE = {
@@ -55,67 +66,69 @@
         appId: "1:481701919126:web:bc6cf2c0dc5d61f4ff85b7"
       };
 
-      const s = document.createElement("script");
-      s.src = "https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js";
-      s.onload = function() {
-        try {
-          if (!firebase.apps.length) firebase.initializeApp(BWHS_FIREBASE);
-          const db = firebase.database();
-          statusEl.textContent = "Connected. Listening for live sessions...";
-          statusEl.style.color = "#3fb950";
-
-          db.ref("presence").on("value", function(snap) {
-            const now = Date.now();
-            const rows = [];
-            let live = 0;
-            let total = 0;
-
-            if (!snap.exists()) {
-              document.getElementById("rows").innerHTML = "<tr><td colspan=5>No sessions yet. Visit the site or test-presence.html in another tab.</td></tr>";
-              document.getElementById("liveCount").textContent = "0";
-              document.getElementById("count").textContent = "0";
+      // Load Firebase App first, then Database (same pattern as bwhs-stats.js)
+      loadScript("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js", function() {
+        loadScript("https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js", function() {
+          try {
+            if (typeof firebase === "undefined") {
+              statusEl.textContent = "firebase is still not defined after loading scripts";
+              statusEl.style.color = "#f85149";
               return;
             }
 
-            snap.forEach(function(ch) {
-              total++;
-              const v = ch.val() || {};
-              const age = now - (v.at || 0);
-              const isLive = age < 90000;
-              if (isLive) live++;
+            if (!firebase.apps.length) firebase.initializeApp(BWHS_FIREBASE);
+            const db = firebase.database();
+            statusEl.textContent = "Connected. Listening for live sessions...";
+            statusEl.style.color = "#3fb950";
 
-              const last = v.at ? new Date(v.at).toLocaleTimeString() : "-";
-              const started = v.startedAt || v.at ? new Date(v.startedAt || v.at).toLocaleString() : "-";
+            db.ref("presence").on("value", function(snap) {
+              const now = Date.now();
+              const rows = [];
+              let live = 0;
+              let total = 0;
 
-              rows.push(`
-                <tr>
-                  <td>${ch.key.slice(0,12)}...</td>
-                  <td>${v.page || "-"}<br><small>${v.title || ""}</small></td>
-                  <td>${v.watching || "-"}</td>
-                  <td class="${isLive ? 'online' : ''}">${last} ${isLive ? "(live)" : ""}</td>
-                  <td>${started}</td>
-                </tr>
-              `);
+              if (!snap.exists()) {
+                document.getElementById("rows").innerHTML = "<tr><td colspan=5>No sessions yet. Visit the site or test-presence.html in another tab.</td></tr>";
+                document.getElementById("liveCount").textContent = "0";
+                document.getElementById("count").textContent = "0";
+                return;
+              }
+
+              snap.forEach(function(ch) {
+                total++;
+                const v = ch.val() || {};
+                const age = now - (v.at || 0);
+                const isLive = age < 90000;
+                if (isLive) live++;
+
+                const last = v.at ? new Date(v.at).toLocaleTimeString() : "-";
+                const started = v.startedAt || v.at ? new Date(v.startedAt || v.at).toLocaleString() : "-";
+
+                rows.push(`
+                  <tr>
+                    <td>${ch.key.slice(0,12)}...</td>
+                    <td>${v.page || "-"}<br><small>${v.title || ""}</small></td>
+                    <td>${v.watching || "-"}</td>
+                    <td class="${isLive ? 'online' : ''}">${last} ${isLive ? "(live)" : ""}</td>
+                    <td>${started}</td>
+                  </tr>
+                `);
+              });
+
+              document.getElementById("liveCount").textContent = live;
+              document.getElementById("count").textContent = live;
+              document.getElementById("totalSeen").textContent = total;
+              document.getElementById("rows").innerHTML = rows.join("") || "<tr><td colspan=5>No active sessions</td></tr>";
+            }, function(err) {
+              statusEl.textContent = "Permission error (rules?): " + (err.message || err);
+              statusEl.style.color = "#f85149";
             });
-
-            document.getElementById("liveCount").textContent = live;
-            document.getElementById("count").textContent = live;
-            document.getElementById("totalSeen").textContent = total;
-            document.getElementById("rows").innerHTML = rows.join("") || "<tr><td colspan=5>No active sessions</td></tr>";
-          }, function(err) {
-            statusEl.textContent = "Permission error (rules?): " + (err.message || err);
+          } catch (e) {
+            statusEl.textContent = "Init error: " + e.message;
             statusEl.style.color = "#f85149";
-          });
-        } catch (e) {
-          statusEl.textContent = "Init error: " + e.message;
-          statusEl.style.color = "#f85149";
-        }
-      };
-      s.onerror = function() {
-        statusEl.textContent = "Failed to load Firebase script";
-        statusEl.style.color = "#f85149";
-      };
-      document.head.appendChild(s);
+          }
+        });
+      });
     }
 
     loadLive();
