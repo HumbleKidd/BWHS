@@ -14249,7 +14249,120 @@ body.player-fs-active.fs-chrome-on a,
 body.player-fs-active.fs-chrome-on [role="button"] {
   cursor: pointer;
 }
-</style>
+
+    /* Social Follow Popup */
+    .social-popup-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .social-popup-backdrop.visible {
+      display: flex;
+    }
+    .social-popup-card {
+      background: linear-gradient(145deg, #1a1a2e, #16213e);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 28px 22px 22px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.55);
+      animation: socialPop 0.35s ease-out;
+    }
+    @keyframes socialPop {
+      from { opacity: 0; transform: scale(0.92) translateY(20px); }
+      to { opacity: 1; transform: none; }
+    }
+    .social-popup-x {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .social-popup-x:hover { background: rgba(255,255,255,0.2); }
+    .social-popup-title {
+      font-size: 1.45rem;
+      font-weight: 900;
+      margin: 0 0 6px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .social-popup-cta {
+      color: rgba(255,255,255,0.75);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      margin: 0 0 18px;
+    }
+    .social-popup-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .social-popup-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #fff;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.15s, filter 0.15s;
+    }
+    .social-popup-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .social-popup-btn.discord { background: #5865F2; }
+    .social-popup-btn.facebook { background: #1877F2; }
+    .social-popup-btn.telegram { background: #0088cc; }
+    .social-popup-btn.share { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+    .social-qr-wrap {
+      margin-top: 6px;
+    }
+    .social-qr-wrap img {
+      width: 140px;
+      height: 140px;
+      border-radius: 12px;
+      background: #fff;
+      padding: 6px;
+    }
+    .social-qr-label {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 6px;
+      font-weight: 600;
+    }
+    @media (max-width: 480px) {
+      .social-popup-card { padding: 22px 16px 18px; }
+      .social-popup-title { font-size: 1.25rem; }
+      .social-qr-wrap img { width: 120px; height: 120px; }
+    }
+
+  </style>
 
 <div class="myui-modal-backdrop" id="myuiModal" aria-hidden="true">
   <div class="myui-modal-card" role="dialog" aria-labelledby="myuiTitle">
@@ -14453,6 +14566,91 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
   <script src="bwhs-stats.js"></script>
   
+
+  <!-- Social Follow Popup -->
+  <div class="social-popup-backdrop" id="socialPopupBackdrop">
+    <div class="social-popup-card">
+      <button type="button" class="social-popup-x" id="socialPopupClose" title="Close"><i class="fa-solid fa-xmark"></i></button>
+      <div class="social-popup-title">Follow BWHS</div>
+      <p class="social-popup-cta">Stay in the loop for new drops, exclusive updates, and help grow the community. Join us on socials!</p>
+      <div class="social-popup-buttons">
+        <a href="https://discord.gg/m94XkyPWm" target="_blank" rel="noopener" class="social-popup-btn discord"><i class="fa-brands fa-discord"></i> Discord</a>
+        <a href="https://www.facebook.com/share/1E9amRZgGi/" target="_blank" rel="noopener" class="social-popup-btn facebook"><i class="fa-brands fa-facebook-f"></i> Facebook</a>
+        <a href="https://t.me/+L0JIIwByOBFiZGEx" target="_blank" rel="noopener" class="social-popup-btn telegram"><i class="fa-brands fa-telegram"></i> Telegram</a>
+        <button type="button" class="social-popup-btn share" id="socialPopupShare"><i class="fa-solid fa-share-nodes"></i> Share with the World</button>
+      </div>
+      <div class="social-qr-wrap">
+        <img id="socialQrImg" alt="QR code for BWHS" />
+        <div class="social-qr-label">BWHS</div>
+      </div>
+    </div>
+  </div>
+
+  
+  <script>
+  (function() {
+    const KEY = 'bwhs_social_popup_last';
+    const HOURS = 12;
+    const MS = HOURS * 60 * 60 * 1000;
+    function shouldShow() {
+      try {
+        const last = Number(localStorage.getItem(KEY) || 0);
+        return !last || (Date.now() - last > MS);
+      } catch { return true; }
+    }
+    function markShown() {
+      try { localStorage.setItem(KEY, String(Date.now())); } catch {}
+    }
+    function showPopup() {
+      const backdrop = document.getElementById('socialPopupBackdrop');
+      const qr = document.getElementById('socialQrImg');
+      if (!backdrop) return;
+      if (qr) {
+        const url = encodeURIComponent('https://bwhs.online');
+        qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data=' + url;
+      }
+      backdrop.classList.add('visible');
+      markShown();
+    }
+    function hidePopup() {
+      const backdrop = document.getElementById('socialPopupBackdrop');
+      if (backdrop) backdrop.classList.remove('visible');
+    }
+    function doShare() {
+      const shareData = {
+        title: 'BWHS - Binge Watch Humble Streams',
+        text: 'Binge popular movies and shows on BWHS!',
+        url: 'https://bwhs.online'
+      };
+      if (navigator.share) {
+        navigator.share(shareData).catch(() => {});
+      } else {
+        // Fallback: copy link
+        navigator.clipboard.writeText(shareData.url).then(() => {
+          alert('Link copied! Share it with friends.');
+        }).catch(() => {
+          prompt('Copy this link:', shareData.url);
+        });
+      }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!shouldShow()) return;
+      // Small delay so page loads first
+      setTimeout(showPopup, 1200);
+      const closeBtn = document.getElementById('socialPopupClose');
+      const shareBtn = document.getElementById('socialPopupShare');
+      const backdrop = document.getElementById('socialPopupBackdrop');
+      if (closeBtn) closeBtn.addEventListener('click', hidePopup);
+      if (shareBtn) shareBtn.addEventListener('click', doShare);
+      if (backdrop) {
+        backdrop.addEventListener('click', (e) => {
+          if (e.target === backdrop) hidePopup();
+        });
+      }
+    });
+  })();
+  </script>
+
 </body>
 </html>
 
