@@ -1,16 +1,49 @@
 <!DOCTYPE html>
 <html>
-<head><title>BWHS Presence Test</title></head>
+<head>
+  <meta charset="UTF-8">
+  <title>BWHS Presence Test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; background: #111; color: #eee; }
+    #status { padding: 12px; background: #222; border-radius: 8px; margin: 10px 0; }
+    .ok { color: #3fb950; }
+    .err { color: #f85149; }
+    pre { background: #1a1a1a; padding: 12px; border-radius: 6px; overflow: auto; font-size: 13px; }
+  </style>
+</head>
 <body>
-  <h1>Testing presence...</h1>
-  <p id="status">Loading...</p>
+  <h1>BWHS Presence Test</h1>
+  <div id="status">Loading Firebase...</div>
+  <pre id="log"></pre>
+
   <script src="bwhs-stats.js"></script>
   <script>
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log");
+
+    function log(msg, isError) {
+      const line = document.createElement("div");
+      line.textContent = msg;
+      if (isError) line.className = "err";
+      logEl.appendChild(line);
+      console.log(msg);
+    }
+
     setTimeout(function() {
-      document.getElementById("status").textContent = window.BWHSStats && window.BWHSStats.ready 
-        ? "Presence script loaded. Check Firebase data view and the live portal." 
-        : "Script not ready — check console.";
-    }, 2000);
+      if (window.BWHSStats && window.BWHSStats.ready) {
+        statusEl.innerHTML = '<span class="ok">Script loaded successfully.</span><br>Check Firebase data view for a "presence" node.';
+        log("BWHSStats.ready = true");
+        log("If you still see nothing in Firebase, the rules or databaseURL are wrong.");
+      } else {
+        statusEl.innerHTML = '<span class="err">Script did not become ready.</span>';
+        log("BWHSStats not ready after 3s", true);
+      }
+    }, 3000);
+
+    // Capture any errors
+    window.addEventListener("error", function(e) {
+      log("Page error: " + e.message, true);
+    });
   </script>
 </body>
 </html>
