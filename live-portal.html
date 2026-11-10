@@ -6,10 +6,7 @@
   <title>BWHS Live Portal</title>
   <style>
     body { margin:0; font-family: system-ui, sans-serif; background:#0a0e17; color:#e6edf3; }
-    .login { max-width:360px; margin:80px auto; padding:24px; background:#161b22; border-radius:12px; text-align:center; }
-    input { width:100%; padding:10px; margin:8px 0; border:1px solid #30363d; border-radius:6px; background:#0d1117; color:#fff; }
-    button { width:100%; padding:12px; background:#238636; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600; }
-    .dashboard { display:none; padding:20px; max-width:1200px; margin:0 auto; }
+    .dashboard { padding:20px; max-width:1200px; margin:0 auto; }
     .stats { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
     .card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:16px; min-width:140px; }
     .card b { font-size:2rem; display:block; }
@@ -17,21 +14,11 @@
     th, td { padding:12px; text-align:left; border-bottom:1px solid #30363d; }
     th { background:#21262d; }
     .online { color:#3fb950; }
-    .logout { float:right; background:#da3633; }
     .status { margin:10px 0; padding:10px; background:#161b22; border-radius:8px; font-size:0.9rem; }
   </style>
 </head>
 <body>
-  <div class="login" id="loginBox">
-    <h2>BWHS Live Portal</h2>
-    <p>Private admin access</p>
-    <input type="password" id="pw" placeholder="Password" autofocus>
-    <button onclick="tryLogin()">Enter</button>
-    <p style="font-size:0.85rem; color:#8b949e; margin-top:12px;">Password: bwhs-live-2026</p>
-  </div>
-
-  <div class="dashboard" id="dash">
-    <button class="logout" onclick="logout()">Logout</button>
+  <div class="dashboard">
     <h1>Live Viewers <span id="count" class="online">0</span></h1>
     <div class="status" id="status">Connecting to Firebase...</div>
     <div class="stats">
@@ -56,32 +43,6 @@
   </div>
 
   <script>
-    const PASSWORD = "bwhs-live-2026";
-
-    function tryLogin() {
-      if (document.getElementById("pw").value === PASSWORD) {
-        sessionStorage.setItem("bwhs_portal_auth", "1");
-        showDash();
-      } else {
-        alert("Wrong password");
-      }
-    }
-
-    function logout() {
-      sessionStorage.removeItem("bwhs_portal_auth");
-      location.reload();
-    }
-
-    function showDash() {
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("dash").style.display = "block";
-      loadLive();
-    }
-
-    if (sessionStorage.getItem("bwhs_portal_auth") === "1") {
-      showDash();
-    }
-
     function loadLive() {
       const statusEl = document.getElementById("status");
       const BWHS_FIREBASE = {
@@ -110,7 +71,7 @@
             let total = 0;
 
             if (!snap.exists()) {
-              document.getElementById("rows").innerHTML = "<tr><td colspan=5>No sessions yet. Visit the site in another tab to test.</td></tr>";
+              document.getElementById("rows").innerHTML = "<tr><td colspan=5>No sessions yet. Visit the site or test-presence.html in another tab.</td></tr>";
               document.getElementById("liveCount").textContent = "0";
               document.getElementById("count").textContent = "0";
               return;
@@ -142,7 +103,7 @@
             document.getElementById("totalSeen").textContent = total;
             document.getElementById("rows").innerHTML = rows.join("") || "<tr><td colspan=5>No active sessions</td></tr>";
           }, function(err) {
-            statusEl.textContent = "Permission error: " + (err.message || err);
+            statusEl.textContent = "Permission error (rules?): " + (err.message || err);
             statusEl.style.color = "#f85149";
           });
         } catch (e) {
@@ -156,6 +117,8 @@
       };
       document.head.appendChild(s);
     }
+
+    loadLive();
   </script>
 </body>
 </html>
