@@ -14664,7 +14664,14 @@ body.player-fs-active.fs-chrome-on [role="button"] {
           e.preventDefault();
           e.stopPropagation();
           const url = btn.getAttribute('data-social-url');
-          if (url) window.open(url, '_blank', 'noopener,noreferrer');
+          if (!url) return;
+          // Bypass the site's window.open blocker
+          window.__bwhsAllowNextOpen = true;
+          const opened = window.open(url, '_blank', 'noopener,noreferrer');
+          if (!opened && window.__bwhsNativeOpen) {
+            window.__bwhsAllowNextOpen = true;
+            window.__bwhsNativeOpen(url, '_blank', 'noopener,noreferrer');
+          }
         });
       });
 
