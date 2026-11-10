@@ -18,6 +18,7 @@
     th { background:#21262d; }
     .online { color:#3fb950; }
     .logout { float:right; background:#da3633; }
+    .status { margin:10px 0; padding:10px; background:#161b22; border-radius:8px; font-size:0.9rem; }
   </style>
 </head>
 <body>
@@ -32,6 +33,7 @@
   <div class="dashboard" id="dash">
     <button class="logout" onclick="logout()">Logout</button>
     <h1>Live Viewers <span id="count" class="online">0</span></h1>
+    <div class="status" id="status">Connecting to Firebase...</div>
     <div class="stats">
       <div class="card">Online now<b id="liveCount">0</b></div>
       <div class="card">Total sessions seen<b id="totalSeen">0</b></div>
@@ -49,7 +51,7 @@
       <tbody id="rows"></tbody>
     </table>
     <p style="margin-top:20px; color:#8b949e; font-size:0.9rem;">
-      Entries auto-remove on disconnect. You can clean old data in Firebase console under <code>presence</code>.
+      Entries auto-remove on disconnect. Clean old data in Firebase under <code>presence</code>.
     </p>
   </div>
 
@@ -81,6 +83,7 @@
     }
 
     function loadLive() {
+      const statusEl = document.getElementById("status");
       const BWHS_FIREBASE = {
         apiKey: "AIzaSyBZhtlZRaWQPxFPEP02toZnsFQWOPvbUJA",
         authDomain: "bwhs-audience.firebaseapp.com",
@@ -94,41 +97,62 @@
       const s = document.createElement("script");
       s.src = "https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js";
       s.onload = function() {
-        if (!firebase.apps.length) firebase.initializeApp(BWHS_FIREBASE);
-        const db = firebase.database();
+        try {
+          if (!firebase.apps.length) firebase.initializeApp(BWHS_FIREBASE);
+          const db = firebase.database();
+          statusEl.textContent = "Connected. Listening for live sessions...";
+          statusEl.style.color = "#3fb950";
 
-        db.ref("presence").on("value", function(snap) {
-          const now = Date.now();
-          const rows = [];
-          let live = 0;
-          let total = 0;
+          db.ref("presence").on("value", function(snap) {
+            const now = Date.now();
+            const rows = [];
+            let live = 0;
+            let total = 0;
 
-          snap.forEach(function(ch) {
-            total++;
-            const v = ch.val() || {};
-            const age = now - (v.at || 0);
-            const isLive = age < 90000;
-            if (isLive) live++;
+            if (!snap.exists()) {
+              document.getElementById("rows").innerHTML = "<tr><td colspan=5>No sessions yet. Visit the site in another tab to test.</td></tr>";
+              document.getElementById("liveCount").textContent = "0";
+              document.getElementById("count").textContent = "0";
+              return;
+            }
 
-            const last = v.at ? new Date(v.at).toLocaleTimeString() : "-";
-            const started = v.startedAt || v.at ? new Date(v.startedAt || v.at).toLocaleString() : "-";
+            snap.forEach(function(ch) {
+              total++;
+              const v = ch.val() || {};
+              const age = now - (v.at || 0);
+              const isLive = age < 90000;
+              if (isLive) live++;
 
-            rows.push(`
-              <tr>
-                <td>${ch.key.slice(0,12)}...</td>
-                <td>${v.page || "-"}<br><small>${v.title || ""}</small></td>
-                <td>${v.watching || "-"}</td>
-                <td class="${isLive ? 'online' : ''}">${last} ${isLive ? "(live)" : ""}</td>
-                <td>${started}</td>
-              </tr>
-            `);
+              const last = v.at ? new Date(v.at).toLocaleTimeString() : "-";
+              const started = v.startedAt || v.at ? new Date(v.startedAt || v.at).toLocaleString() : "-";
+
+              rows.push(`
+                <tr>
+                  <td>${ch.key.slice(0,12)}...</td>
+                  <td>${v.page || "-"}<br><small>${v.title || ""}</small></td>
+                  <td>${v.watching || "-"}</td>
+                  <td class="${isLive ? 'online' : ''}">${last} ${isLive ? "(live)" : ""}</td>
+                  <td>${started}</td>
+                </tr>
+              `);
+            });
+
+            document.getElementById("liveCount").textContent = live;
+            document.getElementById("count").textContent = live;
+            document.getElementById("totalSeen").textContent = total;
+            document.getElementById("rows").innerHTML = rows.join("") || "<tr><td colspan=5>No active sessions</td></tr>";
+          }, function(err) {
+            statusEl.textContent = "Permission error: " + (err.message || err);
+            statusEl.style.color = "#f85149";
           });
-
-          document.getElementById("liveCount").textContent = live;
-          document.getElementById("count").textContent = live;
-          document.getElementById("totalSeen").textContent = total;
-          document.getElementById("rows").innerHTML = rows.join("") || "<tr><td colspan=5>No active sessions</td></tr>";
-        });
+        } catch (e) {
+          statusEl.textContent = "Init error: " + e.message;
+          statusEl.style.color = "#f85149";
+        }
+      };
+      s.onerror = function() {
+        statusEl.textContent = "Failed to load Firebase script";
+        statusEl.style.color = "#f85149";
       };
       document.head.appendChild(s);
     }
