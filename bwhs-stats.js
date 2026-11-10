@@ -129,12 +129,19 @@
         }
       };
 
+      // Auto-inject floating live badge if none exists
       var badge = document.getElementById("bwhs-live-badge");
-      if (badge) {
-        window.BWHSStats.liveCount(function (n) {
-          badge.textContent = n + " watching";
-        });
+      if (!badge) {
+        badge = document.createElement("a");
+        badge.id = "bwhs-live-badge";
+        badge.href = "audience.html";
+        badge.style.cssText = "position:fixed;bottom:16px;right:16px;z-index:9999;background:#4f46e5;color:#fff;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 4px 14px rgba(79,70,229,.4);font-family:system-ui,sans-serif;";
+        badge.textContent = "… watching";
+        document.body.appendChild(badge);
       }
+      window.BWHSStats.liveCount(function (n) {
+        badge.textContent = n + " watching";
+      });
     } catch (err) {
       console.error("BWHS stats init error", err);
       if (window.onBWHSError) window.onBWHSError(err.message || String(err));
