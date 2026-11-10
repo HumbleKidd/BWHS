@@ -14,7 +14,10 @@
   var s = document.createElement("script");
   s.src = "https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js";
   s.onload = start;
-  s.onerror = function() { console.error("Failed to load Firebase"); };
+  s.onerror = function() {
+    console.error("Failed to load Firebase");
+    if (window.onBWHSError) window.onBWHSError("Failed to load Firebase script");
+  };
   document.head.appendChild(s);
 
   function dayKey(d) {
@@ -34,17 +37,25 @@
       var ref = db.ref("presence/" + id);
       var today = dayKey();
 
-      ref.onDisconnect().remove().catch(function(e) { console.warn("onDisconnect failed", e); });
+      console.log("BWHS: attempting presence write for", id);
+
+      ref.onDisconnect().remove().catch(function(e) {
+        console.warn("onDisconnect failed", e);
+      });
+
       ref.set({
         page: page,
         at: firebase.database.ServerValue.TIMESTAMP,
         startedAt: firebase.database.ServerValue.TIMESTAMP,
         title: document.title || "BWHS",
-        userAgent: navigator.userAgent.slice(0, 120)
+        userAgent: navigator.userAgent.slice(0, 120),
+        test: true
       }).then(function() {
-        console.log("BWHS presence written for", id);
+        console.log("BWHS presence written successfully for", id);
+        if (window.onBWHSSuccess) window.onBWHSSuccess(id);
       }).catch(function(e) {
         console.error("Presence write failed", e);
+        if (window.onBWHSError) window.onBWHSError(e.message || String(e));
       });
 
       setInterval(function () {
@@ -96,6 +107,7 @@
       }
     } catch (err) {
       console.error("BWHS stats init error", err);
+      if (window.onBWHSError) window.onBWHSError(err.message || String(err));
     }
   }
 })();
