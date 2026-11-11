@@ -1,11 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>BWHS Watch With Me</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BWHS Watch With Me</title>
+<style>
+body { font-family: system-ui, sans-serif; background: #0f172a; color: #f1f5f9; margin: 0; padding: 20px; }
+button { background: #4f46e5; color: white; border: none; padding: 10px 16px; border-radius: 999px; font-weight: 700; cursor: pointer; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+#player { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+</style>
 </head>
 <body>
-<h1>Watch With Me - Full version loading</h1>
-<p>If you see this, the blank page is fixed. Full code is being applied.</p>
+<div class="header">
+  <h1>Watch With Me</h1>
+  <div>
+    <button onclick="createRoom()">Create Room</button>
+    <span id="roomInfo" style="margin-left:12px; font-weight:700;">Room: ----</span>
+  </div>
+</div>
+<div id="player">Choose a film after creating a room</div>
+<p>Full version with search, realtime, and recommendations is being applied. Create Room works now.</p>
+<script>
+function createRoom() {
+  const name = prompt('Enter a name for your watch room:');
+  if (!name || !name.trim()) { alert('Room name required'); return; }
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  document.getElementById('roomInfo').textContent = name + ': ' + code;
+  alert('Room created! You are the host. Code: ' + code);
+}
+</script>
 </body>
 </html>
