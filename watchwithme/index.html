@@ -1224,6 +1224,9 @@
           <button class="btn-party-pill" onclick="copyPartyInviteLink()">
             <i class="fa-solid fa-link"></i> Share
           </button>
+          <div id="roomCodeDisplay" style="font-size:0.75rem; font-weight:800; color:var(--primary); background:var(--primary-light); padding:4px 10px; border-radius:9999px; cursor:pointer;" onclick="copyPartyInviteLink()" title="Click to copy join link">
+            Room: <span id="roomCodeSpan">----</span>
+          </div>
         </div>
       </div>
     </header>
@@ -1298,14 +1301,6 @@
         <!-- CHAT VIEW -->
         <div class="chat-messages-container" id="chatBox">
           <div class="chat-system-msg">Watch party session active! Type # to search and add films to chat.</div>
-          <div class="chat-bubble-row">
-            <span class="chat-author">Everton (Bunny)</span>
-            <div class="chat-bubble">Yo check out <span class="hash-movie-link" onclick="openFilmPreviewModal('Interstellar')">#Interstellar</span> it's mental!</div>
-          </div>
-          <div class="chat-bubble-row me">
-            <span class="chat-author" id="chatMyAuthorLabel">You (Mr. Humble)</span>
-            <div class="chat-bubble">Welcome everyone! Non-stop playback active.</div>
-          </div>
         </div>
 
         <!-- CHAT INPUT WRAPPER WITH HIGH CONTRAST TEXT -->
@@ -1321,26 +1316,7 @@
 
         <!-- MEMBERS VIEW -->
         <div class="members-list-view" id="membersBox">
-          <div class="member-item-row">
-            <div class="member-info">
-              <img src="" id="memberHostAvatar" class="member-avatar" alt="Host"/>
-              <div>
-                <span class="member-name" id="memberHostName">Mr. Humble</span>
-                <div style="font-size:0.6rem; color:var(--text-muted);">Party Host</div>
-              </div>
-            </div>
-            <span class="member-badge">Host</span>
-          </div>
-          <div class="member-item-row">
-            <div class="member-info">
-              <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" class="member-avatar" alt="Bunny"/>
-              <div>
-                <span class="member-name">Everton (Bunny)</span>
-                <div style="font-size:0.6rem; color:var(--text-muted);">Viewer</div>
-              </div>
-            </div>
-            <button class="btn-assign-host" onclick="assignNewHost('Everton (Bunny)')">Make Host</button>
-          </div>
+          <!-- Dynamic real viewers only -->
         </div>
       </div>
     </div>
@@ -1455,8 +1431,11 @@
 
     let currentAccent = localStorage.getItem('bwhs_accent') || 'accent-indigo';
 
-    let isHost = true;
+    let isHost = false;
     let isHostOnlyControl = true;
+    let currentHostId = null;
+    let roomCode = null;
+    const ROOM_PREFIX = 'rooms/';
     let partyQueue = [];
     let pendingNavigationUrl = null;
     let currentPreviewFilm = null;
@@ -1477,7 +1456,16 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const roomRef = db.ref('rooms/main');
+
+    // Room code from URL or generate new
+    const urlParams = new URLSearchParams(window.location.search);
+    roomCode = urlParams.get('room') || localStorage.getItem('bwhs_room') || generateRoomCode();
+    localStorage.setItem('bwhs_room', roomCode);
+    const roomRef = db.ref(ROOM_PREFIX + roomCode);
+
+    function generateRoomCode() {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
+    }
 
     const myUserId = localStorage.getItem('bwhs_uid') || ('user_' + Math.random().toString(36).substr(2, 9));
     localStorage.setItem('bwhs_uid', myUserId);
@@ -1545,14 +1533,31 @@
       });
       myRef.onDisconnect().remove();
 
-      // Listen for chat
+      // Claim host if none exists
+      roomRef.child('hostId').transaction((current) => {
+        if (current === null) return myUserId;
+        return current;
+      }).then(() => {
+        roomRef.child('hostId').on('value', (snap) => {
+          currentHostId = snap.val();
+          isHost = (currentHostId === myUserId);
+          updateHostUI();
+        });
+      });
+
+      // Viewers list
+      roomRef.child('viewers').on('value', (snap) => {
+        renderViewers(snap.val() || {});
+      });
+
+      // Chat
       roomRef.child('chat').limitToLast(50).on('child_added', (snap) => {
         const msg = snap.val();
-        if (msg.uid === myUserId) return; // already shown locally
+        if (msg.uid === myUserId) return;
         appendChatMessage(msg.name, msg.text, false);
       });
 
-      // Listen for current film
+      // Now playing
       roomRef.child('nowPlaying').on('value', (snap) => {
         const data = snap.val();
         if (data && data.title) {
@@ -1560,6 +1565,67 @@
           if (data.src) document.getElementById('partyPlayerFrame').src = data.src;
         }
       });
+
+      // Host lock state
+      roomRef.child('hostOnly').on('value', (snap) => {
+        isHostOnlyControl = snap.val() !== false;
+        updateHostLockUI();
+      });
+
+      updateShareUI();
+    }
+
+    function updateHostUI() {
+      const lockBtn = document.getElementById('hostLockButton');
+      if (lockBtn) {
+        lockBtn.style.display = isHost ? 'inline-flex' : 'none';
+      }
+      document.getElementById('partyHostInfo').textContent = isHost
+        ? `You are hosting`
+        : `Hosted by someone else`;
+    }
+
+    function updateHostLockUI() {
+      const label = document.getElementById('hostLockLabel');
+      const icon = document.getElementById('hostLockIcon');
+      if (!label || !icon) return;
+      if (isHostOnlyControl) {
+        label.textContent = 'Host Only';
+        icon.className = 'fa-solid fa-lock';
+      } else {
+        label.textContent = 'Anyone Control';
+        icon.className = 'fa-solid fa-lock-open';
+      }
+    }
+
+    function renderViewers(viewers) {
+      const box = document.getElementById('membersBox');
+      const count = Object.keys(viewers).length;
+      document.getElementById('membersCountSpan').textContent = count;
+      box.innerHTML = '';
+      Object.entries(viewers).forEach(([uid, v]) => {
+        const isThisHost = uid === currentHostId;
+        const row = document.createElement('div');
+        row.className = 'member-item-row';
+        row.innerHTML = `
+          <div class="member-info">
+            <img src="${v.dp || ''}" class="member-avatar" alt=""/>
+            <div>
+              <span class="member-name">${v.name || 'Viewer'}</span>
+              <div style="font-size:0.6rem; color:var(--text-muted);">${isThisHost ? 'Party Host' : 'Viewer'}</div>
+            </div>
+          </div>
+          ${isThisHost ? '<span class="member-badge">Host</span>' : (isHost ? `<button class="btn-assign-host" onclick="assignNewHost('${uid}')">Make Host</button>` : '')}
+        `;
+        box.appendChild(row);
+      });
+    }
+
+    function updateShareUI() {
+      const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+      window.currentShareUrl = shareUrl;
+      const span = document.getElementById('roomCodeSpan');
+      if (span) span.textContent = roomCode;
     }
 
     function appendChatMessage(name, text, isMe) {
@@ -1945,18 +2011,25 @@
     }
 
     function toggleHostControlLock() {
-      isHostOnlyControl = !isHostOnlyControl;
-      const label = document.getElementById('hostLockLabel');
-      const icon = document.getElementById('hostLockIcon');
-      if (isHostOnlyControl) {
-        label.textContent = 'Host Only';
-        icon.className = 'fa-solid fa-lock';
-        showToast('Host control locked');
-      } else {
-        label.textContent = 'Anyone Control';
-        icon.className = 'fa-solid fa-lock-open';
-        showToast('Guest controls unlocked');
+      if (!isHost) {
+        showToast('Only the host can change this');
+        return;
       }
+      const newVal = !isHostOnlyControl;
+      roomRef.child('hostOnly').set(newVal);
+      showToast(newVal ? 'Host control locked' : 'Anyone can control');
+    }
+
+    function assignNewHost(newHostUid) {
+      if (!isHost) return;
+      roomRef.child('hostId').set(newHostUid);
+      showToast('Host transferred');
+    }
+
+    function copyPartyInviteLink() {
+      const url = window.currentShareUrl || window.location.href;
+      navigator.clipboard.writeText(url);
+      showToast('Join link copied! Room code: ' + roomCode);
     }
 
     function copyPartyInviteLink() {
