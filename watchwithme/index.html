@@ -1274,14 +1274,12 @@
             <button class="btn-emoji-react" onclick="emitEmojiReaction('😱')">😱</button>
             <button class="btn-emoji-react" onclick="emitEmojiReaction('❤️')">❤️</button>
             <button class="btn-emoji-react" onclick="emitEmojiReaction('👏')">👏</button>
+            <button class="btn-emoji-react" id="toggleExpressionsBtn" onclick="toggleExpressionsLocal()" title="Hide/Show expressions" style="font-size:0.7rem; width:auto; padding:0 8px;">Hide</button>
           </div>
 
           <div class="quick-host-controls">
             <button class="btn-host-ctrl" onclick="syncAllToHostTime()">
               <i class="fa-solid fa-arrows-rotate"></i> Sync All
-            </button>
-            <button class="btn-host-ctrl" id="btnToggleVoiceNote" onclick="toggleVoiceNoteMic()">
-              <i class="fa-solid fa-microphone"></i> Voice Note
             </button>
           </div>
         </div>
@@ -1519,6 +1517,9 @@
       renderTrendingList();
       renderAccentsGrid();
 
+      const exprBtn = document.getElementById('toggleExpressionsBtn');
+      if (exprBtn) exprBtn.textContent = showExpressions ? 'Hide' : 'Show';
+
       // Firebase presence + chat listeners
       setupFirebaseRoom();
     });
@@ -1570,6 +1571,28 @@
       roomRef.child('hostOnly').on('value', (snap) => {
         isHostOnlyControl = snap.val() !== false;
         updateHostLockUI();
+      });
+
+      // Reactions
+      roomRef.child('reactions').limitToLast(20).on('child_added', (snap) => {
+        const r = snap.val();
+        if (r && r.emoji) showFloatingEmoji(r.emoji);
+      });
+
+      // Sync pulse from host
+      roomRef.child('syncPulse').on('value', (snap) => {
+        const data = snap.val();
+        if (!data || !data.src) return;
+        // Don't resync the host who just sent it
+        if (data.by === userProfile.name && Date.now() - data.ts < 2000) return;
+        const frame = document.getElementById('partyPlayerFrame');
+        if (frame && frame.src !== data.src) {
+          frame.src = data.src;
+        } else if (frame) {
+          // Force reload same source
+          frame.src = data.src + (data.src.includes('?') ? '&' : '?') + 't=' + Date.now();
+        }
+        showToast('Synced to host');
       });
 
       updateShareUI();
@@ -1978,14 +2001,51 @@
       e.returnValue = '';
     });
 
+    let showExpressions = localStorage.getItem('bwhs_show_expr') !== 'false';
+
     function emitEmojiReaction(emoji) {
+      // Push to Firebase so everyone sees it
+      roomRef.child('reactions').push({
+        emoji: emoji,
+        from: userProfile.name,
+        ts: Date.now()
+      });
+      // Also show locally immediately
+      if (showExpressions) showFloatingEmoji(emoji);
+    }
+
+    function showFloatingEmoji(emoji) {
       const container = document.getElementById('reactionEmitter');
+      if (!container || !showExpressions) return;
       const el = document.createElement('div');
       el.className = 'floating-emoji';
       el.textContent = emoji;
       el.style.left = (Math.random() * 80 + 10) + '%';
       container.appendChild(el);
       setTimeout(() => el.remove(), 2500);
+    }
+
+    function toggleExpressionsLocal() {
+      showExpressions = !showExpressions;
+      localStorage.setItem('bwhs_show_expr', showExpressions);
+      const btn = document.getElementById('toggleExpressionsBtn');
+      if (btn) btn.textContent = showExpressions ? 'Hide' : 'Show';
+      showToast(showExpressions ? 'Expressions on' : 'Expressions hidden on your screen');
+    }
+
+    function syncAllToHostTime() {
+      if (!isHost) {
+        showToast('Only the host can sync everyone');
+        return;
+      }
+      // Force everyone to reload the current player source
+      const currentSrc = document.getElementById('partyPlayerFrame').src;
+      roomRef.child('syncPulse').set({
+        src: currentSrc,
+        ts: Date.now(),
+        by: userProfile.name
+      });
+      showToast('Sync signal sent to all viewers');
     }
 
     function switchSideTab(tab) {
@@ -2030,30 +2090,6 @@
       const url = window.currentShareUrl || window.location.href;
       navigator.clipboard.writeText(url);
       showToast('Join link copied! Room code: ' + roomCode);
-    }
-
-    function copyPartyInviteLink() {
-      navigator.clipboard.writeText(window.location.href);
-      showToast('Party invite link copied to clipboard!');
-    }
-
-    let isMicRecording = false;
-    function toggleVoiceNoteMic() {
-      isMicRecording = !isMicRecording;
-      const btn = document.getElementById('btnToggleVoiceNote');
-      if (isMicRecording) {
-        btn.classList.add('active');
-        btn.innerHTML = `<i class="fa-solid fa-microphone-slash"></i> Stop Voice`;
-        showToast('Recording voice note...');
-      } else {
-        btn.classList.remove('active');
-        btn.innerHTML = `<i class="fa-solid fa-microphone"></i> Voice Note`;
-        showToast('Voice note broadcasted to room');
-      }
-    }
-
-    function syncAllToHostTime() {
-      showToast('Resynced all viewers to host timestamp');
     }
 
     function showToast(msg) {
