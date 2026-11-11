@@ -767,7 +767,14 @@
       border: 1px solid var(--border);
     }
 
-    /* Mobile optimizations */
+    @media (max-width: 600px) {
+      .header-inner span[style*="font-weight:800"] {
+        font-size: 0.85rem !important;
+      }
+      .party-header-bar {
+        padding: 10px 12px;
+      }
+    }
     @media (max-width: 899px) {
       .party-side-panel {
         height: 480px;
@@ -1210,7 +1217,7 @@
           <button class="btn-circle" onclick="confirmNavigation('/')" title="Go Back">
             <i class="fa-solid fa-arrow-left"></i>
           </button>
-          <span style="font-weight:800; font-size:1rem; color:var(--text-main);">BWHS Watch Party Studio</span>
+          <span style="font-weight:800; font-size:1rem; color:var(--text-main);">BWHS WatchParty</span>
         </div>
 
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
@@ -1221,6 +1228,12 @@
             <img src="" id="headerUserDp" class="user-avatar-circle" alt="DP"/>
             <span class="user-name-display" id="headerUserName">Mr. Humble</span>
           </div>
+          <button class="btn-party-pill secondary" onclick="showRoomLobby()">
+            <i class="fa-solid fa-door-open"></i> Rooms
+          </button>
+          <button class="btn-party-pill" onclick="createNewRoom()">
+            <i class="fa-solid fa-plus"></i> Create Room
+          </button>
           <button class="btn-party-pill" onclick="copyPartyInviteLink()">
             <i class="fa-solid fa-link"></i> Share
           </button>
@@ -1236,7 +1249,6 @@
       <div class="party-stage-column">
         <div class="party-header-bar">
           <div class="party-title-group">
-            <span class="party-live-pill"><span class="dot"></span> SYNC LIVE</span>
             <div>
               <h2 id="partyFilmTitle" style="font-size:1.1rem; font-weight:800; color:var(--text-main);">Inception (2010)</h2>
               <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);" id="partyHostInfo">Hosted by Mr. Humble</span>
@@ -1292,7 +1304,7 @@
             <i class="fa-solid fa-comments"></i> Chat
           </button>
           <button class="side-tab-btn" id="tabBtnMembers" onclick="switchSideTab('members')">
-            <i class="fa-solid fa-users"></i> Viewers (<span id="membersCountSpan">8</span>)
+            <i class="fa-solid fa-users"></i> Viewers (<span id="membersCountSpan">0</span>)
           </button>
         </div>
 
@@ -1375,7 +1387,26 @@
     </div>
   </div>
 
-  <!-- EXIT CONFIRMATION MODAL -->
+  <!-- ROOM LOBBY MODAL -->
+  <div class="modal-backdrop" id="roomLobbyBackdrop">
+    <div class="modal-card" style="max-width:520px;">
+      <div class="modal-title">WatchParty Rooms</div>
+      <div class="form-group">
+        <label class="form-label">Join with Room Code</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="joinCodeInput" class="form-input" placeholder="Enter room code..." style="text-transform:uppercase;" />
+          <button class="btn-party-pill" onclick="joinByCode()">Join</button>
+        </div>
+      </div>
+      <div style="font-size:0.78rem; font-weight:800; color:var(--text-muted); margin-top:8px;">Active Rooms</div>
+      <div id="activeRoomsList" style="max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+        <div style="font-size:0.75rem; color:var(--text-muted); font-style:italic;">Loading rooms...</div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+        <button class="btn-party-pill secondary" onclick="closeRoomLobby()">Close</button>
+      </div>
+    </div>
+  </div>
   <div class="modal-backdrop" id="exitConfirmModalBackdrop">
     <div class="modal-card">
       <div class="modal-title">Leave Watch Party?</div>
@@ -1461,8 +1492,62 @@
     localStorage.setItem('bwhs_room', roomCode);
     const roomRef = db.ref(ROOM_PREFIX + roomCode);
 
-    function generateRoomCode() {
-      return Math.random().toString(36).substring(2, 8).toUpperCase();
+    function createNewRoom() {
+      const newCode = generateRoomCode();
+      localStorage.setItem('bwhs_room', newCode);
+      window.location.href = `${window.location.pathname}?room=${newCode}`;
+    }
+
+    function showRoomLobby() {
+      document.getElementById('roomLobbyBackdrop').classList.add('active');
+      loadActiveRooms();
+    }
+
+    function closeRoomLobby() {
+      document.getElementById('roomLobbyBackdrop').classList.remove('active');
+    }
+
+    function joinByCode() {
+      const code = (document.getElementById('joinCodeInput').value || '').trim().toUpperCase();
+      if (!code || code.length < 4) {
+        showToast('Enter a valid room code');
+        return;
+      }
+      localStorage.setItem('bwhs_room', code);
+      window.location.href = `${window.location.pathname}?room=${code}`;
+    }
+
+    function loadActiveRooms() {
+      const list = document.getElementById('activeRoomsList');
+      list.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted);">Loading...</div>';
+      db.ref('rooms').once('value', (snap) => {
+        const rooms = snap.val() || {};
+        const entries = Object.entries(rooms).filter(([code, data]) => data && data.viewers && Object.keys(data.viewers).length > 0);
+        if (entries.length === 0) {
+          list.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); font-style:italic;">No active rooms right now. Create one!</div>';
+          return;
+        }
+        list.innerHTML = entries.map(([code, data]) => {
+          const count = Object.keys(data.viewers || {}).length;
+          const hostName = data.hostId && data.viewers[data.hostId] ? data.viewers[data.hostId].name : 'Someone';
+          return `
+            <div class="member-item-row" style="cursor:pointer;" onclick="requestJoinRoom('${code}')">
+              <div class="member-info">
+                <div>
+                  <span class="member-name">${code}</span>
+                  <div style="font-size:0.62rem; color:var(--text-muted);">${count} viewer${count !== 1 ? 's' : ''} • Hosted by ${hostName}</div>
+                </div>
+              </div>
+              <button class="btn-assign-host" onclick="event.stopPropagation(); requestJoinRoom('${code}')">Join</button>
+            </div>
+          `;
+        }).join('');
+      });
+    }
+
+    function requestJoinRoom(code) {
+      localStorage.setItem('bwhs_room', code);
+      window.location.href = `${window.location.pathname}?room=${code}`;
     }
 
     const myUserId = localStorage.getItem('bwhs_uid') || ('user_' + Math.random().toString(36).substr(2, 9));
@@ -1719,8 +1804,8 @@
       localStorage.setItem('bwhs_username', userProfile.name);
       localStorage.setItem('bwhs_dp', userProfile.dp);
       applyUserProfileToUI();
-      closeProfileModal();
-      showToast('Profile updated locally!');
+      document.getElementById('profileModalBackdrop').classList.remove('active');
+      showToast('Profile updated!');
     }
 
     function renderTrendingList() {
