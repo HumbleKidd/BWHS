@@ -861,7 +861,7 @@
 
     .chat-bubble-row.me .chat-bubble {
       background: var(--primary);
-      color: #ffffff !important;
+      color: #ffffff;
       border-color: transparent;
     }
 
@@ -1250,15 +1250,12 @@
         <div class="party-header-bar">
           <div class="party-title-group">
             <div>
-              <h2 id="partyFilmTitle" style="font-size:1.1rem; font-weight:800; color:var(--text-main);">Inception (2010)</h2>
+              <h2 id="partyFilmTitle" style="font-size:1.1rem; font-weight:800; color:var(--text-main);">Choose a film to start</h2>
               <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);" id="partyHostInfo">Hosted by Mr. Humble</span>
             </div>
           </div>
 
           <div class="party-actions-group">
-            <button class="btn-party-pill secondary" onclick="switchPartyServer('vixsrc')">
-              <i class="fa-solid fa-server"></i> <span id="partyServerLabel">VixSrc</span>
-            </button>
             <button class="btn-party-pill" id="hostLockButton" onclick="toggleHostControlLock()">
               <i class="fa-solid fa-lock" id="hostLockIcon"></i> <span id="hostLockLabel">Host Only</span>
             </button>
@@ -1271,7 +1268,7 @@
 
           <iframe 
             id="partyPlayerFrame" 
-            src="https://vixsrc.to/movie/27205?autoplay=1&autoPlay=true" 
+            src="about:blank" 
             allowfullscreen 
             allow="autoplay; encrypted-media; fullscreen">
           </iframe>
@@ -1495,7 +1492,8 @@
     function createNewRoom() {
       const newCode = generateRoomCode();
       localStorage.setItem('bwhs_room', newCode);
-      window.location.href = `${window.location.pathname}?room=${newCode}`;
+      // Clear any old nowPlaying so no auto movie
+      window.location.href = window.location.pathname + '?room=' + newCode;
     }
 
     function showRoomLobby() {
@@ -1605,7 +1603,13 @@
       const exprBtn = document.getElementById('toggleExpressionsBtn');
       if (exprBtn) exprBtn.textContent = showExpressions ? 'Hide' : 'Show';
 
-      // Firebase presence + chat listeners
+      // Ensure trending is visible
+      setTimeout(() => {
+        if (document.getElementById('trendingListGrid').children.length === 0) {
+          renderTrendingList();
+        }
+      }, 300);
+
       setupFirebaseRoom();
     });
 
