@@ -1,2 +1,355 @@
 <!DOCTYPE html>
-<html><head><title>24/7 PLAY</title></head><body><h1>24/7 PLAY - Updating live sync...</h1></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>24/7 PLAY · BWHS</title>
+  <meta name="description" content="BWHS 24/7 live movie channel — everyone watches the same film at the same time." />
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --card: #121826;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #ef4444;
+      --primary: #6366f1;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: #0d1220;
+      border-bottom: 1px solid #1f2937;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand { font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; }
+    .brand a { color: inherit; text-decoration: none; }
+    .live-badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 99px;
+      letter-spacing: 0.5px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 50% { opacity: 0.7; } }
+    .nav-links a { color: var(--muted); text-decoration: none; margin-left: 16px; font-size: 0.9rem; font-weight: 600; }
+    .nav-links a:hover { color: #fff; }
+    .main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .on-air { color: var(--accent); font-weight: 800; font-size: 0.85rem; letter-spacing: 1px; }
+    .clock { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .player-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .player-wrap iframe, .player-wrap video {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0a0e17;
+      color: var(--muted);
+      z-index: 2;
+    }
+    .now-playing {
+      margin-top: 20px;
+    }
+    .now-playing h1 { margin: 6px 0 4px; font-size: 1.6rem; }
+    .meta { color: var(--muted); font-size: 0.9rem; display: flex; gap: 16px; flex-wrap: wrap; }
+    .times { font-variant-numeric: tabular-nums; }
+    .actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+    button, .btn {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid #30363d;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    button:hover, .btn:hover { background: #1c2333; }
+    .missed {
+      margin-top: 40px;
+    }
+    .missed h2 { font-size: 1.1rem; margin-bottom: 12px; }
+    .missed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .missed-card {
+      background: var(--card);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #1f2937;
+    }
+    .missed-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
+    .missed-card .info { padding: 8px; font-size: 0.8rem; }
+    .footer-note {
+      margin-top: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .theater-active .player-wrap { position: fixed; inset: 0; z-index: 100; border-radius: 0; max-width: none; }
+    .theater-active header, .theater-active .now-playing, .theater-active .missed, .theater-active .footer-note { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <a href="index.html">BWHS</a>
+      <span class="live-badge">24/7 PLAY</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Go Home</a>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="status-bar">
+      <span class="on-air">● ON AIR</span>
+      <span class="clock" id="clock">--:--:--</span>
+      <span id="genreLabel" style="color:#a78bfa; font-weight:600;"></span>
+    </div>
+
+    <div class="player-wrap" id="playerWrap">
+      <div class="loading-overlay" id="loading">
+        <div style="font-size:2rem; margin-bottom:8px;">▶</div>
+        <div id="loadingText">Tuning the channel…</div>
+      </div>
+      <iframe id="player" allow="autoplay; fullscreen; encrypted-media; picture-in-picture; playsinline" allowfullscreen></iframe>
+    </div>
+
+    <div class="now-playing">
+      <div style="color:var(--muted); font-size:0.8rem; font-weight:700; letter-spacing:1px;">NOW PLAYING</div>
+      <h1 id="title">Catching the live film…</h1>
+      <div class="meta">
+        <span class="times" id="times">Starts --:-- · Ends --:--</span>
+        <span id="runtime"></span>
+      </div>
+      <div class="actions">
+        <button id="fullscreenBtn"><i class="fa-solid fa-expand"></i> Fullscreen</button>
+        <button id="theaterBtn"><i class="fa-solid fa-tv"></i> Theatre</button>
+        <button id="refreshBtn"><i class="fa-solid fa-rotate"></i> Refresh Channel</button>
+      </div>
+    </div>
+
+    <div class="missed">
+      <h2>You just missed</h2>
+      <div class="missed-grid" id="missedGrid"></div>
+    </div>
+
+    <div class="footer-note">
+      Live 24/7 channel. Fresh genre every 6 hours. Never repeats recent films.<br>
+      Everyone on this page watches the same film at the same moment.
+    </div>
+  </div>
+
+  <script src="bwhs-stats.js"></script>
+  <script>
+    const API_KEY = '129637a8869a61522af21b80f6eb5129';
+    const TMDB = 'https://api.themoviedb.org/3';
+    const GENRES = [
+      { id: 28, name: 'Action' },
+      { id: 35, name: 'Comedy' },
+      { id: 18, name: 'Drama' },
+      { id: 27, name: 'Horror' },
+      { id: 878, name: 'Sci-Fi' },
+      { id: 10749, name: 'Romance' },
+      { id: 12, name: 'Adventure' },
+      { id: 80, name: 'Crime' }
+    ];
+
+    let currentMovie = null;
+    let schedule = [];
+    let checkTimer = null;
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function formatTime(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+    function formatClock(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+
+    function getGenreForTime(now) {
+      const block = Math.floor(now.getUTCHours() / 6);
+      return GENRES[block % GENRES.length];
+    }
+
+    async function fetchMovies(genreId) {
+      const pages = [1, 2, 3];
+      let all = [];
+      for (const p of pages) {
+        const url = `${TMDB}/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&sort_by=popularity.desc&vote_count.gte=200&page=${p}&include_adult=false`;
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+          all = all.concat(data.results || []);
+        } catch (e) { console.warn(e); }
+      }
+      const seen = new Set();
+      return all.filter(m => {
+        if (!m.id || !m.title || !m.poster_path || seen.has(m.id)) return false;
+        if ((m.vote_average || 0) < 6) return false;
+        seen.add(m.id);
+        return true;
+      }).slice(0, 40);
+    }
+
+    function buildSchedule(movies, genreStart) {
+      const slotMs = 110 * 60 * 1000;
+      const now = Date.now();
+      const dayStart = genreStart.getTime();
+      const elapsed = now - dayStart;
+      const startIndex = Math.floor(elapsed / slotMs);
+      const offsetInSlot = elapsed % slotMs;
+
+      const sched = [];
+      for (let i = 0; i < movies.length; i++) {
+        const idx = (startIndex + i) % movies.length;
+        const m = movies[idx];
+        const start = dayStart + (startIndex + i) * slotMs;
+        const end = start + slotMs;
+        sched.push({
+          movie: m,
+          start,
+          end,
+          offsetSec: i === 0 ? Math.floor(offsetInSlot / 1000) : 0
+        });
+      }
+      return sched;
+    }
+
+    function vixsrcUrl(id, startAt) {
+      const params = [
+        'autoplay=1',
+        'autoPlay=true',
+        'startAt=' + Math.max(0, Math.floor(startAt || 0)),
+        'lang=en',
+        'primaryColor=6366f1',
+        'secondaryColor=ef4444',
+        'skin=vixsrc',
+        'canPlayFHD=1',
+        'quality=2160',
+        'maxQuality=2160'
+      ].join('&');
+      return `https://vixsrc.to/movie/${id}?${params}`;
+    }
+
+    async function loadChannel() {
+      const now = new Date();
+      document.getElementById('clock').textContent = formatClock(now);
+      const genre = getGenreForTime(now);
+      document.getElementById('genreLabel').textContent = genre.name + ' block';
+
+      const utcHour = now.getUTCHours();
+      const blockHour = Math.floor(utcHour / 6) * 6;
+      const genreStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), blockHour, 0, 0));
+
+      document.getElementById('loadingText').textContent = 'Tuning the channel…';
+      document.getElementById('loading').style.display = 'flex';
+
+      const movies = await fetchMovies(genre.id);
+      if (!movies.length) {
+        document.getElementById('loadingText').textContent = 'No films available right now. Retrying…';
+        setTimeout(loadChannel, 10000);
+        return;
+      }
+
+      schedule = buildSchedule(movies, genreStart);
+      const current = schedule[0];
+      currentMovie = current.movie;
+
+      const titleEl = document.getElementById('title');
+      titleEl.textContent = current.movie.title + (current.movie.release_date ? ' (' + current.movie.release_date.slice(0,4) + ')' : '');
+      document.title = current.movie.title + ' · 24/7 PLAY · BWHS';
+
+      const startD = new Date(current.start);
+      const endD = new Date(current.end);
+      document.getElementById('times').textContent = `Starts ${formatTime(startD)} · Ends ${formatTime(endD)}`;
+      document.getElementById('runtime').textContent = '~110 min slot';
+
+      const iframe = document.getElementById('player');
+      const startAt = Math.min(current.offsetSec, 100 * 60);
+      iframe.src = vixsrcUrl(current.movie.id, startAt);
+
+      iframe.onload = () => {
+        document.getElementById('loading').style.display = 'none';
+      };
+      setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 4000);
+
+      const missed = schedule.slice(1, 7);
+      const grid = document.getElementById('missedGrid');
+      grid.innerHTML = missed.map(s => {
+        const poster = s.movie.poster_path ? `https://image.tmdb.org/t/p/w342${s.movie.poster_path}` : '';
+        return `<div class="missed-card">
+          ${poster ? `<img src="${poster}" alt="">` : ''}
+          <div class="info">${s.movie.title}</div>
+        </div>`;
+      }).join('');
+
+      if (checkTimer) clearTimeout(checkTimer);
+      const remaining = current.end - Date.now();
+      checkTimer = setTimeout(loadChannel, Math.max(15000, remaining + 2000));
+    }
+
+    setInterval(() => {
+      document.getElementById('clock').textContent = formatClock(new Date());
+    }, 1000);
+
+    document.getElementById('fullscreenBtn').onclick = () => {
+      const el = document.getElementById('playerWrap');
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    };
+    document.getElementById('theaterBtn').onclick = () => {
+      document.body.classList.toggle('theater-active');
+    };
+    document.getElementById('refreshBtn').onclick = loadChannel;
+
+    loadChannel();
+
+    setInterval(() => {
+      if (currentMovie && schedule.length) {
+        const now = Date.now();
+        if (now > schedule[0].end) loadChannel();
+      }
+    }, 30000);
+  </script>
+</body>
+</html>
