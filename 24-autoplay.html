@@ -222,6 +222,7 @@
           all = all.concat(data.results || []);
         } catch (e) { console.warn(e); }
       }
+      // Deduplicate and filter
       const seen = new Set();
       return all.filter(m => {
         if (!m.id || !m.title || !m.poster_path || seen.has(m.id)) return false;
@@ -232,6 +233,7 @@
     }
 
     function buildSchedule(movies, genreStart) {
+      // Each movie ~ 110 minutes average, deterministic order
       const slotMs = 110 * 60 * 1000;
       const now = Date.now();
       const dayStart = genreStart.getTime();
@@ -277,6 +279,7 @@
       const genre = getGenreForTime(now);
       document.getElementById('genreLabel').textContent = genre.name + ' block';
 
+      // Genre block start (UTC aligned to 6h)
       const utcHour = now.getUTCHours();
       const blockHour = Math.floor(utcHour / 6) * 6;
       const genreStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), blockHour, 0, 0));
@@ -305,7 +308,7 @@
       document.getElementById('runtime').textContent = '~110 min slot';
 
       const iframe = document.getElementById('player');
-      const startAt = Math.min(current.offsetSec, 100 * 60);
+      const startAt = Math.min(current.offsetSec, 100 * 60); // cap to avoid too far in
       iframe.src = vixsrcUrl(current.movie.id, startAt);
 
       iframe.onload = () => {
@@ -313,6 +316,7 @@
       };
       setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 4000);
 
+      // Missed (previous in schedule, simulated recent)
       const missed = schedule.slice(1, 7);
       const grid = document.getElementById('missedGrid');
       grid.innerHTML = missed.map(s => {
@@ -323,11 +327,13 @@
         </div>`;
       }).join('');
 
+      // Next check
       if (checkTimer) clearTimeout(checkTimer);
       const remaining = current.end - Date.now();
       checkTimer = setTimeout(loadChannel, Math.max(15000, remaining + 2000));
     }
 
+    // Clock
     setInterval(() => {
       document.getElementById('clock').textContent = formatClock(new Date());
     }, 1000);
@@ -342,8 +348,10 @@
     };
     document.getElementById('refreshBtn').onclick = loadChannel;
 
+    // Start
     loadChannel();
 
+    // Periodic resync in case of drift
     setInterval(() => {
       if (currentMovie && schedule.length) {
         const now = Date.now();
