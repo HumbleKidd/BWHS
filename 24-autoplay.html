@@ -627,7 +627,13 @@
       showChrome();
     }
     async function boot() {
-      playlist = await buildPlaylist();
+      try {
+        playlist = await buildPlaylist();
+      } catch(e) { playlist = []; }
+      if (!playlist.length) {
+        setTimeout(boot, 2000);
+        return;
+      }
       loadLive(true);
     }
     $('fsBtn').addEventListener('click', toggleFs);
@@ -662,7 +668,33 @@
       } catch (_) {}
     }
     armPlayers();
+
+    // Start something immediately so the player is never blank
+    (function startImmediate(){
+      var fallbackId = 155; // The Dark Knight as instant starter
+      if (front) {
+        warm(front, {id: fallbackId}, 0);
+        loadedId = fallbackId;
+        $('boot').classList.add('hidden');
+      }
+    })();
+
     setInterval(tick, 1000);
+
+    // Force continuous playback
+    setInterval(function(){
+      if (!playlist.length || !front) return;
+      var spot = liveSpot();
+      if (spot.film && spot.film.id !== loadedId) {
+        loadLive();
+      }
+      // If front iframe has no src, force load
+      if (front && (!front.src || front.src === 'about:blank' || front.src.indexOf('vixsrc') === -1)) {
+        loadedId = 0;
+        loadLive();
+      }
+    }, 3000);
+
     keepScreenAwake();
     restoreInstant();
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepScreenAwake(); if (playlist.length) loadLive(); } });
