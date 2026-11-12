@@ -1,363 +1,674 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="preconnect" href="https://vixsrc.to" crossorigin>
+  <link rel="dns-prefetch" href="https://vixsrc.to">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="referrer" content="origin" />
   <title>24/7 PLAY · BWHS</title>
-  <meta name="description" content="BWHS 24/7 live movie channel — everyone watches the same film at the same time." />
-  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <meta name="description" content="Live 24/7 channel. Fresh genre every 6 hours. Never repeats recent films." />
+  <link rel="icon" href="./apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://image.tmdb.org" />
+  <link rel="preconnect" href="https://api.themoviedb.org" />
+  <link rel="preconnect" href="https://vixsrc.to" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
     :root {
-      --bg: #0a0e17;
-      --card: #121826;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #ef4444;
-      --primary: #6366f1;
+      --primary: #4f46e5;
+      --pink: #ec4899;
+      --amber: #f59e0b;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --bg: #f5f7ff;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
     body {
-      margin: 0;
-      font-family: Inter, system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 380px at 0% 0%, rgba(236,72,153,0.16), transparent 55%),
+        radial-gradient(800px 360px at 100% 0%, rgba(79,70,229,0.16), transparent 50%),
+        linear-gradient(180deg, #fbfcff, var(--bg));
+      overflow-x: hidden;
+      overflow-y: auto;
     }
-    header {
+    button, a { font-family: inherit; }
+    .stage {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 16px 16px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 20px;
-      background: #0d1220;
-      border-bottom: 1px solid #1f2937;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      gap: 10px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 18px;
+      padding: 7px 10px;
+      box-shadow: 0 10px 28px rgba(79,70,229,0.1);
+      flex-shrink: 0;
     }
-    .brand { font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; }
-    .brand a { color: inherit; text-decoration: none; }
-    .live-badge {
-      background: var(--accent);
-      color: #fff;
-      font-size: 0.7rem;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 99px;
-      letter-spacing: 0.5px;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse { 50% { opacity: 0.7; } }
-    .nav-links a { color: var(--muted); text-decoration: none; margin-left: 16px; font-size: 0.9rem; font-weight: 600; }
-    .nav-links a:hover { color: #fff; }
-    .main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
-    .status-bar {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+      min-width: 0;
     }
-    .on-air { color: var(--accent); font-weight: 800; font-size: 0.85rem; letter-spacing: 1px; }
-    .clock { font-variant-numeric: tabular-nums; font-weight: 600; }
-    .player-wrap {
+    .brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .brand b { display: block; font-size: 0.92rem; letter-spacing: -0.03em; }
+    .brand small { color: var(--muted); font-weight: 700; font-size: 0.66rem; }
+    .tools { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .pill, .tool {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .live { background: #fff1f2; color: #be123c; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #ef4444;
+      box-shadow: 0 0 0 0 rgba(239,68,68,0.6);
+      animation: pulse 1.3s ease-out infinite;
+    }
+    @keyframes pulse { 70% { box-shadow: 0 0 0 7px rgba(239,68,68,0); } }
+    .genre { background: #eef2ff; color: var(--primary); }
+    .clock { background: #fff7ed; color: #c2410c; }
+    .tool { background: #fff; color: var(--ink); box-shadow: 0 4px 12px rgba(15,23,42,0.06); cursor: pointer; }
+    .tool.primary { background: linear-gradient(135deg, var(--primary), var(--pink)); color: #fff; }
+    .now {
+      display: grid;
+      grid-template-columns: 46px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: #fff;
+      border-radius: 16px;
+      padding: 8px 12px;
+      box-shadow: 0 10px 24px rgba(79,70,229,0.08);
+      flex-shrink: 0;
+    }
+    .now img { width: 46px; height: 68px; object-fit: cover; border-radius: 8px; background: #e2e8f0; }
+    .kicker { font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pink); }
+    .now h1 { font-size: clamp(1rem, 2vw, 1.35rem); letter-spacing: -0.03em; line-height: 1.1; }
+    .sub { margin-top: 2px; color: var(--muted); font-size: 0.72rem; font-weight: 700; }
+    .synopsis {
+      margin-top: 3px;
+      font-size: 0.74rem;
+      line-height: 1.3;
+      color: #334155;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      max-width: 78ch;
+    }
+    .times { text-align: right; font-size: 0.72rem; font-weight: 800; color: var(--ink); }
+    .times span { display: block; color: var(--muted); font-size: 0.66rem; margin-top: 2px; }
+    .track { margin-top: 6px; height: 5px; border-radius: 999px; background: #eef2ff; overflow: hidden; }
+    .track i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--pink), var(--amber)); }
+    .theatre {
+      flex: 0 0 auto;
       position: relative;
       width: 100%;
-      aspect-ratio: 16/9;
-      background: #000;
-      border-radius: 12px;
+      border-radius: 22px;
       overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      background: #070b16;
+      box-shadow: 0 18px 40px rgba(15,23,42,0.22);
     }
-    .player-wrap iframe, .player-wrap video {
-      width: 100%;
-      height: 100%;
-      border: 0;
+    .aura {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      filter: blur(16px) saturate(1.15) brightness(0.4);
+      transform: scale(1.06);
     }
-    .loading-overlay {
-      position: absolute;
-      inset: 0;
+    .viewport {
+      position: relative;
+      width: min(100%, 1100px);
+      margin: 12px auto;
+      aspect-ratio: 16 / 9;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+    }
+    .viewport iframe {
+      position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+      pointer-events: none; background: #000; opacity: 0; z-index: 1;
+      transition: opacity .5s ease;
+    }
+    .viewport iframe.front { opacity: 1; z-index: 2; }
+    .shield { position: absolute; inset: 0; z-index: 3; }
+    .fs-exit, #fsBtn.floating {
+      position: absolute; top: 12px; right: 12px; z-index: 5;
+      border: none; color: #fff; background: rgba(15,23,42,0.78);
+      border-radius: 999px; padding: 8px 12px; font-weight: 800; cursor: pointer;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+    }
+    body.fs-chrome .fs-exit, body.fs-chrome #fsBtn.floating,
+    .viewport:fullscreen.fs-chrome .fs-exit { opacity: 1; pointer-events: auto; }
+    .boot {
+      position: absolute; inset: 0; z-index: 4;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; background: rgba(7,11,22,0.35);
+    }
+    .boot.hidden { display: none; }
+    .missed {
+      flex-shrink: 0;
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 10px;
+      box-shadow: 0 10px 24px rgba(79,70,229,0.08);
+    }
+    .missed-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 0 8px 6px; }
+    .missed-head h2 { font-size: 0.78rem; }
+    .missed-head span { color: var(--muted); font-size: 0.66rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rail { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+    .miss-card {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+      background: #f8fafc;
+      border-radius: 999px;
+      padding: 4px 10px 4px 4px;
+    }
+    .miss-card img { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; display: block; background: #e2e8f0; flex-shrink: 0; }
+    .miss-card div { min-width: 0; }
+    .miss-card strong { display: block; font-size: 0.68rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .miss-card em { font-style: normal; color: var(--muted); font-size: 0.6rem; font-weight: 700; }
+
+    .topbar { position: relative; }
+    .go-home {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #4f46e5, #ec4899); color: #fff; text-decoration: none;
+      font-weight: 800; font-size: 0.78rem; padding: 8px 16px; border-radius: 999px;
+      box-shadow: 0 8px 18px rgba(79,70,229,.35); z-index: 3; white-space: nowrap;
+    }
+    .go-home:hover { transform: translate(-50%, -50%) scale(1.04); }
+
+    .now { position: relative; }
+    .title-row { min-width: 0; padding-right: 34px; }
+    .reload-live {
+      position: absolute;
+      top: 22px;
+      right: 10px;
+      z-index: 3;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: #0a0e17;
-      color: var(--muted);
-      z-index: 2;
-    }
-    .now-playing {
-      margin-top: 20px;
-    }
-    .now-playing h1 { margin: 6px 0 4px; font-size: 1.6rem; }
-    .meta { color: var(--muted); font-size: 0.9rem; display: flex; gap: 16px; flex-wrap: wrap; }
-    .times { font-variant-numeric: tabular-nums; }
-    .actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
-    button, .btn {
-      background: var(--card);
-      color: var(--text);
-      border: 1px solid #30363d;
-      padding: 8px 14px;
-      border-radius: 8px;
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0;
+      background: rgba(15, 23, 42, 0.16);
+      color: #334155;
+      font-size: 0.85rem;
+      line-height: 1;
       cursor: pointer;
-      font-weight: 600;
-      font-size: 0.85rem;
+      box-shadow: none;
     }
-    button:hover, .btn:hover { background: #1c2333; }
-    .missed {
-      margin-top: 40px;
+    .reload-live:hover, .reload-live:focus-visible { background: rgba(15, 23, 42, 0.28); outline: none; }
+    @media (max-width: 900px) {
+      .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+      .go-home { position: static; left: auto; top: auto; transform: none; margin: 0 auto; flex: 1 0 100%; text-align: center; width: fit-content; }
+      .brand, .tools { position: relative; z-index: 1; }
+      .tools { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-start; }
+      .pill, .tool { flex: 0 1 auto; }
+      .reload-live { top: 18px; right: 8px; }
     }
-    .missed h2 { font-size: 1.1rem; margin-bottom: 12px; }
-    .missed-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
+    .note { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; color: var(--muted); padding: 0 6px 4px; }
+    @media (max-width: 900px) {
+      .rail { grid-template-columns: 1fr 1fr; }
+      .missed { border-radius: 22px; }
+      .miss-card { border-radius: 16px; align-items: flex-start; padding: 8px; }
+      .miss-card strong { white-space: normal; line-height: 1.25; }
+      .miss-card:nth-child(n+4) { display: flex; }
+      .go-home { font-size: 0.72rem; padding: 7px 12px; }
     }
-    .missed-card {
-      background: var(--card);
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid #1f2937;
+    @media (max-width: 760px) {
+      .hide-sm { display: none; }
+      .now { grid-template-columns: 40px 1fr; }
+      .times { display: none; }
+      .stage { padding: 8px; gap: 8px; }
+      .viewport { margin: 8px; width: auto; }
     }
-    .missed-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
-    .missed-card .info { padding: 8px; font-size: 0.8rem; }
-    .footer-note {
-      margin-top: 40px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-    .theater-active .player-wrap { position: fixed; inset: 0; z-index: 100; border-radius: 0; max-width: none; }
-    .theater-active header, .theater-active .now-playing, .theater-active .missed, .theater-active .footer-note { display: none; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <a href="index.html">BWHS</a>
-      <span class="live-badge">24/7 PLAY</span>
-    </div>
-    <div class="nav-links">
-      <a href="index.html">Go Home</a>
-    </div>
-  </header>
-
-  <div class="main">
-    <div class="status-bar">
-      <span class="on-air">● ON AIR</span>
-      <span class="clock" id="clock">--:--:--</span>
-      <span id="genreLabel" style="color:#a78bfa; font-weight:600;"></span>
-    </div>
-
-    <div class="player-wrap" id="playerWrap">
-      <div class="loading-overlay" id="loading">
-        <div style="font-size:2rem; margin-bottom:8px;">▶</div>
-        <div id="loadingText">Tuning the channel…</div>
+  <div class="stage">
+    <header class="topbar">
+      <a class="brand" href="https://bwhs.online" title="BWHS home">
+        <img src="./Gemini_Generated_Image_kg21fkkg21fkkg21__1_-removebg-preview.png" alt="BWHS" />
+        <span><b>BWHS</b><small>24/7 PLAY</small></span>
+      </a>
+      <a class="go-home" href="https://bwhs.online" title="Go home">Go Home</a>
+      <div class="tools">
+        <span class="pill live"><i class="dot"></i> ON AIR</span>
+        <span class="pill genre" id="genrePill">Today</span>
+        <span class="pill clock" id="clockPill">--:--</span>
+        <button class="tool primary" id="fsBtn" type="button"><i class="fa-solid fa-expand"></i> <span class="hide-sm">Fullscreen</span></button>
       </div>
-      <iframe id="player" allow="autoplay; fullscreen; encrypted-media; picture-in-picture; playsinline" allowfullscreen></iframe>
-    </div>
+    </header>
 
-    <div class="now-playing">
-      <div style="color:var(--muted); font-size:0.8rem; font-weight:700; letter-spacing:1px;">NOW PLAYING</div>
-      <h1 id="title">Catching the live film…</h1>
-      <div class="meta">
-        <span class="times" id="times">Starts --:-- · Ends --:--</span>
-        <span id="runtime"></span>
+    <section class="now">
+      <img id="nowPoster" alt="" />
+      <div>
+        <div class="kicker" id="nowKicker">Now playing</div>
+        <div class="title-row">
+          <h1 id="nowTitle">Tuning the channel…</h1>
+        </div>
+        <button class="reload-live" id="reloadLive" type="button" title="Reload" aria-label="Reload"><i class="fa-solid fa-rotate-right"></i></button>
+        <div class="sub" id="nowSub"></div>
+        <p class="synopsis" id="nowSyn"></p>
+        <div class="track"><i id="progressBar"></i></div>
       </div>
-      <div class="actions">
-        <button id="fullscreenBtn"><i class="fa-solid fa-expand"></i> Fullscreen</button>
-        <button id="theaterBtn"><i class="fa-solid fa-tv"></i> Theatre</button>
-        <button id="refreshBtn"><i class="fa-solid fa-rotate"></i> Refresh Channel</button>
+      <div class="times" id="timeBlock"><span id="startLabel">Starts</span><span id="endLabel">Ends</span></div>
+    </section>
+
+    <section class="theatre">
+      <div class="aura" id="aura"></div>
+      <div class="viewport" id="viewport">
+        <iframe id="player" class="front" title="BWHS 24/7 PLAY" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *" allowfullscreen referrerpolicy="origin"></iframe>
+        <iframe id="playerB" title="BWHS 24/7 PLAY next" allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; playsinline *; media-playback-while-not-visible *" allowfullscreen referrerpolicy="origin"></iframe>
+        <div class="shield" id="shield"></div>
+        <button class="fs-exit" id="fsExit" type="button"><i class="fa-solid fa-compress"></i> Theatre</button>
+        <div class="boot" id="boot">Catching the live film…</div>
       </div>
-    </div>
+    </section>
 
-    <div class="missed">
-      <h2>You just missed</h2>
-      <div class="missed-grid" id="missedGrid"></div>
-    </div>
-
-    <div class="footer-note">
-      Live 24/7 channel. Fresh genre every 6 hours. Never repeats recent films.<br>
-      Everyone on this page watches the same film at the same moment.
-    </div>
+    <section class="missed">
+      <div class="missed-head">
+        <h2>You just missed</h2>
+        <span id="missedHint">Earlier films from today’s channel</span>
+      </div>
+      <div class="rail" id="missedRail"></div>
+    </section>
+    <p class="note">Live 24/7 channel. Fresh genre every 6 hours. Never repeats recent films.</p>
   </div>
-
-  <script src="bwhs-stats.js"></script>
   <script>
-    const API_KEY = '129637a8869a61522af21b80f6eb5129';
     const TMDB = 'https://api.themoviedb.org/3';
+    const KEY = '129637a8869a61522af21b80f6eb5129';
+    const IMG = 'https://image.tmdb.org/t/p/w342';
+    const BACK = 'https://image.tmdb.org/t/p/w780';
+    const SHIFT = 5 * 3600 * 1000;
+    const HOME = 'https://bwhs.online';
+    const SLOT_SEC = 6 * 3600;
     const GENRES = [
-      { id: 28, name: 'Action' },
-      { id: 35, name: 'Comedy' },
-      { id: 18, name: 'Drama' },
-      { id: 27, name: 'Horror' },
-      { id: 878, name: 'Sci-Fi' },
-      { id: 10749, name: 'Romance' },
-      { id: 12, name: 'Adventure' },
-      { id: 80, name: 'Crime' }
+      { id: 28, name: 'Action' }, { id: 12, name: 'Adventure' }, { id: 16, name: 'Animation' },
+      { id: 35, name: 'Comedy' }, { id: 80, name: 'Crime' }, { id: 18, name: 'Drama' },
+      { id: 14, name: 'Fantasy' }, { id: 27, name: 'Horror' }, { id: 9648, name: 'Mystery' },
+      { id: 10749, name: 'Romance' }, { id: 878, name: 'Science Fiction' }, { id: 53, name: 'Thriller' },
+      { id: 10752, name: 'War' }, { id: 37, name: 'Western' },
+      { id: 10751, name: 'Family' }, { id: 36, name: 'History' }, { id: 10402, name: 'Music' },
+      { id: 99, name: 'Documentary' }
     ];
+    const FALLBACK = {
+      28: [155,603,27205,245891,76341,299536,550,680], 12: [122,120,671,329,122917,11,19995],
+      16: [129,585,10681,12477,12,808,862], 35: [13,773,18785,120467,546554,49519,120],
+      80: [769,111,680,807,103,1422,274], 18: [278,238,424,550,389,73,637],
+      14: [671,122,120,121,122917,76338,120], 27: [694,948,539,9552,419430,493922,694],
+      9648: [745,807,77,11324,146,1949,807], 10749: [11036,597,4348,313369,152601,332562],
+      878: [603,27205,157336,78,62,335984,603], 53: [550,680,745,807,694,146233],
+      10752: [857,424,600,228150,374720,1271], 37: [68718,5176,33,11969,9360,336],
+      10751: [862,12,129,585,10681], 36: [424,857,1271,228150], 10402: [313369,152601],
+      99: [424,857]
+    };
+    const $ = id => document.getElementById(id);
+    let playlist = [], genre = GENRES[0], dayKey = '', slotKey = '', loadedId = 0, handoff = null, chromeTimer = null, lastTap = 0;
 
-    let currentMovie = null;
-    let schedule = [];
-    let checkTimer = null;
-
+    function jam() { return new Date(Date.now() - SHIFT); }
+    function dayStamp() { return jam().toISOString().slice(0, 10); }
+    function secondsIntoDay() {
+      const j = jam();
+      return j.getUTCHours() * 3600 + j.getUTCMinutes() * 60 + j.getUTCSeconds() + j.getUTCMilliseconds() / 1000;
+    }
+    function slotIndex() { return Math.floor(secondsIntoDay() / SLOT_SEC); }
+    function currentSlotKey() { return dayStamp() + ':s' + slotIndex(); }
+    function hash(str) {
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return h >>> 0;
+    }
+    function mulberry32(a) {
+      return function() {
+        a |= 0; a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+    function shuffle(list, seed) {
+      const rand = mulberry32(seed), arr = list.slice();
+      for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+      return arr;
+    }
     function pad(n) { return String(n).padStart(2, '0'); }
-    function formatTime(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
-    function formatClock(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
-
-    function getGenreForTime(now) {
-      const block = Math.floor(now.getUTCHours() / 6);
-      return GENRES[block % GENRES.length];
+    function clock12(totalSec) {
+      const s = ((Math.floor(totalSec) % 86400) + 86400) % 86400;
+      let h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+      const ap = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return h + ':' + pad(m) + ' ' + ap;
     }
-
-    async function fetchMovies(genreId) {
-      const pages = [1, 2, 3];
-      let all = [];
-      for (const p of pages) {
-        const url = `${TMDB}/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&sort_by=popularity.desc&vote_count.gte=200&page=${p}&include_adult=false`;
+    function nowClock() {
+      const j = jam();
+      return clock12(j.getUTCHours() * 3600 + j.getUTCMinutes() * 60 + j.getUTCSeconds());
+    }
+    function absTime(offsetInCycle) {
+      const slotStart = slotIndex() * SLOT_SEC;
+      const t = secondsIntoDay() % SLOT_SEC;
+      const total = playlist.reduce((n, f) => n + f.dur, 0) || 1;
+      const cycleStart = Math.floor(t / total) * total;
+      return slotStart + cycleStart + offsetInCycle;
+    }
+    function prettyDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    function shortSyn(text) {
+      const clean = (text || '').replace(/\s+/g, ' ').trim();
+      if (clean.length <= 140) return clean;
+      return clean.slice(0, 137).replace(/\s+\S*$/, '') + '…';
+    }
+    function getRecentIds() {
+      try {
+        const raw = JSON.parse(localStorage.getItem('bwhs24recent') || '[]');
+        return new Set(Array.isArray(raw) ? raw.map(Number).filter(Boolean) : []);
+      } catch (_) { return new Set(); }
+    }
+    function addToRecent(ids) {
+      try {
+        const cur = Array.from(getRecentIds());
+        const next = [...new Set([...cur, ...ids.map(Number)])].slice(-480);
+        localStorage.setItem('bwhs24recent', JSON.stringify(next));
+      } catch (_) {}
+    }
+    async function getJSON(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('tmdb');
+      return res.json();
+    }
+    async function hydrate(id) {
+      try {
+        const d = await getJSON(`${TMDB}/movie/${id}?api_key=${KEY}&language=en-US`);
+        const runtime = Number(d.runtime) || 0;
+        if (runtime < 70 || runtime > 220 || d.adult || !d.title) return null;
+        return {
+          id: d.id, title: d.title, year: (d.release_date || '').slice(0, 4),
+          date: d.release_date || '', runtime, overview: d.overview || '',
+          poster: d.poster_path ? IMG + d.poster_path : '',
+          backdrop: d.backdrop_path ? BACK + d.backdrop_path : ''
+        };
+      } catch (_) { return null; }
+    }
+    async function buildPlaylist() {
+      dayKey = dayStamp();
+      slotKey = currentSlotKey();
+      const slot = slotIndex();
+      // pick genre that rotates every 6h and avoids the previous slot when possible
+      let gIdx = hash(slotKey) % GENRES.length;
+      const prevSlot = slot === 0 ? 3 : slot - 1;
+      const prevKey = dayKey + ':s' + prevSlot;
+      if (hash(prevKey) % GENRES.length === gIdx) gIdx = (gIdx + 3) % GENRES.length;
+      genre = GENRES[gIdx];
+      const ranges = ['00–06', '06–12', '12–18', '18–24'];
+      $('genrePill').textContent = genre.name + ' · ' + ranges[slot];
+      const cacheKey = 'bwhs24v6:' + slotKey;
+      try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+        if (Array.isArray(cached) && cached.length >= 4) {
+          playlist = cached;
+          return playlist;
+        }
+      } catch (_) {}
+      const recent = getRecentIds();
+      const seed = hash(slotKey);
+      const pages = shuffle([1,2,3,4,5,6,7,8,9,10,11,12], seed).slice(0, 4);
+      const ids = new Set();
+      for (const page of pages) {
         try {
-          const res = await fetch(url);
-          const data = await res.json();
-          all = all.concat(data.results || []);
-        } catch (e) { console.warn(e); }
+          const data = await getJSON(`${TMDB}/discover/movie?api_key=${KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_genres=${genre.id}&vote_count.gte=50&vote_average.gte=5.5&with_runtime.gte=70&with_runtime.lte=180`);
+          for (const m of (data.results || [])) {
+            if (m.id && !recent.has(m.id) && m.vote_count >= 50) ids.add(m.id);
+          }
+        } catch (_) {}
       }
-      // Deduplicate and filter
-      const seen = new Set();
-      return all.filter(m => {
-        if (!m.id || !m.title || !m.poster_path || seen.has(m.id)) return false;
-        if ((m.vote_average || 0) < 6) return false;
-        seen.add(m.id);
-        return true;
-      }).slice(0, 40);
-    }
-
-    function buildSchedule(movies, genreStart) {
-      // Each movie ~ 110 minutes average, deterministic order
-      const slotMs = 110 * 60 * 1000;
-      const now = Date.now();
-      const dayStart = genreStart.getTime();
-      const elapsed = now - dayStart;
-      const startIndex = Math.floor(elapsed / slotMs);
-      const offsetInSlot = elapsed % slotMs;
-
-      const sched = [];
-      for (let i = 0; i < movies.length; i++) {
-        const idx = (startIndex + i) % movies.length;
-        const m = movies[idx];
-        const start = dayStart + (startIndex + i) * slotMs;
-        const end = start + slotMs;
-        sched.push({
-          movie: m,
-          start,
-          end,
-          offsetSec: i === 0 ? Math.floor(offsetInSlot / 1000) : 0
-        });
+      if (ids.size < 8) {
+        for (const id of (FALLBACK[genre.id] || FALLBACK[28])) if (!recent.has(id)) ids.add(id);
       }
-      return sched;
+      const pool = shuffle(Array.from(ids), seed).slice(0, 18);
+      const hydrated = [];
+      for (const id of pool) {
+        const film = await hydrate(id);
+        if (film) hydrated.push(film);
+        if (hydrated.length >= 12) break;
+      }
+      if (hydrated.length < 4) {
+        for (const id of (FALLBACK[genre.id] || FALLBACK[28])) {
+          if (hydrated.find(f => f.id === id)) continue;
+          const film = await hydrate(id);
+          if (film) hydrated.push(film);
+          if (hydrated.length >= 6) break;
+        }
+      }
+      let cursor = 0;
+      const reel = hydrated.map(f => {
+        const dur = f.runtime * 60;
+        const item = Object.assign({}, f, { start: cursor, dur });
+        cursor += dur;
+        return item;
+      });
+      if (reel.length) addToRecent(reel.map(f => f.id));
+      try { localStorage.setItem(cacheKey, JSON.stringify(reel)); } catch (_) {}
+      return reel;
     }
-
-    function vixsrcUrl(id, startAt) {
-      const params = [
-        'autoplay=1',
-        'autoPlay=true',
-        'startAt=' + Math.max(0, Math.floor(startAt || 0)),
-        'lang=en',
-        'primaryColor=6366f1',
-        'secondaryColor=ef4444',
-        'skin=vixsrc',
-        'canPlayFHD=1',
-        'quality=2160',
-        'maxQuality=2160'
-      ].join('&');
-      return `https://vixsrc.to/movie/${id}?${params}`;
+    function liveSpot() {
+      const t = secondsIntoDay() % SLOT_SEC;
+      const total = playlist.reduce((n, f) => n + f.dur, 0) || 1;
+      const pos = t % total;
+      let film = playlist[0];
+      for (const item of playlist) {
+        if (pos >= item.start && pos < item.start + item.dur) { film = item; break; }
+      }
+      return { film, into: Math.max(0, pos - film.start), pos };
     }
-
-    async function loadChannel() {
-      const now = new Date();
-      document.getElementById('clock').textContent = formatClock(now);
-      const genre = getGenreForTime(now);
-      document.getElementById('genreLabel').textContent = genre.name + ' block';
-
-      // Genre block start (UTC aligned to 6h)
-      const utcHour = now.getUTCHours();
-      const blockHour = Math.floor(utcHour / 6) * 6;
-      const genreStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), blockHour, 0, 0));
-
-      document.getElementById('loadingText').textContent = 'Tuning the channel…';
-      document.getElementById('loading').style.display = 'flex';
-
-      const movies = await fetchMovies(genre.id);
-      if (!movies.length) {
-        document.getElementById('loadingText').textContent = 'No films available right now. Retrying…';
-        setTimeout(loadChannel, 10000);
+    function vixUrl(id, startAt) {
+      // clean 1080p, low-latency start, no forced mute
+      return `https://vixsrc.to/movie/${id}?autoplay=1&autoPlay=true&muted=0&mute=0&volume=1&lang=en&primaryColor=4f46e5&secondaryColor=0f172a&skin=vixsrc&canPlayFHD=1&quality=1080&maxQuality=1080&startAt=${Math.max(0, Math.floor(startAt || 0))}`;
+    }
+    function paint(spot) {
+      const film = spot.film;
+      $('nowKicker').textContent = 'Now playing';
+      $('nowTitle').textContent = film.title;
+      document.title = film.title + ' · 24/7 PLAY';
+      $('nowSub').textContent = [film.year, prettyDate(film.date)].filter(Boolean).join(' · ');
+      $('nowSyn').textContent = shortSyn(film.overview);
+      if (film.poster) $('nowPoster').src = film.poster;
+      if (film.backdrop) $('aura').style.backgroundImage = `url("${film.backdrop}")`;
+      $('progressBar').style.width = Math.min(100, (spot.into / film.dur) * 100).toFixed(2) + '%';
+      $('startLabel').textContent = 'Started ' + clock12(absTime(film.start));
+      $('endLabel').textContent = 'Ends ' + clock12(absTime(film.start + film.dur));
+      $('clockPill').textContent = nowClock();
+    }
+    function paintMissed(spot) {
+      const missed = playlist.filter(f => f.start + f.dur <= spot.film.start + 1).slice(-6);
+      const rail = $('missedRail');
+      rail.innerHTML = '';
+      $('missedHint').textContent = missed.length ? ('You just missed ' + missed[missed.length - 1].title) : 'Fresh block just started';
+      missed.forEach(film => {
+        const a = document.createElement('a');
+        a.className = 'miss-card';
+        a.href = HOME + '/#/watch/movie/' + film.id;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.innerHTML = `<img alt="" src="${film.poster || ''}" /><div><strong>${film.title}</strong><em>Ended ${clock12(absTime(film.start + film.dur))}</em></div>`;
+        rail.appendChild(a);
+      });
+      rail.scrollLeft = rail.scrollWidth;
+    }
+    let front = null, back = null, primedId = 0, priming = false;
+    function armPlayers() {
+      front = $('player');
+      back = $('playerB');
+    }
+    function warm(frame, film, startAt) {
+      if (!frame || !film) return;
+      const url = vixUrl(film.id, startAt);
+      if (frame.src !== url) frame.src = url;
+    }
+    function swapToBack() {
+      if (!back || !front) return false;
+      front.classList.remove('front');
+      back.classList.add('front');
+      [front, back] = [back, front];
+      return true;
+    }
+    function nextFilm(spot) {
+      const idx = playlist.findIndex(f => f.id === spot.film.id);
+      return playlist[(idx + 1) % playlist.length] || playlist[0];
+    }
+    function remember(film, startAt) {
+      try { sessionStorage.setItem('bwhs247-live', JSON.stringify({ id: film.id, title: film.title, startAt, saved: Date.now() })); } catch (_) {}
+    }
+    function restoreInstant() {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('bwhs247-live') || 'null');
+        if (!saved || !saved.id) return;
+        const elapsed = Math.max(0, Math.floor((Date.now() - (saved.saved || Date.now())) / 1000));
+        const startAt = (saved.startAt || 0) + elapsed;
+        warm($('player'), {id: saved.id}, startAt);
+        $('nowTitle').textContent = saved.title || 'Back on air';
+        $('boot').classList.add('hidden');
+        loadedId = saved.id;
+      } catch (_) {}
+    }
+    function loadLive() {
+      if (!playlist.length || !front) return;
+      const spot = liveSpot();
+      paint(spot);
+      paintMissed(spot);
+      const startAt = Math.min(Math.floor(spot.into), Math.max(0, spot.film.dur - 8));
+      const remain = spot.film.dur - spot.into;
+      if (loadedId === spot.film.id) {
+        remember(spot.film, startAt);
+        if (remain < 55) {
+          const nxt = nextFilm(spot);
+          if (nxt && primedId !== nxt.id) {
+            primedId = nxt.id;
+            priming = true;
+            warm(back, nxt, 0);
+          }
+        }
         return;
       }
-
-      schedule = buildSchedule(movies, genreStart);
-      const current = schedule[0];
-      currentMovie = current.movie;
-
-      const titleEl = document.getElementById('title');
-      titleEl.textContent = current.movie.title + (current.movie.release_date ? ' (' + current.movie.release_date.slice(0,4) + ')' : '');
-      document.title = current.movie.title + ' · 24/7 PLAY · BWHS';
-
-      const startD = new Date(current.start);
-      const endD = new Date(current.end);
-      document.getElementById('times').textContent = `Starts ${formatTime(startD)} · Ends ${formatTime(endD)}`;
-      document.getElementById('runtime').textContent = '~110 min slot';
-
-      const iframe = document.getElementById('player');
-      const startAt = Math.min(current.offsetSec, 100 * 60); // cap to avoid too far in
-      iframe.src = vixsrcUrl(current.movie.id, startAt);
-
-      iframe.onload = () => {
-        document.getElementById('loading').style.display = 'none';
-      };
-      setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 4000);
-
-      // Missed (previous in schedule, simulated recent)
-      const missed = schedule.slice(1, 7);
-      const grid = document.getElementById('missedGrid');
-      grid.innerHTML = missed.map(s => {
-        const poster = s.movie.poster_path ? `https://image.tmdb.org/t/p/w342${s.movie.poster_path}` : '';
-        return `<div class="missed-card">
-          ${poster ? `<img src="${poster}" alt="">` : ''}
-          <div class="info">${s.movie.title}</div>
-        </div>`;
-      }).join('');
-
-      // Next check
-      if (checkTimer) clearTimeout(checkTimer);
-      const remaining = current.end - Date.now();
-      checkTimer = setTimeout(loadChannel, Math.max(15000, remaining + 2000));
-    }
-
-    // Clock
-    setInterval(() => {
-      document.getElementById('clock').textContent = formatClock(new Date());
-    }, 1000);
-
-    document.getElementById('fullscreenBtn').onclick = () => {
-      const el = document.getElementById('playerWrap');
-      if (el.requestFullscreen) el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    };
-    document.getElementById('theaterBtn').onclick = () => {
-      document.body.classList.toggle('theater-active');
-    };
-    document.getElementById('refreshBtn').onclick = loadChannel;
-
-    // Start
-    loadChannel();
-
-    // Periodic resync in case of drift
-    setInterval(() => {
-      if (currentMovie && schedule.length) {
-        const now = Date.now();
-        if (now > schedule[0].end) loadChannel();
+      if (primedId === spot.film.id && swapToBack()) {
+        remember(spot.film, startAt);
+        $('boot').classList.add('hidden');
+        return;
       }
-    }, 30000);
+      warm(front, spot.film, startAt);
+      loadedId = spot.film.id;
+      remember(spot.film, startAt);
+      $('boot').classList.add('hidden');
+      clearTimeout(handoff);
+      handoff = setTimeout(() => { loadedId = 0; loadLive(); }, Math.max(6000, remain * 1000));
+    }
+    function tick() {
+      $('clockPill').textContent = nowClock();
+      if (!playlist.length) return;
+      if (currentSlotKey() !== slotKey) { loadedId = 0; boot(); return; }
+      const spot = liveSpot();
+      paint(spot);
+      if (spot.film.id !== loadedId) loadLive();
+    }
+    function showChrome() {
+      document.body.classList.add('fs-chrome');
+      $('viewport').classList.add('fs-chrome');
+      clearTimeout(chromeTimer);
+      chromeTimer = setTimeout(() => {
+        document.body.classList.remove('fs-chrome');
+        $('viewport').classList.remove('fs-chrome');
+      }, 1600);
+    }
+    function toggleFs() {
+      const vp = $('viewport');
+      const active = document.fullscreenElement || document.webkitFullscreenElement;
+      if (active) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        return;
+      }
+      (vp.requestFullscreen || vp.webkitRequestFullscreen).call(vp);
+      showChrome();
+    }
+    async function boot() {
+      playlist = await buildPlaylist();
+      loadLive(true);
+    }
+    $('fsBtn').addEventListener('click', toggleFs);
+    $('reloadLive').addEventListener('click', () => location.reload());
+    $('fsExit').addEventListener('click', toggleFs);
+    $('shield').addEventListener('click', () => {
+      const now = Date.now();
+      if (now - lastTap < 320) toggleFs();
+      lastTap = now;
+      showChrome();
+    });
+    $('viewport').addEventListener('mousemove', showChrome);
+    document.addEventListener('keydown', (e) => {
+      if (['ArrowLeft','ArrowRight',' ','MediaTrackNext','MediaTrackPrevious'].includes(e.key)) e.preventDefault();
+      if (e.key === 'f' || e.key === 'F') toggleFs();
+      showChrome();
+    });
+    document.addEventListener('fullscreenchange', showChrome);
+
+    let screenWakeLock = null;
+    let wakeWanted = true;
+    async function keepScreenAwake() {
+      wakeWanted = true;
+      try {
+        if (!navigator.wakeLock || !navigator.wakeLock.request) return;
+        if (screenWakeLock && !screenWakeLock.released) return;
+        screenWakeLock = await navigator.wakeLock.request("screen");
+        screenWakeLock.addEventListener("release", () => {
+          screenWakeLock = null;
+          if (wakeWanted && document.visibilityState === "visible") setTimeout(keepScreenAwake, 400);
+        });
+      } catch (_) {}
+    }
+    armPlayers();
+    setInterval(tick, 1000);
+    keepScreenAwake();
+    restoreInstant();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { keepScreenAwake(); if (playlist.length) loadLive(); } });
+    window.addEventListener('pageshow', () => { keepScreenAwake(); if (playlist.length) loadLive(); });
+    window.addEventListener('focus', keepScreenAwake);
+    boot();
   </script>
 </body>
 </html>
