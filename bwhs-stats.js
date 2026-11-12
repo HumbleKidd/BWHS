@@ -44,7 +44,7 @@
       var db = firebase.database();
       var id = sessionStorage.getItem("bwhs_vid") || ("v_" + Math.random().toString(36).slice(2) + Date.now().toString(36));
       sessionStorage.setItem("bwhs_vid", id);
-      var page = location.pathname.split("/").pop() || "index.html";
+      var page = location.pathname.split("/").pop() || "index.html"; if (page === "24-autoplay.html") page = "24/7 PLAY";
       var ref = db.ref("presence/" + id);
       var today = dayKey();
 
@@ -54,8 +54,10 @@
 
       function currentWatching() {
         var t = document.title || "";
-        if (t && t !== "BWHS - Binge Watch Humble Streams" && t !== "BWHS") return t.replace(/^BWHS\s*[-\u2013\u2014]\s*/i, "").slice(0, 80);
-        var el = document.querySelector(".hero-title, .player-title, #playerTitle, .now-playing-title, .film-title");
+        if (t && t !== "BWHS - Binge Watch Humble Streams" && t !== "BWHS" && t !== "24/7 PLAY · BWHS") {
+          return t.replace(/\s*[·\-|]\s*BWHS.*$/i, "").replace(/^BWHS\s*[-\u2013\u2014]\s*/i, "").slice(0, 80);
+        }
+        var el = document.querySelector(".hero-title, .player-title, #playerTitle, .now-playing-title, .film-title, #nowTitle");
         if (el && el.textContent) return el.textContent.trim().slice(0, 80);
         return "";
       }

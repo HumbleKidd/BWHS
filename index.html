@@ -1079,7 +1079,7 @@
 
     @media (min-width: 900px) {
       .mobile-header-share {
-        display: none;
+        display: inline-flex;
       }
     }
 
@@ -15077,7 +15077,7 @@ body.player-fs-active.fs-chrome-on [role="button"] {
       };
 
       const STORAGE_SNOOZE_KEY = 'bwhs_social_popup_snoozed_v1';
-      const AUTO_POP_DELAY_MS = 7000;
+      const AUTO_POP_DELAY_MS = 5000;
       const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * 56;
 
       // DOM Elements
@@ -15383,7 +15383,8 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
       // Start 7-Second Automatic Pop-Up Trigger (countdown visuals optional)
       function startSevenSecondAutoTrigger() {
-        const isSnoozed = snoozeCheckbox && snoozeCheckbox.checked;
+        // Always auto-open once per page load unless user has the checkbox checked AFTER this visit
+        const isSnoozed = false; // force show; checkbox only stops future auto-pops if we re-enable later
         if (isSnoozed) {
           if (secondsText) secondsText.textContent = 'Paused';
           if (statusLabel) statusLabel.textContent = 'Snoozed';
@@ -15427,7 +15428,6 @@ body.player-fs-active.fs-chrome-on [role="button"] {
         startSevenSecondAutoTrigger();
       });
     })();
-  </script>
   </script>
 
 </body>

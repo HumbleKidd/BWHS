@@ -506,7 +506,7 @@
       const film = spot.film;
       $('nowKicker').textContent = 'Now playing';
       $('nowTitle').textContent = film.title;
-      document.title = film.title + ' · 24/7 PLAY';
+      document.title = (film.title || 'Live') + ' · 24/7 PLAY · BWHS';
       $('nowSub').textContent = [film.year, prettyDate(film.date)].filter(Boolean).join(' · ');
       $('nowSyn').textContent = shortSyn(film.overview);
       if (film.poster) $('nowPoster').src = film.poster;
@@ -670,5 +670,6 @@
     window.addEventListener('focus', keepScreenAwake);
     boot();
   </script>
+  <script src="./bwhs-stats.js"></script>
 </body>
 </html>
