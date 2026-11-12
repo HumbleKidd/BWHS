@@ -44,7 +44,7 @@
       flex-direction: column;
       gap: 10px;
       padding: 12px 16px 16px;
-      max-width: 1280px;
+      max-width: 1480px;
       margin: 0 auto;
     }
     .topbar {
@@ -447,7 +447,7 @@
           return playlist;
         }
       } catch (_) {}
-      const recent = getRecentIds();
+      const recent = new Set(); // shared schedule — ignore per-device recent so all devices match
       const seed = hash(slotKey);
       const pages = shuffle([1,2,3,4,5,6,7,8,9,10,11,12], seed).slice(0, 4);
       const ids = new Set();
@@ -577,7 +577,7 @@
       const remain = spot.film.dur - spot.into;
       if (loadedId === spot.film.id) {
         remember(spot.film, startAt);
-        if (remain < 55) {
+        if (remain < 90) {
           const nxt = nextFilm(spot);
           if (nxt && primedId !== nxt.id) {
             primedId = nxt.id;
