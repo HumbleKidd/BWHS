@@ -2047,16 +2047,30 @@
     }
 
     .player-page-heading {
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       font-weight: 800;
       color: var(--text-main);
-      display: -webkit-box;
-      -webkit-line-clamp: 1;
-      -webkit-box-orient: vertical;
+      line-height: 1.25;
+      white-space: nowrap;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      text-overflow: ellipsis;
+      display: block;
+      max-width: 100%;
+    }
+    .player-title-main {
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-title-meta {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted, #64748b);
+      margin-top: 2px;
+      white-space: nowrap;
     }
 
     .player-nav-center {
@@ -2073,9 +2087,11 @@
         gap: 6px;
       }
       .player-page-heading {
-        max-width: 42vw;
-        font-size: 0.86rem;
+        max-width: 58vw;
+        font-size: 0.95rem;
       }
+      .player-title-main { font-size: 0.95rem; }
+      .player-title-meta { font-size: 0.65rem; }
       .btn-theater-pill span {
         display: none;
       }
@@ -12033,9 +12049,11 @@
         desktopRightPanel.classList.add('player-hidden');
       }
 
-      const mediaTitle = titleWithYear(item) || item.title || item.name || 'Media Player';
+      const mediaTitle = item.title || item.name || 'Media Player';
+      const year = (item.release_date || item.first_air_date || '').slice(0,4);
       const badge = makeReleaseBadge(item);
-      playerPageTitle.innerHTML = mediaTitle + (badge ? ' ' + badge : '');
+      playerPageTitle.innerHTML = '<div class="player-title-main">' + mediaTitle + (badge ? ' ' + badge : '') + '</div>' +
+        (year ? '<div class="player-title-meta">' + year + '</div>' : '');
       const ov = item.overview || 'No synopsis available for this title.';
       const relFmt = formatReleaseDate(item);
       playerOverview.innerHTML = ov + (relFmt ? ' <span class="release-date-badge" style="margin-left:8px;vertical-align:middle;">' + relFmt + '</span>' : '');
@@ -12080,9 +12098,11 @@
       cachedFetch(`${TMDB_BASE}/${type}/${item.id}?api_key=${apiKey}`).then((full) => {
         if (loadId !== mediaSessionId || !full || !full.id) return;
         activeMedia = { ...item, ...full, computedType: type };
-        const mediaTitle = titleWithYear(activeMedia) || activeMedia.title || activeMedia.name || 'Media Player';
+        const mediaTitle = activeMedia.title || activeMedia.name || 'Media Player';
+        const year = (activeMedia.release_date || activeMedia.first_air_date || '').slice(0,4);
         const badge = makeReleaseBadge(activeMedia);
-        playerPageTitle.innerHTML = mediaTitle + (badge ? ' ' + badge : '');
+        playerPageTitle.innerHTML = '<div class="player-title-main">' + mediaTitle + (badge ? ' ' + badge : '') + '</div>' +
+          (year ? '<div class="player-title-meta">' + year + '</div>' : '');
         const ov = activeMedia.overview || 'No synopsis available for this title.';
         const relFmt = formatReleaseDate(activeMedia);
         playerOverview.innerHTML = ov + (relFmt ? ' <span class="release-date-badge" style="margin-left:8px;vertical-align:middle;">' + relFmt + '</span>' : '');
@@ -13120,13 +13140,13 @@
 
         case 'vidsrc':
           return isTv
-            ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}&${hdQuery('ds_lang=en')}`
-            : `https://vidsrc.xyz/embed/movie?tmdb=${id}&${hdQuery('ds_lang=en')}`;
+            ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}&autoplay=1&${hdQuery('ds_lang=en')}`
+            : `https://vidsrc.xyz/embed/movie?tmdb=${id}&autoplay=1&${hdQuery('ds_lang=en')}`;
 
         case 'embedsu':
           return isTv
-            ? `https://embed.su/embed/tv/${id}/${s}/${e}`
-            : `https://embed.su/embed/movie/${id}`;
+            ? `https://embed.su/embed/tv/${id}/${s}/${e}?autoplay=1`
+            : `https://embed.su/embed/movie/${id}?autoplay=1`;
 
         case 'autoembed':
           return isTv
@@ -15038,16 +15058,7 @@ body.player-fs-active.fs-chrome-on [role="button"] {
               <div id="qrcodeTarget" aria-label="Scannable QR Code"></div>
             </div>
 
-            <!-- Editable Site URL Field (visible when "This Site" tab is active) -->
-            <div id="qrCustomUrlRow" class="qr-custom-url-row">
-              <input
-                id="qrSiteUrlInput"
-                type="url"
-                class="qr-url-input"
-                placeholder="Enter your website URL..."
-                aria-label="Website URL for QR code"
-              />
-            </div>
+            <!-- QR uses site URL automatically -->
 
             <button id="saveQrPngBtn" type="button" class="btn-save-qr">
               <i class="fa-solid fa-download"></i>
@@ -15526,3 +15537,112 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
 
 
+
+<script>
+// Ensure social action cards always open their links (bulletproof)
+(function(){
+  document.addEventListener("click", function(e){
+    var card = e.target.closest(".social-action-card");
+    if (!card) return;
+    // If the click was on the copy button inside, let it handle itself
+    if (e.target.closest(".copy-link-mini-btn")) return;
+    var href = card.getAttribute("href");
+    if (href) {
+      e.preventDefault();
+      window.open(href, "_blank", "noopener,noreferrer");
+    }
+  }, true);
+  // Force QR to use current site URL only
+  var qrTarget = document.getElementById("qrcodeTarget");
+  if (qrTarget && typeof QRCode !== "undefined") {
+    try {
+      qrTarget.innerHTML = "";
+      new QRCode(qrTarget, { text: window.location.href || "https://bwhs.online", width: 100, height: 100, colorDark: "#0f172a", colorLight: "#ffffff" });
+    } catch(e){}
+  }
+})();
+</script>
+
+<script id="bwhs-modal-click-fix">
+(function(){
+  "use strict";
+  var SOCIAL = {
+    discord: "https://discord.gg/m94XkyPWm",
+    facebook: "https://www.facebook.com/share/1E9amRZgGi/",
+    telegram: "https://t.me/+L0JIIwByOBFiZGEx"
+  };
+  var SITE = function(){ return window.location.href || "https://bwhs.online"; };
+
+  function openLink(url){
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function renderQr(text){
+    var target = document.getElementById("qrcodeTarget");
+    if (!target) return;
+    target.innerHTML = "";
+    if (typeof QRCode !== "undefined") {
+      try {
+        new QRCode(target, {
+          text: text || SITE(),
+          width: 100,
+          height: 100,
+          colorDark: "#0f172a",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+        return;
+      } catch(e){}
+    }
+    target.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(text || SITE()) + '" alt="QR" style="width:100px;height:100px;">';
+  }
+
+  // Capture-phase handler so nothing else can block the cards
+  document.addEventListener("click", function(e){
+    // Social cards — click anywhere (except copy button) opens the link
+    var card = e.target.closest && e.target.closest(".social-action-card");
+    if (card) {
+      if (e.target.closest(".copy-link-mini-btn")) return; // let copy work
+      e.preventDefault();
+      e.stopPropagation();
+      var href = card.getAttribute("href") || card.dataset.href;
+      if (href) openLink(href);
+      return;
+    }
+
+    // QR tab buttons — switch the QR code
+    var tab = e.target.closest && e.target.closest(".qr-tab-btn");
+    if (tab) {
+      e.preventDefault();
+      e.stopPropagation();
+      var mode = tab.getAttribute("data-qr-mode") || "site";
+      document.querySelectorAll(".qr-tab-btn").forEach(function(b){ b.classList.remove("active"); });
+      tab.classList.add("active");
+      var url = (mode === "site") ? SITE() : (SOCIAL[mode] || SITE());
+      renderQr(url);
+      return;
+    }
+  }, true); // capture = true so we run before other handlers
+
+  // Initial QR on modal open
+  var origOpen = window.openSocialPopup;
+  window.openSocialPopup = function(e){
+    if (e && e.preventDefault) e.preventDefault();
+    var m = document.getElementById("socialModalBackdrop");
+    if (m) {
+      m.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+    setTimeout(function(){ renderQr(SITE()); }, 50);
+    if (typeof origOpen === "function") {
+      try { origOpen(e); } catch(_){}
+    }
+  };
+
+  // Also wire the existing open if the modal is already in DOM
+  document.addEventListener("DOMContentLoaded", function(){
+    setTimeout(function(){ renderQr(SITE()); }, 300);
+  });
+})();
+</script>
