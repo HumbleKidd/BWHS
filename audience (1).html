@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BWHS.online — Live Audience Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#f0f3ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 40%, #eef2ff 100%); min-height: 100vh; }
+    .glass-card { background: rgba(255,255,255,0.88); backdrop-filter: blur(12px); border: 1px solid rgba(226,232,240,0.9); }
+    a.jump-link { color: #4f46e5; text-decoration: underline; text-underline-offset: 2px; font-weight: 700; }
+    a.jump-link:hover { color: #3730a3; }
+  </style>
+</head>
+<body class="text-slate-800 antialiased font-sans">
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-indigo-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center text-white font-black text-xl shadow-md">
+          <i class="fa-solid fa-play text-sm"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl font-extrabold bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-900 bg-clip-text text-transparent">BWHS.online</span>
+            <span class="px-2 py-0.5 text-xs font-bold bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">LIVE ADMIN</span>
+          </div>
+          <p class="text-xs text-slate-500 font-medium">Real-time Audience Dashboard · Private</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 text-xs">
+        <div class="flex items-center gap-2 bg-indigo-50/80 border border-indigo-100 px-3 py-2 rounded-xl">
+          <i class="fa-solid fa-users text-indigo-600 text-sm"></i>
+          <div>
+            <span class="block text-slate-400 text-[10px] uppercase font-bold">Online Now</span>
+            <span id="header-total-viewers" class="font-extrabold text-indigo-900 text-sm">0</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 bg-emerald-50/80 border border-emerald-100 px-3 py-2 rounded-xl">
+          <i class="fa-solid fa-film text-emerald-600 text-sm"></i>
+          <div>
+            <span class="block text-slate-400 text-[10px] uppercase font-bold">Active Sessions</span>
+            <span id="header-active-streams" class="font-extrabold text-emerald-900 text-sm">0</span>
+          </div>
+        </div>
+        <a href="index.html" class="px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">← Back to BWHS</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Viewers</p>
+        <h3 id="card-total-viewers" class="text-3xl font-extrabold text-slate-900 mt-1">0</h3>
+        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+      </div>
+      <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Sessions</p>
+        <h3 id="card-total-sessions" class="text-3xl font-extrabold text-slate-900 mt-1">0</h3>
+        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+      </div>
+      <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Title</p>
+        <h3 id="card-top-content" class="text-lg font-bold text-slate-900 mt-1 line-clamp-1">—</h3>
+        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+      </div>
+      <div class="glass-card rounded-2xl p-5 relative overflow-hidden">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Status</p>
+        <h3 id="status-text" class="text-lg font-bold text-emerald-600 mt-1">Connecting…</h3>
+        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-400 to-indigo-500"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 glass-card rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+          <i class="fa-solid fa-mobile-screen text-indigo-600"></i> Device Breakdown (Live)
+        </h2>
+        <div id="device-breakdown" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+      </div>
+      <div class="glass-card rounded-2xl p-5">
+        <h2 class="text-md font-bold text-slate-900 mb-3 flex items-center justify-between">
+          <span><i class="fa-solid fa-fire text-rose-500 mr-2"></i> Hot Right Now</span>
+          <span class="text-[11px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold">LIVE</span>
+        </h2>
+        <div id="top-content-list" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <div class="glass-card rounded-2xl p-5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+        <div>
+          <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-users-viewfinder text-indigo-600"></i> Active Sessions
+          </h2>
+          <p class="text-xs text-slate-500">Live presence · updates instantly · admin only</p>
+        </div>
+        <div class="relative min-w-[220px]">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="viewer-search" oninput="renderTable()" placeholder="Search film, page, device…" class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+        </div>
+      </div>
+      <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-100/80 text-slate-600 text-[11px] uppercase tracking-wider font-bold border-b border-slate-200">
+              <th class="py-3 px-3">Film / Page</th>
+              <th class="py-3 px-3">Device</th>
+              <th class="py-3 px-3">Joined</th>
+              <th class="py-3 px-3">Online</th>
+              <th class="py-3 px-3">Last Seen</th>
+              <th class="py-3 px-3">Session</th>
+            </tr>
+          </thead>
+          <tbody id="viewer-table-body" class="divide-y divide-slate-100 font-medium text-slate-700 bg-white"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const BWHS_FIREBASE = {
+      apiKey: "AIzaSyBZhtlZRaWQPxFPEP02toZnsFQWOPvbUJA",
+      authDomain: "bwhs-audience.firebaseapp.com",
+      databaseURL: "https://bwhs-audience-default-rtdb.firebaseio.com",
+      projectId: "bwhs-audience",
+      storageBucket: "bwhs-audience.firebasestorage.app",
+      messagingSenderId: "481701919126",
+      appId: "1:481701919126:web:bc6cf2c0dc5d61f4ff85b7"
+    };
+
+    let allSessions = [];
+
+    function loadFirebase() {
+      const s1 = document.createElement("script");
+      s1.src = "https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js";
+      s1.onload = () => {
+        const s2 = document.createElement("script");
+        s2.src = "https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js";
+        s2.onload = startDashboard;
+        document.head.appendChild(s2);
+      };
+      document.head.appendChild(s1);
+    }
+
+    function formatDuration(ms) {
+      if (!ms || ms < 0) return "—";
+      const s = Math.floor(ms / 1000);
+      const m = Math.floor(s / 60);
+      const h = Math.floor(m / 60);
+      if (h > 0) return h + "h " + (m % 60) + "m";
+      if (m > 0) return m + "m " + (s % 60) + "s";
+      return s + "s";
+    }
+
+    function makeJumpLink(label, path) {
+      if (!label || label === "—") return "—";
+      // Prefer hash routes if present, else just the page
+      const href = path && path.indexOf("#") !== -1 ? path : (path || "index.html");
+      return `<a class="jump-link" href="${href}" target="_blank" rel="noopener">${label}</a>`;
+    }
+
+    function startDashboard() {
+      if (!firebase.apps.length) firebase.initializeApp(BWHS_FIREBASE);
+      const db = firebase.database();
+      document.getElementById("status-text").textContent = "Connected · Live";
+
+      db.ref("presence").on("value", snap => {
+        const now = Date.now();
+        allSessions = [];
+        let live = 0;
+        const titles = {};
+        const devices = { "Smart TV": 0, "Mobile": 0, "Desktop": 0, "Tablet": 0, "Unknown": 0 };
+
+        snap.forEach(ch => {
+          const v = ch.val() || {};
+          // Skip any accidental admin panel sessions
+          if ((v.page || "").toLowerCase().indexOf("audience") !== -1) return;
+
+          const age = now - (v.at || 0);
+          const isLive = age < 45000; // tighter live window
+          if (isLive) live++;
+
+          let watching = v.watching || v.title || "—";
+          // Clean "Watch Title now at BWHS" style titles down to just the film name
+          if (watching && watching !== "—") {
+            watching = watching.replace(/^Watch\s+/i, "").replace(/\s+now\s+at\s+BWHS.*$/i, "").trim();
+            if (!watching) watching = v.title || "—";
+          }
+          if (watching && watching !== "—" && watching.length > 2) {
+            titles[watching] = (titles[watching] || 0) + 1;
+          }
+          const dev = v.device || "Unknown";
+          if (isLive) devices[dev] = (devices[dev] || 0) + 1;
+
+          allSessions.push({
+            id: ch.key,
+            page: v.page || "—",
+            path: v.path || "",
+            title: v.title || "—",
+            watching: watching,
+            at: v.at,
+            startedAt: v.startedAt || v.at,
+            isLive,
+            device: dev,
+            userAgent: v.userAgent || ""
+          });
+        });
+
+        document.getElementById("header-total-viewers").textContent = live;
+        document.getElementById("card-total-viewers").textContent = live;
+        document.getElementById("header-active-streams").textContent = live;
+        document.getElementById("card-total-sessions").textContent = allSessions.length;
+
+        let top = "—", topN = 0;
+        Object.keys(titles).forEach(k => { if (titles[k] > topN) { topN = titles[k]; top = k; } });
+        document.getElementById("card-top-content").textContent = top;
+
+        renderDeviceBreakdown(devices, live);
+        renderTopList(titles);
+        renderTable();
+      }, err => {
+        document.getElementById("status-text").textContent = "Error";
+        document.getElementById("status-text").className = "text-lg font-bold text-rose-600 mt-1";
+      });
+    }
+
+    function renderDeviceBreakdown(devices, live) {
+      const el = document.getElementById("device-breakdown");
+      const items = [
+        { key: "Smart TV", icon: "fa-tv", color: "indigo" },
+        { key: "Mobile", icon: "fa-mobile-screen-button", color: "emerald" },
+        { key: "Desktop", icon: "fa-laptop", color: "purple" },
+        { key: "Tablet", icon: "fa-tablet-screen-button", color: "sky" }
+      ];
+      el.innerHTML = items.map(it => {
+        const n = devices[it.key] || 0;
+        const pct = live ? Math.round((n / live) * 100) : 0;
+        return `<div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
+          <i class="fa-solid ${it.icon} text-${it.color}-600 text-lg mb-1"></i>
+          <div class="text-xs font-bold text-slate-700">${it.key}</div>
+          <div class="text-lg font-extrabold text-slate-900">${n}</div>
+          <div class="text-[10px] text-slate-400">${pct}%</div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderTopList(titles) {
+      const list = Object.entries(titles).sort((a,b) => b[1]-a[1]).slice(0, 6);
+      const el = document.getElementById("top-content-list");
+      if (!list.length) { el.innerHTML = '<p class="text-xs text-slate-400">No active titles yet</p>'; return; }
+      el.innerHTML = list.map(([title, n], i) => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-black flex items-center justify-center shrink-0">${i+1}</span>
+            <div class="text-xs font-bold text-slate-800 truncate">${title}</div>
+          </div>
+          <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">${n}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderTable() {
+      const q = (document.getElementById("viewer-search").value || "").toLowerCase();
+      const filtered = allSessions.filter(s =>
+        s.id.toLowerCase().includes(q) ||
+        (s.page || "").toLowerCase().includes(q) ||
+        (s.watching || "").toLowerCase().includes(q) ||
+        (s.device || "").toLowerCase().includes(q)
+      );
+      const tbody = document.getElementById("viewer-table-body");
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400">No matching sessions</td></tr>';
+        return;
+      }
+      const now = Date.now();
+      tbody.innerHTML = filtered.map(s => {
+        const joined = s.startedAt ? new Date(s.startedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "—";
+        const online = s.startedAt ? formatDuration(now - s.startedAt) : "—";
+        const last = s.at ? new Date(s.at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : "—";
+        const filmLink = makeJumpLink(s.watching || s.page, s.path || "index.html");
+        return `<tr class="hover:bg-indigo-50/40 ${s.isLive ? '' : 'opacity-60'}">
+          <td class="py-3 px-3 font-semibold">${filmLink}</td>
+          <td class="py-3 px-3"><i class="fa-solid fa-${s.device === 'Mobile' ? 'mobile-screen-button' : s.device === 'Smart TV' ? 'tv' : s.device === 'Tablet' ? 'tablet-screen-button' : 'laptop'} text-slate-500 mr-1"></i>${s.device}</td>
+          <td class="py-3 px-3">${joined}</td>
+          <td class="py-3 px-3 font-bold text-emerald-700">${online}</td>
+          <td class="py-3 px-3 ${s.isLive ? 'text-emerald-600 font-bold' : 'text-slate-400'}">${last}${s.isLive ? ' · live' : ''}</td>
+          <td class="py-3 px-3 font-mono text-[10px] text-slate-400">${s.id.slice(0, 10)}…</td>
+        </tr>`;
+      }).join("");
+    }
+
+    loadFirebase();
+  </script>
+</body>
+</html>
