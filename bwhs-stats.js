@@ -1,5 +1,5 @@
 /* BWHS live audience presence system.
-   Tracks real viewers only. Skips the admin audience.html panel.
+   Tracks real viewers only. Skips the admin audience.html panel and bots.
    No public-facing live counts. Aggregates only for popular titles. */
 (function () {
   var BWHS_FIREBASE = {
@@ -16,11 +16,10 @@
   var path = (location.pathname || "").toLowerCase();
   if (path.indexOf("audience.html") !== -1 || path.indexOf("/audience") !== -1) {
     console.log("[BWHS] Admin panel detected — presence tracking skipped.");
-    // Mark this browser as the owner so it is never tracked on other pages either
     try { localStorage.setItem("bwhs_is_owner", "1"); } catch(e){}
     return;
   }
-  // Owner exclusion: if this browser was used on the admin panel, never track it
+  // Owner exclusion
   try {
     if (localStorage.getItem("bwhs_is_owner") === "1") {
       console.log("[BWHS] Owner browser detected — presence tracking skipped.");
@@ -28,13 +27,19 @@
     }
   } catch(e){}
 
+  // Skip obvious bots / crawlers / headless
+  var uaRaw = navigator.userAgent || "";
+  var ua = uaRaw.toLowerCase();
+  if (!ua || /bot|crawler|spider|slurp|facebookexternalhit|whatsapp|telegram|preview|headless|phantom|selenium|puppeteer|playwright|curl|wget|python-requests|go-http|axios|node-fetch/.test(ua)) {
+    console.log("[BWHS] Bot / non-browser detected — presence tracking skipped.");
+    return;
+  }
+
   function loadScript(src, callback) {
     var s = document.createElement("script");
     s.src = src;
     s.onload = callback;
-    s.onerror = function () {
-      console.error("Failed to load", src);
-    };
+    s.onerror = function () { console.error("Failed to load", src); };
     document.head.appendChild(s);
   }
 
@@ -47,13 +52,27 @@
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
-  function detectDevice() {
-    var ua = (navigator.userAgent || "").toLowerCase();
-    if (/smart-tv|tizen|webos|android tv|fire tv|roku/.test(ua)) return "Smart TV";
-    if (/ipad|tablet|kindle/.test(ua)) return "Tablet";
-    if (/mobile|iphone|android|webos/.test(ua)) return "Mobile";
-    if (/windows|macintosh|linux|cros/.test(ua)) return "Desktop";
-    return "Unknown";
+  function detectDevice(userAgent) {
+    var u = (userAgent || navigator.userAgent || "").toLowerCase();
+    if (!u) return "Other";
+
+    // Smart TVs / streaming sticks
+    if (/smart-tv|smarttv|tizen|webos|web0s|android tv|googletv|fire tv|firetv|roku|bravia|netcast|viera|nettv|appletv|hbbtv|vidaa|philips|hisense|tcl|mi box|chromecast/.test(u)) {
+      return "Smart TV";
+    }
+    // Tablets (check before mobile)
+    if (/ipad|tablet|kindle|silk|playbook|nexus 7|nexus 10|galaxy tab|sm-t|lenovo tab|huawei mediapad|mi pad/.test(u) && !/mobile/.test(u)) {
+      return "Tablet";
+    }
+    // Mobile phones
+    if (/mobile|iphone|ipod|android.*mobile|blackberry|bb10|opera mini|iemobile|wpdesktop|webos|fennec|meego/.test(u)) {
+      return "Mobile";
+    }
+    // Desktop / laptop
+    if (/windows|macintosh|mac os|linux|cros|chrome os|ubuntu|fedora|x11/.test(u) || /mozilla/.test(u) && /gecko/.test(u)) {
+      return "Desktop";
+    }
+    return "Other";
   }
 
   function start() {
@@ -88,14 +107,16 @@
 
       function writePresence() {
         var watching = currentWatching();
+        var device = detectDevice();
         var data = {
           page: page,
           at: firebase.database.ServerValue.TIMESTAMP,
           startedAt: startedAt,
           title: document.title || "BWHS",
-          userAgent: (navigator.userAgent || "").slice(0, 180),
-          device: detectDevice(),
-          path: location.pathname + location.hash
+          userAgent: (navigator.userAgent || "").slice(0, 220),
+          device: device,
+          path: location.pathname + location.hash,
+          real: true
         };
         if (watching) data.watching = watching;
         return ref.update(data);
@@ -106,9 +127,10 @@
         at: firebase.database.ServerValue.TIMESTAMP,
         startedAt: startedAt,
         title: document.title || "BWHS",
-        userAgent: (navigator.userAgent || "").slice(0, 180),
+        userAgent: (navigator.userAgent || "").slice(0, 220),
         device: detectDevice(),
-        path: location.pathname + location.hash
+        path: location.pathname + location.hash,
+        real: true
       }).then(function () {
         writePresence();
       }).catch(function (e) {

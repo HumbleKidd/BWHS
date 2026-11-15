@@ -187,21 +187,45 @@
         allSessions = [];
         let live = 0;
         const titles = {};
-        const devices = { "Smart TV": 0, "Mobile": 0, "Desktop": 0, "Tablet": 0, "Unknown": 0 };
+        const devices = {};
+
+        function classifyDevice(v) {
+          let d = (v.device || "").trim();
+          const ua = (v.userAgent || "").toLowerCase();
+          // Re-classify from UA if missing or Unknown
+          if (!d || d === "Unknown" || d === "Other") {
+            if (/smart-tv|smarttv|tizen|webos|android tv|fire tv|roku|bravia|appletv|chromecast|vidaa/.test(ua)) d = "Smart TV";
+            else if (/ipad|tablet|kindle|galaxy tab|sm-t|mediapad/.test(ua)) d = "Tablet";
+            else if (/mobile|iphone|ipod|android.*mobile|blackberry|opera mini/.test(ua)) d = "Mobile";
+            else if (/windows|macintosh|mac os|linux|cros|chrome os/.test(ua)) d = "Desktop";
+            else if (ua) d = "Other";
+            else d = "Other";
+          }
+          // Normalize common variants
+          if (/tv|roku|firetv|tizen|webos/.test(d.toLowerCase())) d = "Smart TV";
+          if (/phone|android|ios|iphone/.test(d.toLowerCase()) && d !== "Smart TV") d = "Mobile";
+          return d || "Other";
+        }
+
+        function isRealPerson(v) {
+          const ua = (v.userAgent || "").toLowerCase();
+          if (!ua || ua.length < 20) return false;
+          if (/bot|crawler|spider|slurp|headless|phantom|selenium|puppeteer|curl|wget|python|go-http|axios|node-fetch|facebookexternalhit|whatsapp|telegram/.test(ua)) return false;
+          if ((v.page || "").toLowerCase().indexOf("audience") !== -1) return false;
+          if ((v.path || "").toLowerCase().indexOf("audience") !== -1) return false;
+          if (v.owner === true || v.isOwner === true) return false;
+          return true;
+        }
 
         snap.forEach(ch => {
           const v = ch.val() || {};
-          // Skip any accidental admin panel sessions and owner markers
-          if ((v.page || "").toLowerCase().indexOf("audience") !== -1) return;
-          if ((v.path || "").toLowerCase().indexOf("audience") !== -1) return;
-          if (v.owner === true || v.isOwner === true) return;
+          if (!isRealPerson(v)) return;
 
           const age = now - (v.at || 0);
-          const isLive = age < 45000; // tighter live window
+          const isLive = age < 45000;
           if (isLive) live++;
 
           let watching = v.watching || v.title || "—";
-          // Clean "Watch Title now at BWHS" style titles down to just the film name
           if (watching && watching !== "—") {
             watching = watching.replace(/^Watch\s+/i, "").replace(/\s+now\s+at\s+BWHS.*$/i, "").trim();
             if (!watching) watching = v.title || "—";
@@ -209,7 +233,8 @@
           if (watching && watching !== "—" && watching.length > 2) {
             titles[watching] = (titles[watching] || 0) + 1;
           }
-          const dev = v.device || "Unknown";
+
+          const dev = classifyDevice(v);
           if (isLive) devices[dev] = (devices[dev] || 0) + 1;
 
           allSessions.push({
@@ -246,18 +271,25 @@
 
     function renderDeviceBreakdown(devices, live) {
       const el = document.getElementById("device-breakdown");
-      const items = [
-        { key: "Smart TV", icon: "fa-tv", color: "indigo" },
-        { key: "Mobile", icon: "fa-mobile-screen-button", color: "emerald" },
-        { key: "Desktop", icon: "fa-laptop", color: "purple" },
-        { key: "Tablet", icon: "fa-tablet-screen-button", color: "sky" }
-      ];
-      el.innerHTML = items.map(it => {
-        const n = devices[it.key] || 0;
+      const iconMap = {
+        "Smart TV": { icon: "fa-tv", color: "indigo" },
+        "Mobile": { icon: "fa-mobile-screen-button", color: "emerald" },
+        "Desktop": { icon: "fa-laptop", color: "purple" },
+        "Tablet": { icon: "fa-tablet-screen-button", color: "sky" },
+        "Other": { icon: "fa-question", color: "slate" }
+      };
+      // Show every device type that currently has online people, sorted by count
+      const entries = Object.entries(devices).filter(([k, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+      if (!entries.length) {
+        el.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">No live devices right now</p>';
+        return;
+      }
+      el.innerHTML = entries.map(([key, n]) => {
+        const meta = iconMap[key] || { icon: "fa-circle-question", color: "slate" };
         const pct = live ? Math.round((n / live) * 100) : 0;
         return `<div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
-          <i class="fa-solid ${it.icon} text-${it.color}-600 text-lg mb-1"></i>
-          <div class="text-xs font-bold text-slate-700">${it.key}</div>
+          <i class="fa-solid ${meta.icon} text-${meta.color}-600 text-lg mb-1"></i>
+          <div class="text-xs font-bold text-slate-700">${key}</div>
           <div class="text-lg font-extrabold text-slate-900">${n}</div>
           <div class="text-[10px] text-slate-400">${pct}%</div>
         </div>`;
@@ -300,7 +332,7 @@
         const filmLink = makeJumpLink(s.watching || s.page, s.path || "index.html");
         return `<tr class="hover:bg-indigo-50/40 ${s.isLive ? '' : 'opacity-60'}">
           <td class="py-3 px-3 font-semibold">${filmLink}</td>
-          <td class="py-3 px-3"><i class="fa-solid fa-${s.device === 'Mobile' ? 'mobile-screen-button' : s.device === 'Smart TV' ? 'tv' : s.device === 'Tablet' ? 'tablet-screen-button' : 'laptop'} text-slate-500 mr-1"></i>${s.device}</td>
+          <td class="py-3 px-3"><i class="fa-solid fa-${s.device === 'Mobile' ? 'mobile-screen-button' : s.device === 'Smart TV' ? 'tv' : s.device === 'Tablet' ? 'tablet-screen-button' : s.device === 'Other' ? 'circle-question' : 'laptop'} text-slate-500 mr-1"></i>${s.device}</td>
           <td class="py-3 px-3">${joined}</td>
           <td class="py-3 px-3 font-bold text-emerald-700">${online}</td>
           <td class="py-3 px-3 ${s.isLive ? 'text-emerald-600 font-bold' : 'text-slate-400'}">${last}${s.isLive ? ' · live' : ''}</td>
