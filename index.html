@@ -2534,8 +2534,8 @@
         top: auto !important;
         right: auto !important;
         bottom: auto !important;
-        width: 470px !important;
-        max-width: 36vw !important;
+        width: 420px;
+        max-width: none;
         aspect-ratio: 16 / 9 !important;
         z-index: 45 !important;
         border-radius: 14px !important;
@@ -2581,6 +2581,27 @@
         touch-action: none;
       }
       .float-drag-handle:active { cursor: grabbing; }
+
+      .float-resize {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        z-index: 40;
+        background: rgba(255,255,255,0.15);
+        border: 1.5px solid rgba(255,255,255,0.55);
+        border-radius: 4px;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .video-viewport.is-floating-dock:hover .float-resize,
+      .video-viewport.is-floating-dock.is-resizing .float-resize {
+        opacity: 1;
+      }
+      .float-resize.nw { top: 4px; left: 4px; }
+      .float-resize.ne { top: 4px; right: 4px; }
+      .float-resize.sw { bottom: 4px; left: 4px; }
+      .float-resize.se { bottom: 4px; right: 4px; }
+
       .float-dock-spacer {
         width: 100%;
         border-radius: 12px;
@@ -7206,52 +7227,106 @@
     const videoViewport = document.getElementById('videoViewport');
 
     // ===== FLOATING MINI PLAYER (after DOM refs exist) =====
-    let floatDockPos = null; // {x, y} translate
+    const FLOAT_STORAGE_KEY = 'bwhs_float_dock_v1';
+    let floatDockPos = null; // {x, y}
+    let floatDockSize = { w: 420 }; // width, height follows aspect
     let isDraggingFloat = false;
+    let isResizingFloat = false;
     let dragOriginX = 0;
     let dragOriginY = 0;
     let dragStartPosX = 0;
     let dragStartPosY = 0;
+    let resizeStartW = 0;
+    let resizeStartX = 0;
+    let resizeStartY = 0;
     let floatObserver = null;
+
+    function loadFloatPrefs() {
+      try {
+        const raw = localStorage.getItem(FLOAT_STORAGE_KEY);
+        if (raw) {
+          const p = JSON.parse(raw);
+          if (p && typeof p.x === 'number' && typeof p.y === 'number') {
+            floatDockPos = { x: p.x, y: p.y };
+          }
+          if (p && typeof p.w === 'number' && p.w >= 240 && p.w <= 900) {
+            floatDockSize.w = p.w;
+          }
+        }
+      } catch (_) {}
+    }
+
+    function saveFloatPrefs() {
+      try {
+        localStorage.setItem(FLOAT_STORAGE_KEY, JSON.stringify({
+          x: floatDockPos ? floatDockPos.x : 0,
+          y: floatDockPos ? floatDockPos.y : 0,
+          w: floatDockSize.w
+        }));
+      } catch (_) {}
+    }
 
     function getFloatSidebarClearance() {
       const sidebar = document.querySelector('.desktop-sidebar');
       if (!sidebar) return 92;
-      // Always leave room for expanded menu so float never covers it
       const expanded = 240;
       const live = Math.ceil(sidebar.getBoundingClientRect().width);
-      return Math.max(live, expanded) + 16;
+      return Math.max(live, expanded) + 20;
+    }
+
+    function getFloatRightClearance() {
+      return 400; // leave room for the also-watch sidebar (~380px)
     }
 
     function ensureFloatSpacer(on) {
-      // Wrapper keeps aspect-ratio so the page never jumps when the player floats.
       const spacer = document.getElementById('floatDockSpacer');
       if (spacer) spacer.remove();
     }
 
     function defaultFloatCorner() {
-      const side = getFloatSidebarClearance();
+      const leftClear = getFloatSidebarClearance();
+      const rightClear = getFloatRightClearance();
       const vh = window.innerHeight;
-      const w = 470;
+      const vw = window.innerWidth;
+      const w = floatDockSize.w;
       const h = w * 9 / 16;
-      // Lower-left, lifted a little more off the bottom
-      const left = side + 12;
-      const top = Math.max(76, vh - h - 92);
-      return { x: left, y: top };
+      // Prefer a spot lower and more toward the center of the free middle area
+      const freeLeft = leftClear + 16;
+      const freeRight = vw - rightClear - 16;
+      const freeWidth = Math.max(200, freeRight - freeLeft);
+      const left = freeLeft + Math.max(0, (freeWidth - w) * 0.45); // a bit left of pure center
+      const top = Math.max(100, vh - h - 140); // lower, not too close to bottom
+      return { x: Math.round(left), y: Math.round(top) };
     }
 
     function applyFloatTransform() {
       if (!videoViewport || !floatDockPos) return;
-      // Use left/top so we never flash at 0,0; transform only for drag smoothing if needed
       videoViewport.style.left = floatDockPos.x + 'px';
       videoViewport.style.top = floatDockPos.y + 'px';
+      videoViewport.style.width = floatDockSize.w + 'px';
+      videoViewport.style.maxWidth = 'none';
       videoViewport.style.transform = '';
+    }
+
+    function constrainFloat() {
+      if (!videoViewport || !floatDockPos) return;
+      const side = getFloatSidebarClearance();
+      const right = getFloatRightClearance();
+      const w = floatDockSize.w;
+      const h = w * 9 / 16;
+      const maxX = window.innerWidth - w - right - 8;
+      const maxY = window.innerHeight - h - 12;
+      floatDockPos.x = Math.max(side + 8, Math.min(maxX, floatDockPos.x));
+      floatDockPos.y = Math.max(12, Math.min(maxY, floatDockPos.y));
+      applyFloatTransform();
     }
 
     let floatExitTimer = null;
 
     function getFloatTriggerEl() {
-      return document.getElementById('filmArtworksSection')
+      // Prefer the dynamic "More With [Actor]" shelves; fall back to artworks
+      return document.getElementById('actorsMovieShelvesContainer')
+        || document.getElementById('filmArtworksSection')
         || document.getElementById('castBarAnchor')
         || document.getElementById('videoViewportWrapper');
     }
@@ -7265,24 +7340,19 @@
       videoViewport.classList.remove('float-fading');
 
       if (videoViewport.classList.contains('is-floating-dock') && videoViewport.classList.contains('float-visible')) {
-        if (!isDraggingFloat && floatDockPos) {
-          const minX = getFloatSidebarClearance() + 12;
-          if (floatDockPos.x < minX) {
-            floatDockPos.x = minX;
-            applyFloatTransform();
-          }
-        }
+        constrainFloat();
         return;
       }
 
       ensureFloatSpacer(true);
-      if (!floatDockPos) floatDockPos = defaultFloatCorner();
-      // Set position before adding fixed class to avoid any 0,0 flash
+      if (!floatDockPos) {
+        loadFloatPrefs();
+        if (!floatDockPos) floatDockPos = defaultFloatCorner();
+      }
       applyFloatTransform();
       videoViewport.classList.add('is-floating-dock');
       videoViewport.classList.remove('float-visible');
 
-      // Fade in only when appearing after section is fully gone
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (videoViewport && videoViewport.classList.contains('is-floating-dock')) {
@@ -7298,18 +7368,17 @@
         clearTimeout(floatExitTimer);
         floatExitTimer = null;
       }
-      videoViewport.classList.remove('float-visible', 'float-fading', 'is-floating-dock', 'is-dragging');
+      videoViewport.classList.remove('float-visible', 'float-fading', 'is-floating-dock', 'is-dragging', 'is-resizing');
       videoViewport.style.transform = '';
       videoViewport.style.left = '';
       videoViewport.style.top = '';
       videoViewport.style.width = '';
       videoViewport.style.maxWidth = '';
-      floatDockPos = null;
       isDraggingFloat = false;
+      isResizingFloat = false;
       ensureFloatSpacer(false);
     }
 
-    // Instant hide — no fade delay when section comes back into view
     function exitFloatingDock() {
       forceExitFloatingDock();
     }
@@ -7325,16 +7394,17 @@
       if (!trigger) return;
 
       const tRect = trigger.getBoundingClientRect();
-      const artBottom = tRect.bottom;
+      const vh = window.innerHeight;
       const isFloating = videoViewport.classList.contains('is-floating-dock');
 
-      // Hysteresis so it does not flicker / fight at the artwork edge.
-      // Show after the bottom of Film Artworks has left the top of the view.
-      if (!isFloating && artBottom <= 92) {
+      // Show when the "More With" shelves (or fallback) have scrolled so their top
+      // is around the middle of the viewport (~half the cover arts visible).
+      // Hysteresis keeps it from flickering.
+      if (!isFloating && tRect.top <= vh * 0.48 && tRect.bottom > vh * 0.15) {
         enterFloatingDock();
         return;
       }
-      if (isFloating && artBottom > 168) {
+      if (isFloating && tRect.top > vh * 0.62) {
         forceExitFloatingDock();
       }
     }
@@ -7351,10 +7421,10 @@
       if (typeof IntersectionObserver === 'undefined') return;
       floatObserver = new IntersectionObserver(() => updateFloatProgressive(), {
         root: null,
-        threshold: [0, 0.08, 0.2, 0.4, 0.7, 1],
-        rootMargin: '0px 0px -8% 0px'
+        threshold: [0, 0.2, 0.4, 0.5, 0.6, 0.8, 1],
+        rootMargin: '0px'
       });
-      const art = document.getElementById('filmArtworksSection');
+      const art = document.getElementById('actorsMovieShelvesContainer') || document.getElementById('filmArtworksSection');
       const wrapper = document.getElementById('videoViewportWrapper');
       if (art) floatObserver.observe(art);
       if (wrapper) floatObserver.observe(wrapper);
@@ -7380,51 +7450,99 @@
       });
 
       document.addEventListener('pointermove', (e) => {
-        if (!isDraggingFloat || !videoViewport) return;
-        const dx = e.clientX - dragOriginX;
-        const dy = e.clientY - dragOriginY;
-        let x = dragStartPosX + dx;
-        let y = dragStartPosY + dy;
-        const side = getFloatSidebarClearance();
-        const w = videoViewport.offsetWidth || 340;
-        const h = videoViewport.offsetHeight || 190;
-        const maxX = window.innerWidth - w - 12;
-        const maxY = window.innerHeight - h - 12;
-        x = Math.max(side + 8, Math.min(maxX, x));
-        y = Math.max(8, Math.min(maxY, y));
-        floatDockPos = { x, y };
-        videoViewport.style.left = x + 'px';
-        videoViewport.style.top = y + 'px';
-        videoViewport.style.transform = '';
+        if (isDraggingFloat && videoViewport && floatDockPos) {
+          const dx = e.clientX - dragOriginX;
+          const dy = e.clientY - dragOriginY;
+          floatDockPos.x = dragStartPosX + dx;
+          floatDockPos.y = dragStartPosY + dy;
+          constrainFloat();
+        }
+        if (isResizingFloat && videoViewport && floatDockPos) {
+          const dx = e.clientX - resizeStartX;
+          const handle = e.target && e.target.classList && e.target.classList.contains('float-resize') ? e.target : null;
+          const isLeft = handle && (handle.classList.contains('nw') || handle.classList.contains('sw'));
+          let newW = resizeStartW + (isLeft ? -dx : dx);
+          newW = Math.max(260, Math.min(860, newW));
+          const oldW = floatDockSize.w;
+          floatDockSize.w = newW;
+          if (isLeft) {
+            floatDockPos.x += (oldW - newW);
+          }
+          constrainFloat();
+        }
       });
 
       const endDrag = () => {
-        if (!isDraggingFloat) return;
+        if (isDraggingFloat || isResizingFloat) {
+          saveFloatPrefs();
+        }
         isDraggingFloat = false;
-        if (videoViewport) videoViewport.classList.remove('is-dragging');
+        isResizingFloat = false;
+        if (videoViewport) videoViewport.classList.remove('is-dragging', 'is-resizing');
       };
       document.addEventListener('pointerup', endDrag);
       document.addEventListener('pointercancel', endDrag);
     }
 
+    function setupFloatResizeHandles() {
+      if (!videoViewport || videoViewport._resizeBound) return;
+      videoViewport._resizeBound = true;
+
+      const corners = [
+        { cls: 'float-resize nw', cursor: 'nwse-resize', dir: -1 },
+        { cls: 'float-resize ne', cursor: 'nesw-resize', dir: 1 },
+        { cls: 'float-resize sw', cursor: 'nesw-resize', dir: -1 },
+        { cls: 'float-resize se', cursor: 'nwse-resize', dir: 1 }
+      ];
+
+      corners.forEach(c => {
+        const el = document.createElement('div');
+        el.className = c.cls;
+        el.style.cursor = c.cursor;
+        el.title = 'Drag to resize';
+        videoViewport.appendChild(el);
+
+        el.addEventListener('pointerdown', (e) => {
+          if (!videoViewport.classList.contains('is-floating-dock')) return;
+          e.preventDefault();
+          e.stopPropagation();
+          isResizingFloat = true;
+          videoViewport.classList.add('is-resizing');
+          resizeStartW = floatDockSize.w;
+          resizeStartX = e.clientX;
+          resizeStartY = e.clientY;
+          // Store direction on the element for the move handler if needed
+          el._dir = c.dir;
+          try { el.setPointerCapture(e.pointerId); } catch (_) {}
+        });
+      });
+    }
+
     (function () {
+      loadFloatPrefs();
       const sidebar = document.querySelector('.desktop-sidebar');
       if (!sidebar) return;
       const nudge = () => {
         if (!videoViewport || !floatDockPos || !videoViewport.classList.contains('is-floating-dock')) return;
-        const minX = getFloatSidebarClearance() + 12;
-        if (floatDockPos.x < minX) {
-          floatDockPos.x = minX;
-          applyFloatTransform();
-        }
+        constrainFloat();
       };
       sidebar.addEventListener('mouseenter', () => setTimeout(nudge, 40));
       sidebar.addEventListener('mouseleave', () => setTimeout(nudge, 40));
     })();
 
     window.addEventListener('scroll', handleDesktopFloatingVideoDock, { passive: true });
+    window.addEventListener('resize', () => {
+      if (videoViewport && videoViewport.classList.contains('is-floating-dock')) constrainFloat();
+    });
 
-    const singleLineCastBar = document.getElementById('singleLineCastBar');
+    // Call setups after a short delay so DOM is ready
+    setTimeout(() => {
+      setupFloatingDrag();
+      setupFloatResizeHandles();
+      setupFloatingDockObserver();
+    }, 400);
+
+const singleLineCastBar = document.getElementById('singleLineCastBar');
     const artworksContainer = document.getElementById('artworksContainer');
     const sidebarRecList = document.getElementById('sidebarRecList');
     const btnLoadMoreRelated = document.getElementById('btnLoadMoreRelated');
