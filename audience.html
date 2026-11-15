@@ -91,7 +91,7 @@
         <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
           <i class="fa-solid fa-mobile-screen text-indigo-600"></i> Device Breakdown (Live)
         </h2>
-        <div id="device-breakdown" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+        <div id="device-breakdown" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"></div>
       </div>
       <div class="glass-card rounded-2xl p-5">
         <h2 class="text-md font-bold text-slate-900 mb-3 flex items-center justify-between">
@@ -108,7 +108,7 @@
           <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
             <i class="fa-solid fa-users-viewfinder text-indigo-600"></i> Active Sessions
           </h2>
-          <p class="text-xs text-slate-500">Live presence · updates instantly · admin only</p>
+          <p class="text-xs text-slate-500">Every live presence · real people only · updates instantly</p>
         </div>
         <div class="relative min-w-[220px]">
           <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
@@ -170,14 +170,39 @@
 
     function makeJumpLink(label, path) {
       if (!label || label === "—") return "—";
-      // Prefer hash routes if present, else just the page
       const href = path && path.indexOf("#") !== -1 ? path : (path || "index.html");
       return `<a class="jump-link" href="${href}" target="_blank" rel="noopener">${label}</a>`;
     }
 
+    // Always return a human-readable device name — never blank
+    function classifyDevice(v) {
+      let d = (v.device || "").trim();
+      const ua = (v.userAgent || "").toLowerCase();
+
+      // Prefer stored label if it's already good
+      if (d && d !== "Unknown" && d !== "Other" && d !== "—") {
+        return d;
+      }
+
+      // Strong UA classification
+      if (/smart-tv|smarttv|tizen|webos|web0s|android tv|googletv|fire tv|firetv|roku|bravia|netcast|viera|appletv|hbbtv|vidaa|philips|hisense|tcl|mi box|chromecast|nettv/.test(ua)) return "Smart TV";
+      if (/ipad|tablet|kindle|silk|playbook|nexus 7|nexus 10|galaxy tab|sm-t|lenovo tab|huawei mediapad|mi pad/.test(ua)) return "Tablet";
+      if (/mobile|iphone|ipod|android.*mobile|blackberry|bb10|opera mini|iemobile|fennec|meego/.test(ua)) return "Mobile";
+      if (/windows|macintosh|mac os|linux|cros|chrome os|ubuntu|fedora|x11/.test(ua)) return "Desktop";
+
+      // Fallback — still name it so it appears in the breakdown
+      if (ua) return "Other Device";
+      return "Unknown Device";
+    }
+
+    function isBot(v) {
+      const ua = (v.userAgent || "").toLowerCase();
+      if (!ua) return false; // keep it, just label as Unknown
+      return /bot|crawler|spider|slurp|headless|phantom|selenium|puppeteer|playwright|curl|wget|python-requests|go-http-client|axios|node-fetch|facebookexternalhit|whatsapp|telegram|preview/.test(ua);
+    }
+
     function startDashboard() {
       if (!firebase.apps.length) firebase.initializeApp(BWHS_FIREBASE);
-      // Mark this browser as owner so main site never tracks it
       try { localStorage.setItem("bwhs_is_owner", "1"); } catch(e){}
       const db = firebase.database();
       document.getElementById("status-text").textContent = "Connected · Live";
@@ -189,40 +214,17 @@
         const titles = {};
         const devices = {};
 
-        function classifyDevice(v) {
-          let d = (v.device || "").trim();
-          const ua = (v.userAgent || "").toLowerCase();
-          // Re-classify from UA if missing or Unknown
-          if (!d || d === "Unknown" || d === "Other") {
-            if (/smart-tv|smarttv|tizen|webos|android tv|fire tv|roku|bravia|appletv|chromecast|vidaa/.test(ua)) d = "Smart TV";
-            else if (/ipad|tablet|kindle|galaxy tab|sm-t|mediapad/.test(ua)) d = "Tablet";
-            else if (/mobile|iphone|ipod|android.*mobile|blackberry|opera mini/.test(ua)) d = "Mobile";
-            else if (/windows|macintosh|mac os|linux|cros|chrome os/.test(ua)) d = "Desktop";
-            else if (ua) d = "Other";
-            else d = "Other";
-          }
-          // Normalize common variants
-          if (/tv|roku|firetv|tizen|webos/.test(d.toLowerCase())) d = "Smart TV";
-          if (/phone|android|ios|iphone/.test(d.toLowerCase()) && d !== "Smart TV") d = "Mobile";
-          return d || "Other";
-        }
-
-        function isRealPerson(v) {
-          const ua = (v.userAgent || "").toLowerCase();
-          if (!ua || ua.length < 20) return false;
-          if (/bot|crawler|spider|slurp|headless|phantom|selenium|puppeteer|curl|wget|python|go-http|axios|node-fetch|facebookexternalhit|whatsapp|telegram/.test(ua)) return false;
-          if ((v.page || "").toLowerCase().indexOf("audience") !== -1) return false;
-          if ((v.path || "").toLowerCase().indexOf("audience") !== -1) return false;
-          if (v.owner === true || v.isOwner === true) return false;
-          return true;
-        }
-
         snap.forEach(ch => {
           const v = ch.val() || {};
-          if (!isRealPerson(v)) return;
+
+          // Skip admin panel and explicit owner markers only
+          if ((v.page || "").toLowerCase().indexOf("audience") !== -1) return;
+          if ((v.path || "").toLowerCase().indexOf("audience") !== -1) return;
+          if (v.owner === true || v.isOwner === true) return;
+          if (isBot(v)) return;
 
           const age = now - (v.at || 0);
-          const isLive = age < 45000;
+          const isLive = age < 60000; // 60s window so more sessions stay visible
           if (isLive) live++;
 
           let watching = v.watching || v.title || "—";
@@ -276,9 +278,9 @@
         "Mobile": { icon: "fa-mobile-screen-button", color: "emerald" },
         "Desktop": { icon: "fa-laptop", color: "purple" },
         "Tablet": { icon: "fa-tablet-screen-button", color: "sky" },
-        "Other": { icon: "fa-question", color: "slate" }
+        "Other Device": { icon: "fa-circle-question", color: "amber" },
+        "Unknown Device": { icon: "fa-question", color: "slate" }
       };
-      // Show every device type that currently has online people, sorted by count
       const entries = Object.entries(devices).filter(([k, n]) => n > 0).sort((a, b) => b[1] - a[1]);
       if (!entries.length) {
         el.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">No live devices right now</p>';
@@ -311,6 +313,15 @@
       `).join("");
     }
 
+    function deviceIcon(dev) {
+      if (dev === "Mobile") return "mobile-screen-button";
+      if (dev === "Smart TV") return "tv";
+      if (dev === "Tablet") return "tablet-screen-button";
+      if (dev === "Desktop") return "laptop";
+      if (dev === "Other Device") return "circle-question";
+      return "question";
+    }
+
     function renderTable() {
       const q = (document.getElementById("viewer-search").value || "").toLowerCase();
       const filtered = allSessions.filter(s =>
@@ -332,7 +343,7 @@
         const filmLink = makeJumpLink(s.watching || s.page, s.path || "index.html");
         return `<tr class="hover:bg-indigo-50/40 ${s.isLive ? '' : 'opacity-60'}">
           <td class="py-3 px-3 font-semibold">${filmLink}</td>
-          <td class="py-3 px-3"><i class="fa-solid fa-${s.device === 'Mobile' ? 'mobile-screen-button' : s.device === 'Smart TV' ? 'tv' : s.device === 'Tablet' ? 'tablet-screen-button' : s.device === 'Other' ? 'circle-question' : 'laptop'} text-slate-500 mr-1"></i>${s.device}</td>
+          <td class="py-3 px-3"><i class="fa-solid fa-${deviceIcon(s.device)} text-slate-500 mr-1"></i>${s.device}</td>
           <td class="py-3 px-3">${joined}</td>
           <td class="py-3 px-3 font-bold text-emerald-700">${online}</td>
           <td class="py-3 px-3 ${s.isLive ? 'text-emerald-600 font-bold' : 'text-slate-400'}">${last}${s.isLive ? ' · live' : ''}</td>
