@@ -174,30 +174,21 @@
       return `<a class="jump-link" href="${href}" target="_blank" rel="noopener">${label}</a>`;
     }
 
-    // Always return a human-readable device name — never blank
     function classifyDevice(v) {
       let d = (v.device || "").trim();
       const ua = (v.userAgent || "").toLowerCase();
-
-      // Prefer stored label if it's already good
-      if (d && d !== "Unknown" && d !== "Other" && d !== "—") {
-        return d;
-      }
-
-      // Strong UA classification
+      if (d && d !== "Unknown" && d !== "Other" && d !== "—") return d;
       if (/smart-tv|smarttv|tizen|webos|web0s|android tv|googletv|fire tv|firetv|roku|bravia|netcast|viera|appletv|hbbtv|vidaa|philips|hisense|tcl|mi box|chromecast|nettv/.test(ua)) return "Smart TV";
       if (/ipad|tablet|kindle|silk|playbook|nexus 7|nexus 10|galaxy tab|sm-t|lenovo tab|huawei mediapad|mi pad/.test(ua)) return "Tablet";
       if (/mobile|iphone|ipod|android.*mobile|blackberry|bb10|opera mini|iemobile|fennec|meego/.test(ua)) return "Mobile";
       if (/windows|macintosh|mac os|linux|cros|chrome os|ubuntu|fedora|x11/.test(ua)) return "Desktop";
-
-      // Fallback — still name it so it appears in the breakdown
       if (ua) return "Other Device";
-      return "Unknown Device";
+      return "Unknown";
     }
 
     function isBot(v) {
       const ua = (v.userAgent || "").toLowerCase();
-      if (!ua) return false; // keep it, just label as Unknown
+      if (!ua) return false;
       return /bot|crawler|spider|slurp|headless|phantom|selenium|puppeteer|playwright|curl|wget|python-requests|go-http-client|axios|node-fetch|facebookexternalhit|whatsapp|telegram|preview/.test(ua);
     }
 
@@ -212,19 +203,17 @@
         allSessions = [];
         let live = 0;
         const titles = {};
-        const devices = {};
+        const devices = { "Smart TV": 0, "Mobile": 0, "Desktop": 0, "Tablet": 0, "Unknown": 0, "Other Device": 0 };
 
         snap.forEach(ch => {
           const v = ch.val() || {};
-
-          // Skip admin panel and explicit owner markers only
           if ((v.page || "").toLowerCase().indexOf("audience") !== -1) return;
           if ((v.path || "").toLowerCase().indexOf("audience") !== -1) return;
           if (v.owner === true || v.isOwner === true) return;
           if (isBot(v)) return;
 
           const age = now - (v.at || 0);
-          const isLive = age < 60000; // 60s window so more sessions stay visible
+          const isLive = age < 60000;
           if (isLive) live++;
 
           let watching = v.watching || v.title || "—";
@@ -278,14 +267,11 @@
         "Mobile": { icon: "fa-mobile-screen-button", color: "emerald" },
         "Desktop": { icon: "fa-laptop", color: "purple" },
         "Tablet": { icon: "fa-tablet-screen-button", color: "sky" },
-        "Other Device": { icon: "fa-circle-question", color: "amber" },
-        "Unknown Device": { icon: "fa-question", color: "slate" }
+        "Unknown": { icon: "fa-question", color: "slate" },
+        "Other Device": { icon: "fa-circle-question", color: "amber" }
       };
-      const entries = Object.entries(devices).filter(([k, n]) => n > 0).sort((a, b) => b[1] - a[1]);
-      if (!entries.length) {
-        el.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">No live devices right now</p>';
-        return;
-      }
+      const order = ["Smart TV", "Mobile", "Desktop", "Tablet", "Unknown", "Other Device"];
+      const entries = order.filter(k => devices[k] !== undefined).map(k => [k, devices[k] || 0]).sort((a,b) => b[1] - a[1]);
       el.innerHTML = entries.map(([key, n]) => {
         const meta = iconMap[key] || { icon: "fa-circle-question", color: "slate" };
         const pct = live ? Math.round((n / live) * 100) : 0;
@@ -318,8 +304,8 @@
       if (dev === "Smart TV") return "tv";
       if (dev === "Tablet") return "tablet-screen-button";
       if (dev === "Desktop") return "laptop";
-      if (dev === "Other Device") return "circle-question";
-      return "question";
+      if (dev === "Unknown") return "question";
+      return "circle-question";
     }
 
     function renderTable() {
