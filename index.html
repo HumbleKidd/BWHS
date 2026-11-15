@@ -7349,10 +7349,8 @@
       }
 
       ensureFloatSpacer(true);
-      if (!floatDockPos) {
-        loadFloatPrefs();
-        if (!floatDockPos) floatDockPos = defaultFloatCorner();
-      }
+      // Always use the default position (no remembered/saved position)
+      floatDockPos = defaultFloatCorner();
       applyFloatTransform();
       videoViewport.classList.add('is-floating-dock');
       videoViewport.classList.remove('float-visible');
@@ -7496,9 +7494,7 @@
       });
 
       const endDrag = () => {
-        if (isDraggingFloat || isResizingFloat) {
-          saveFloatPrefs();
-        }
+        // Position is not remembered — always returns to default next time
         isDraggingFloat = false;
         isResizingFloat = false;
         if (videoViewport) videoViewport.classList.remove('is-dragging', 'is-resizing');
@@ -7542,7 +7538,11 @@
     }
 
     (function () {
-      loadFloatPrefs();
+      // Clear any previously saved positions so it always starts at default
+      try {
+        localStorage.removeItem('bwhs_float_dock_v1');
+        localStorage.removeItem('bwhs_float_dock_v2');
+      } catch (_) {}
       const sidebar = document.querySelector('.desktop-sidebar');
       if (!sidebar) return;
       const nudge = () => {
