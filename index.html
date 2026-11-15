@@ -7228,7 +7228,7 @@
     const videoViewport = document.getElementById('videoViewport');
 
     // ===== FLOATING MINI PLAYER (after DOM refs exist) =====
-    const FLOAT_STORAGE_KEY = 'bwhs_float_dock_v1';
+    const FLOAT_STORAGE_KEY = 'bwhs_float_dock_v2';
     let floatDockPos = null; // {x, y}
     let floatDockSize = { w: 420 }; // width, height follows aspect
     let isDraggingFloat = false;
@@ -7289,9 +7289,18 @@
       const vw = window.innerWidth;
       const w = floatDockSize.w;
       const h = w * 9 / 16;
-      // Bottom-center of the screen, almost at the bottom
-      const left = Math.round((vw - w) / 2);
-      const top = Math.round(vh - h - 28);
+
+      // Account for left sidebar + right panel so the mini player sits
+      // in the middle of the main content area, near the bottom
+      // (matches the yellow-outline reference area).
+      const leftClear = getFloatSidebarClearance();
+      const rightClear = getFloatRightClearance();
+      const freeLeft = leftClear + 16;
+      const freeRight = vw - rightClear - 16;
+      const freeWidth = Math.max(w, freeRight - freeLeft);
+      const left = Math.round(freeLeft + (freeWidth - w) / 2);
+      const top = Math.round(vh - h - 36); // almost bottom
+
       return { x: left, y: top };
     }
 
@@ -7308,7 +7317,7 @@
       if (!videoViewport || !floatDockPos) return;
       const w = floatDockSize.w;
       const h = w * 9 / 16;
-      const margin = 16;
+      const margin = 12;
       const maxX = window.innerWidth - w - margin;
       const maxY = window.innerHeight - h - margin;
       floatDockPos.x = Math.max(margin, Math.min(maxX, floatDockPos.x));
