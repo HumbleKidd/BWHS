@@ -16,8 +16,17 @@
   var path = (location.pathname || "").toLowerCase();
   if (path.indexOf("audience.html") !== -1 || path.indexOf("/audience") !== -1) {
     console.log("[BWHS] Admin panel detected — presence tracking skipped.");
+    // Mark this browser as the owner so it is never tracked on other pages either
+    try { localStorage.setItem("bwhs_is_owner", "1"); } catch(e){}
     return;
   }
+  // Owner exclusion: if this browser was used on the admin panel, never track it
+  try {
+    if (localStorage.getItem("bwhs_is_owner") === "1") {
+      console.log("[BWHS] Owner browser detected — presence tracking skipped.");
+      return;
+    }
+  } catch(e){}
 
   function loadScript(src, callback) {
     var s = document.createElement("script");

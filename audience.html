@@ -177,6 +177,8 @@
 
     function startDashboard() {
       if (!firebase.apps.length) firebase.initializeApp(BWHS_FIREBASE);
+      // Mark this browser as owner so main site never tracks it
+      try { localStorage.setItem("bwhs_is_owner", "1"); } catch(e){}
       const db = firebase.database();
       document.getElementById("status-text").textContent = "Connected · Live";
 
@@ -189,8 +191,10 @@
 
         snap.forEach(ch => {
           const v = ch.val() || {};
-          // Skip any accidental admin panel sessions
+          // Skip any accidental admin panel sessions and owner markers
           if ((v.page || "").toLowerCase().indexOf("audience") !== -1) return;
+          if ((v.path || "").toLowerCase().indexOf("audience") !== -1) return;
+          if (v.owner === true || v.isOwner === true) return;
 
           const age = now - (v.at || 0);
           const isLive = age < 45000; // tighter live window
