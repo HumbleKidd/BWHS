@@ -15263,12 +15263,9 @@ body.player-fs-active.fs-chrome-on [role="button"] {
   // Bulletproof modal: open, close, QR, all clicks work
   (function(){
     function openModal(){
-      var m = document.getElementById('socialModalBackdrop');
-      if (m) {
-        m.classList.add('is-open');
-        document.body.style.overflow = 'hidden';
-        generateQR();
-      }
+      // Permanently disabled — never lock scroll
+      console.log('[BWHS] Modal open blocked');
+      return;
     }
     function closeModal(){
       var m = document.getElementById('socialModalBackdrop');
@@ -15295,10 +15292,11 @@ body.player-fs-active.fs-chrome-on [role="button"] {
     }
     window.openSocialPopup = function(e){
       if (e && e.preventDefault) e.preventDefault();
-      openModal();
+      // Modal permanently disabled
+      return;
     };
-    // Auto open after 5s
-    setTimeout(openModal, 5000);
+    // Auto open removed — was locking page scroll
+    // setTimeout(openModal, 5000);
     // Wire close + share + outside click
     function wire(){
       var btn = document.getElementById('mobileHeaderShareBtn');
@@ -15751,6 +15749,28 @@ body.player-fs-active.fs-chrome-on [role="button"] {
   document.addEventListener('webkitfullscreenchange', boost);
   setInterval(boost, 8000);
   window.addEventListener('load', boost);
+})();
+</script>
+
+
+<script>
+// Safety: ensure page can always scroll
+(function() {
+  function unlockScroll() {
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.height = '';
+    document.body.style.touchAction = '';
+  }
+  unlockScroll();
+  window.addEventListener('load', unlockScroll);
+  setTimeout(unlockScroll, 100);
+  setTimeout(unlockScroll, 1000);
+  setTimeout(unlockScroll, 3000);
+  // Also watch for any accidental locks
+  const obs = new MutationObserver(unlockScroll);
+  obs.observe(document.body, { attributes: true, attributeFilter: ['style'] });
 })();
 </script>
 
