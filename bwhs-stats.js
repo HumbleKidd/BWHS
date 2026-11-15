@@ -1,6 +1,7 @@
 /* BWHS live audience presence system.
-   Tracks real viewers only. Skips the admin audience.html panel and bots.
-   No public-facing live counts. Aggregates only for popular titles. */
+   Tracks real viewers. Skips only the admin audience.html panel itself and bots.
+   Updates frequently for near-instant visibility.
+*/
 (function () {
   var BWHS_FIREBASE = {
     apiKey: "AIzaSyBZhtlZRaWQPxFPEP02toZnsFQWOPvbUJA",
@@ -15,23 +16,15 @@
   // Never track the admin panel itself
   var path = (location.pathname || "").toLowerCase();
   if (path.indexOf("audience.html") !== -1 || path.indexOf("/audience") !== -1) {
-    console.log("[BWHS] Admin panel detected — presence tracking skipped.");
-    try { localStorage.setItem("bwhs_is_owner", "1"); } catch(e){}
+    console.log("[BWHS] Admin panel — presence tracking skipped.");
     return;
   }
-  // Owner exclusion
-  try {
-    if (localStorage.getItem("bwhs_is_owner") === "1") {
-      console.log("[BWHS] Owner browser detected — presence tracking skipped.");
-      return;
-    }
-  } catch(e){}
 
-  // Skip obvious bots / crawlers / headless
+  // Skip obvious bots
   var uaRaw = navigator.userAgent || "";
   var ua = uaRaw.toLowerCase();
   if (!ua || /bot|crawler|spider|slurp|facebookexternalhit|whatsapp|telegram|preview|headless|phantom|selenium|puppeteer|playwright|curl|wget|python-requests|go-http|axios|node-fetch/.test(ua)) {
-    console.log("[BWHS] Bot / non-browser detected — presence tracking skipped.");
+    console.log("[BWHS] Bot detected — presence skipped.");
     return;
   }
 
@@ -54,30 +47,17 @@
 
   function detectDevice(userAgent) {
     var u = (userAgent || navigator.userAgent || "").toLowerCase();
-    if (!u) return "Other";
+    if (!u) return "Unknown";
 
-    // Smart TVs / streaming sticks
-    if (/smart-tv|smarttv|tizen|webos|web0s|android tv|googletv|fire tv|firetv|roku|bravia|netcast|viera|nettv|appletv|hbbtv|vidaa|philips|hisense|tcl|mi box|chromecast/.test(u)) {
-      return "Smart TV";
-    }
-    // Tablets (check before mobile)
-    if (/ipad|tablet|kindle|silk|playbook|nexus 7|nexus 10|galaxy tab|sm-t|lenovo tab|huawei mediapad|mi pad/.test(u) && !/mobile/.test(u)) {
-      return "Tablet";
-    }
-    // Mobile phones
-    if (/mobile|iphone|ipod|android.*mobile|blackberry|bb10|opera mini|iemobile|wpdesktop|webos|fennec|meego/.test(u)) {
-      return "Mobile";
-    }
-    // Desktop / laptop
-    if (/windows|macintosh|mac os|linux|cros|chrome os|ubuntu|fedora|x11/.test(u) || /mozilla/.test(u) && /gecko/.test(u)) {
-      return "Desktop";
-    }
-    return "Other";
+    if (/smart-tv|smarttv|tizen|webos|web0s|android tv|googletv|fire tv|firetv|roku|bravia|netcast|viera|nettv|appletv|hbbtv|vidaa|philips|hisense|tcl|mi box|chromecast/.test(u)) return "Smart TV";
+    if (/ipad|tablet|kindle|silk|playbook|nexus 7|nexus 10|galaxy tab|sm-t|lenovo tab|huawei mediapad|mi pad/.test(u)) return "Tablet";
+    if (/mobile|iphone|ipod|android.*mobile|blackberry|bb10|opera mini|iemobile|fennec/.test(u)) return "Mobile";
+    if (/windows|macintosh|mac os|linux|cros|chrome os|ubuntu|fedora|x11/.test(u)) return "Desktop";
+    return "Other Device";
   }
 
   function start() {
     try {
-      if (typeof firebase === "undefined") return;
       if (!firebase.apps.length) firebase.initializeApp(BWHS_FIREBASE);
       var db = firebase.database();
 
@@ -92,7 +72,8 @@
       var today = dayKey();
       var startedAt = Date.now();
 
-      ref.onDisconnect().remove().catch(function () {});
+      // Reliable disconnect cleanup
+      ref.onDisconnect().remove();
 
       function currentWatching() {
         var t = document.title || "";
@@ -107,14 +88,13 @@
 
       function writePresence() {
         var watching = currentWatching();
-        var device = detectDevice();
         var data = {
           page: page,
           at: firebase.database.ServerValue.TIMESTAMP,
           startedAt: startedAt,
           title: document.title || "BWHS",
           userAgent: (navigator.userAgent || "").slice(0, 220),
-          device: device,
+          device: detectDevice(),
           path: location.pathname + location.hash,
           real: true
         };
@@ -122,6 +102,7 @@
         return ref.update(data);
       }
 
+      // Initial write
       ref.set({
         page: page,
         at: firebase.database.ServerValue.TIMESTAMP,
@@ -131,16 +112,16 @@
         device: detectDevice(),
         path: location.pathname + location.hash,
         real: true
-      }).then(function () {
-        writePresence();
       }).catch(function (e) {
-        console.warn("Presence write failed", e);
+        console.warn("Presence set failed", e);
       });
 
+      // Frequent heartbeat for near-instant updates (every 5s)
       setInterval(function () {
         writePresence().catch(function () {});
-      }, 15000);
+      }, 5000);
 
+      // Instant update on title change
       var titleObs = new MutationObserver(function () {
         writePresence().catch(function () {});
       });
@@ -152,6 +133,11 @@
         var pObs = new MutationObserver(function () { writePresence().catch(function () {}); });
         pObs.observe(pTitle, { childList: true, characterData: true, subtree: true });
       }
+
+      // Also update on hash change (SPA navigation)
+      window.addEventListener("hashchange", function () {
+        writePresence().catch(function () {});
+      });
 
       function bump(path, by) {
         db.ref(path).transaction(function (cur) { return (cur || 0) + (by || 1); });
@@ -174,19 +160,10 @@
           var slug = String(name).slice(0, 80).replace(/[.#$\/\[\]]/g, "_");
           bump("stats/titles/" + slug, 1);
           ref.update({ watching: name.slice(0, 100), at: firebase.database.ServerValue.TIMESTAMP });
-        },
-        liveCount: function (cb) {
-          db.ref("presence").on("value", function (snap) {
-            var n = 0, now = Date.now();
-            snap.forEach(function (ch) {
-              var v = ch.val() || {};
-              var at = v.at || 0;
-              if (now - at < 45000) n++;
-            });
-            if (typeof cb === "function") cb(n);
-          });
         }
       };
+
+      console.log("[BWHS] Presence tracking active for", id);
     } catch (err) {
       console.error("BWHS stats init error", err);
     }
