@@ -2530,8 +2530,8 @@
     @media (min-width: 1080px) {
       .video-viewport.is-floating-dock {
         position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
+        left: auto !important;
+        top: auto !important;
         right: auto !important;
         bottom: auto !important;
         width: 470px !important;
@@ -7242,7 +7242,10 @@
 
     function applyFloatTransform() {
       if (!videoViewport || !floatDockPos) return;
-      videoViewport.style.transform = 'translate3d(' + floatDockPos.x + 'px,' + floatDockPos.y + 'px,0)';
+      // Use left/top so we never flash at 0,0; transform only for drag smoothing if needed
+      videoViewport.style.left = floatDockPos.x + 'px';
+      videoViewport.style.top = floatDockPos.y + 'px';
+      videoViewport.style.transform = '';
     }
 
     let floatExitTimer = null;
@@ -7274,9 +7277,10 @@
 
       ensureFloatSpacer(true);
       if (!floatDockPos) floatDockPos = defaultFloatCorner();
+      // Set position before adding fixed class to avoid any 0,0 flash
+      applyFloatTransform();
       videoViewport.classList.add('is-floating-dock');
       videoViewport.classList.remove('float-visible');
-      applyFloatTransform();
 
       // Fade in only when appearing after section is fully gone
       requestAnimationFrame(() => {
@@ -7296,6 +7300,8 @@
       }
       videoViewport.classList.remove('float-visible', 'float-fading', 'is-floating-dock', 'is-dragging');
       videoViewport.style.transform = '';
+      videoViewport.style.left = '';
+      videoViewport.style.top = '';
       videoViewport.style.width = '';
       videoViewport.style.maxWidth = '';
       floatDockPos = null;
@@ -7387,7 +7393,9 @@
         x = Math.max(side + 8, Math.min(maxX, x));
         y = Math.max(8, Math.min(maxY, y));
         floatDockPos = { x, y };
-        videoViewport.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+        videoViewport.style.left = x + 'px';
+        videoViewport.style.top = y + 'px';
+        videoViewport.style.transform = '';
       });
 
       const endDrag = () => {
@@ -15807,7 +15815,7 @@ body.player-fs-active.fs-chrome-on [role="button"] {
   document.addEventListener('webkitfullscreenchange', boost);
   document.addEventListener('mozfullscreenchange', boost);
   window.addEventListener('load', () => { boost(); hideLocalSpinners(); });
-  setInterval(() => { boost(); hideLocalSpinners(); }, 5000);
+  setInterval(() => { hideLocalSpinners(); }, 8000); // boost only on events, not every interval
 
   // Keep alive on visibility
   document.addEventListener('visibilitychange', () => {
