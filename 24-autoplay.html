@@ -396,19 +396,8 @@
       if (clean.length <= 140) return clean;
       return clean.slice(0, 137).replace(/\s+\S*$/, '') + '…';
     }
-    function getRecentIds() {
-      try {
-        const raw = JSON.parse(localStorage.getItem('bwhs24recent') || '[]');
-        return new Set(Array.isArray(raw) ? raw.map(Number).filter(Boolean) : []);
-      } catch (_) { return new Set(); }
-    }
-    function addToRecent(ids) {
-      try {
-        const cur = Array.from(getRecentIds());
-        const next = [...new Set([...cur, ...ids.map(Number)])].slice(-480);
-        localStorage.setItem('bwhs24recent', JSON.stringify(next));
-      } catch (_) {}
-    }
+    // Recent filter removed for perfect cross-device sync.
+    // Playlist is now purely deterministic from the current slot.
     async function getJSON(url) {
       const res = await fetch(url);
       if (!res.ok) throw new Error('tmdb');
@@ -431,13 +420,13 @@
       dayKey = dayStamp();
       slotKey = currentSlotKey();
       const slot = slotIndex();
-      // pick genre that rotates every 6h and avoids the previous slot when possible
+      // Deterministic genre for this slot (same on every device)
       let gIdx = hash(slotKey) % GENRES.length;
       const prevSlot = slot === 0 ? 3 : slot - 1;
       const prevKey = dayKey + ':s' + prevSlot;
       if (hash(prevKey) % GENRES.length === gIdx) gIdx = (gIdx + 1) % GENRES.length;
       genre = GENRES[gIdx];
-      const recent = getRecentIds();
+
       let pool = [];
       try {
         const pages = [1, 2, 3, 4];
@@ -445,13 +434,13 @@
         pool = results.flatMap(r => r.results || []).map(m => m.id);
       } catch (_) {}
       if (pool.length < 12) pool = [...pool, ...(FALLBACK[genre.id] || [])];
-      pool = [...new Set(pool)].filter(id => !recent.has(id));
+      pool = [...new Set(pool)];
       if (pool.length < 8) pool = [...new Set([...pool, ...(FALLBACK[genre.id] || [])])];
-      const seed = hash(slotKey + genre.id);
+
+      const seed = hash(slotKey + ':' + genre.id);
       const shuffled = shuffle(pool, seed).slice(0, 24);
       const hydrated = (await Promise.all(shuffled.map(hydrate))).filter(Boolean);
       playlist = hydrated.map(f => ({ ...f, dur: f.runtime * 60 }));
-      if (playlist.length) addToRecent(playlist.map(f => f.id));
       $('genrePill').textContent = genre.name;
     }
     function currentFilm() {
