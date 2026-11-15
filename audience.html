@@ -213,7 +213,7 @@
           if (isBot(v)) return;
 
           const age = now - (v.at || 0);
-          const isLive = age < 60000;
+          const isLive = age < 30000;
           if (isLive) live++;
 
           let watching = v.watching || v.title || "—";
