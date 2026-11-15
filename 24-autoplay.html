@@ -396,8 +396,7 @@
       if (clean.length <= 140) return clean;
       return clean.slice(0, 137).replace(/\s+\S*$/, '') + '…';
     }
-    // Recent filter removed for perfect cross-device sync.
-    // Playlist is now purely deterministic from the current slot.
+    // Recent filter removed — playlist is now fully deterministic for perfect sync.
     async function getJSON(url) {
       const res = await fetch(url);
       if (!res.ok) throw new Error('tmdb');
@@ -420,7 +419,7 @@
       dayKey = dayStamp();
       slotKey = currentSlotKey();
       const slot = slotIndex();
-      // Deterministic genre for this slot (same on every device)
+      // Deterministic genre for this slot (identical on every device)
       let gIdx = hash(slotKey) % GENRES.length;
       const prevSlot = slot === 0 ? 3 : slot - 1;
       const prevKey = dayKey + ':s' + prevSlot;
