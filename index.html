@@ -34,6 +34,12 @@
   <link rel="dns-prefetch" href="https://vidsrc.to" />
   <link rel="preconnect" href="https://vixsrc.to" crossorigin />
   <link rel="dns-prefetch" href="https://vixsrc.to" />
+  <link rel="preconnect" href="https://vidsrc.to" crossorigin />
+  <link rel="dns-prefetch" href="https://vidsrc.to" />
+  <link rel="preconnect" href="https://vidsrc.xyz" crossorigin />
+  <link rel="dns-prefetch" href="https://vidsrc.xyz" />
+  <link rel="preconnect" href="https://vidapi.ru" />
+  <link rel="dns-prefetch" href="https://vidapi.ru" />
   <link rel="dns-prefetch" href="https://vidbolt.xyz" />
   <link rel="dns-prefetch" href="https://vidapi.ru" />
   <link rel="dns-prefetch" href="https://vidsrc.xyz" />
@@ -5257,6 +5263,17 @@
     .video-viewport iframe {
       transform: translateZ(0);
       backface-visibility: hidden;
+    }
+
+  
+    /* Suppress local spinners over the video player */
+    .video-viewport .loading-spinner,
+    .video-viewport .fa-spin,
+    #videoViewport .loading-spinner,
+    #playerPageView .loading-spinner {
+      display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
     }
 
   </style>
@@ -14073,9 +14090,15 @@
         }
         return;
       }
+      // Prefer not to blank — keep previous frame if possible for smoother transition
+      if (playerFrame.src && playerFrame.src !== 'about:blank' && playerFrame.src !== '') {
+        // soft switch
+      }
       playerFrame.src = url;
-      setTimeout(unmuteVidLinkIfNeeded, 900);
-      setTimeout(unmuteVidLinkIfNeeded, 2200);
+      playerFrame.setAttribute('importance', 'high');
+      playerFrame.setAttribute('fetchpriority', 'high');
+      setTimeout(unmuteVidLinkIfNeeded, 600);
+      setTimeout(unmuteVidLinkIfNeeded, 1500);
 
       let markedReady = false;
       const markReady = () => {
@@ -15728,27 +15751,68 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
 
 <script>
-// BWHS Playback Booster — reduces freezes especially in fullscreen
+// BWHS Smooth Playback Booster — minimize buffering / spinner in fullscreen & normal
 (function() {
   function isFs() {
-    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+  }
+  let wake = null;
+  async function keepAwake() {
+    try {
+      if (navigator.wakeLock) {
+        if (wake) try { await wake.release(); } catch(e){}
+        wake = await navigator.wakeLock.request('screen');
+      }
+    } catch(e){}
   }
   function boost() {
     const vp = document.getElementById('videoViewport');
-    const iframe = document.getElementById('playerFrame') || document.querySelector('.video-viewport iframe');
+    const iframe = document.getElementById('playerFrame');
     if (!vp || !iframe) return;
+
+    // Strong GPU layer promotion
+    vp.style.transform = 'translateZ(0)';
+    vp.style.willChange = 'transform, opacity';
+    iframe.style.transform = 'translateZ(0)';
+    iframe.style.willChange = 'transform';
+    iframe.style.backfaceVisibility = 'hidden';
+    iframe.style.contain = 'layout style paint';
+
+    // Prefer high priority
+    iframe.setAttribute('importance', 'high');
+    iframe.setAttribute('fetchpriority', 'high');
+
     if (isFs()) {
-      vp.style.willChange = 'transform';
-      iframe.style.willChange = 'transform';
-      iframe.style.transform = 'translateZ(0)';
-      // Keep tab alive
-      try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{}); } catch(e){}
+      keepAwake();
+      // Prevent background throttling hints
+      if (iframe.contentWindow) {
+        try { iframe.contentWindow.focus(); } catch(e){}
+      }
     }
   }
+
+  // Hide any local loading overlays over the player once playing
+  function hideLocalSpinners() {
+    const spinners = document.querySelectorAll('.loading-spinner, .fa-spin');
+    spinners.forEach(s => {
+      if (s.closest('#videoViewport, .video-viewport, #playerPageView')) {
+        s.style.display = 'none';
+        s.style.opacity = '0';
+        s.style.visibility = 'hidden';
+      }
+    });
+  }
+
   document.addEventListener('fullscreenchange', boost);
   document.addEventListener('webkitfullscreenchange', boost);
-  setInterval(boost, 8000);
-  window.addEventListener('load', boost);
+  document.addEventListener('mozfullscreenchange', boost);
+  window.addEventListener('load', () => { boost(); hideLocalSpinners(); });
+  setInterval(() => { boost(); hideLocalSpinners(); }, 5000);
+
+  // Keep alive on visibility
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') boost();
+  });
 })();
 </script>
 
