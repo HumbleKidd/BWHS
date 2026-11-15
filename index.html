@@ -2566,8 +2566,8 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 36px;
-        z-index: 50;
+        height: 48px;
+        z-index: 60;
         pointer-events: auto !important;
         cursor: grab;
         align-items: center;
@@ -2609,6 +2609,16 @@
         background: transparent;
         pointer-events: none;
       }
+
+      /* Hide mini-player chrome when in fullscreen */
+      .video-viewport:fullscreen .float-drag-handle,
+      .video-viewport:-webkit-full-screen .float-drag-handle,
+      body.player-fs-active .float-drag-handle,
+      .video-viewport:fullscreen .float-resize,
+      .video-viewport:-webkit-full-screen .float-resize,
+      body.player-fs-active .float-resize {
+        display: none !important;
+      }
     }
 
     /* Mobile Fullscreen Full Coverage Landscape Enforcement */
@@ -2624,6 +2634,19 @@
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
+      position: fixed !important;
+      left: 0 !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    .video-viewport:fullscreen .float-drag-handle,
+    .video-viewport:-webkit-full-screen .float-drag-handle,
+    .video-viewport:fullscreen .float-resize,
+    .video-viewport:-webkit-full-screen .float-resize {
+      display: none !important;
     }
 
     .video-viewport:fullscreen iframe,
@@ -7290,16 +7313,15 @@
       const w = floatDockSize.w;
       const h = w * 9 / 16;
 
-      // Account for left sidebar + right panel so the mini player sits
-      // in the middle of the main content area, near the bottom
-      // (matches the yellow-outline reference area).
-      const leftClear = getFloatSidebarClearance();
-      const rightClear = getFloatRightClearance();
-      const freeLeft = leftClear + 16;
-      const freeRight = vw - rightClear - 16;
-      const freeWidth = Math.max(w, freeRight - freeLeft);
-      const left = Math.round(freeLeft + (freeWidth - w) / 2);
-      const top = Math.round(vh - h - 36); // almost bottom
+      // Middle of the main content area, almost at the bottom
+      // (matches the yellow-outline reference — not hard-left, not absolute viewport center)
+      const leftClear = Math.min(getFloatSidebarClearance(), 180);
+      const rightClear = Math.min(getFloatRightClearance(), 280);
+      const freeLeft = leftClear + 20;
+      const freeRight = vw - rightClear - 20;
+      const freeWidth = Math.max(w + 40, freeRight - freeLeft);
+      const left = Math.round(freeLeft + (freeWidth - w) * 0.5);
+      const top = Math.round(vh - h - 18);
 
       return { x: left, y: top };
     }
@@ -7442,30 +7464,31 @@
       if (!handle || handle._dragBound) return;
       handle._dragBound = true;
 
-      // Also allow dragging by clicking the top bar area of the mini-player itself
       const startDrag = (e) => {
         if (!videoViewport || !videoViewport.classList.contains('is-floating-dock')) return;
-        // Ignore if clicking inside the iframe or a resize handle
-        if (e.target && (e.target.tagName === 'IFRAME' || e.target.closest('.float-resize'))) return;
+        if (e.target && e.target.closest && e.target.closest('.float-resize')) return;
         e.preventDefault();
         e.stopPropagation();
         isDraggingFloat = true;
         videoViewport.classList.add('is-dragging');
-        dragOriginX = e.clientX;
-        dragOriginY = e.clientY;
+        dragOriginX = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || 0;
+        dragOriginY = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 0;
         dragStartPosX = floatDockPos ? floatDockPos.x : 0;
         dragStartPosY = floatDockPos ? floatDockPos.y : 0;
-        try { (e.currentTarget || handle).setPointerCapture(e.pointerId); } catch (_) {}
+        try { if (e.pointerId != null) (e.currentTarget || handle).setPointerCapture(e.pointerId); } catch (_) {}
       };
+
+      // Reliable drag from the top "Drag" bar
       handle.addEventListener('pointerdown', startDrag);
-      // Extra hit area: the video viewport itself (except iframe)
+      handle.addEventListener('mousedown', startDrag);
+      handle.addEventListener('touchstart', startDrag, { passive: false });
+
+      // Also allow drag from the top strip of the mini player
       videoViewport.addEventListener('pointerdown', (e) => {
         if (!videoViewport.classList.contains('is-floating-dock')) return;
-        if (e.target === handle || handle.contains(e.target)) return;
-        if (e.target.closest && e.target.closest('.float-resize')) return;
-        // Only start drag if near the top 40px (drag bar zone) or if holding alt/meta
+        if (e.target && e.target.closest && e.target.closest('.float-resize')) return;
         const rect = videoViewport.getBoundingClientRect();
-        if (e.clientY - rect.top < 40 || e.altKey || e.metaKey) {
+        if (e.clientY - rect.top < 52 || e.altKey || e.metaKey) {
           startDrag(e);
         }
       });
@@ -7543,6 +7566,34 @@
         localStorage.removeItem('bwhs_float_dock_v1');
         localStorage.removeItem('bwhs_float_dock_v2');
       } catch (_) {}
+
+      // Space / P to play-pause the film (works with the iframe player)
+      document.addEventListener('keydown', (e) => {
+        const tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+        const key = (e.key || '').toLowerCase();
+        if (key !== ' ' && key !== 'spacebar' && key !== 'p') return;
+        if (!playerFrame || !playerFrame.contentWindow) return;
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          const msgs = [
+            { event: 'command', func: 'togglePlay', args: [] },
+            { event: 'command', func: 'playVideo', args: [] },
+            { event: 'command', func: 'pauseVideo', args: [] },
+            { type: 'toggle' },
+            { type: 'play' },
+            { type: 'pause' },
+            { event: 'toggle' },
+            { event: 'play' },
+            { event: 'pause' },
+            { command: 'toggle' },
+            { command: 'playPause' }
+          ];
+          msgs.forEach(m => { try { playerFrame.contentWindow.postMessage(m, '*'); } catch(_){} });
+        } catch (_) {}
+      }, true);
+
       const sidebar = document.querySelector('.desktop-sidebar');
       if (!sidebar) return;
       const nudge = () => {
