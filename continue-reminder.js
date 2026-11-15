@@ -5,6 +5,36 @@
 (function () {
   if (localStorage.getItem('humble_save_memory') === '0') return;
 
+  // Inject styles once
+  if (!document.getElementById('bwhs-continue-styles')) {
+    const style = document.createElement('style');
+    style.id = 'bwhs-continue-styles';
+    style.textContent = `
+      @keyframes bwhs-border-spin {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+      }
+      @keyframes bwhs-fade-in {
+        from { opacity: 0; transform: scale(0.96); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .bwhs-btn {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+      }
+      .bwhs-btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.08);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      }
+      .bwhs-btn:active {
+        transform: translateY(1px) scale(0.98);
+        filter: brightness(0.95);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function getLastTv() {
     try {
       const hist = JSON.parse(localStorage.getItem('humble_history') || '[]');
@@ -29,15 +59,26 @@
     overlay.id = 'bwhs-continue-popup';
     overlay.style.cssText = `
       position:fixed; inset:0; z-index:999999; display:flex; align-items:center; justify-content:center;
-      background:rgba(15,23,42,0.65); backdrop-filter:blur(6px); padding:16px; animation:fadeIn .4s ease;
+      background:rgba(15,23,42,0.55); backdrop-filter:blur(4px); padding:16px;
+    `;
+
+    // Outer wrapper for animated gradient border
+    const borderWrap = document.createElement('div');
+    borderWrap.style.cssText = `
+      max-width:520px; width:100%; padding:3px; border-radius:31px;
+      background: linear-gradient(90deg, #4f46e5, #ec4899, #f59e0b, #10b981, #4f46e5);
+      background-size: 300% 100%;
+      animation: bwhs-border-spin 4s linear infinite;
+      box-shadow: 0 30px 60px rgba(0,0,0,.4);
     `;
 
     const card = document.createElement('div');
     card.style.cssText = `
-      max-width:520px; width:100%; background:#fff; border-radius:28px; overflow:hidden;
-      box-shadow:0 30px 60px rgba(0,0,0,.35); position:relative; font-family:'Plus Jakarta Sans',sans-serif;
-      background-image:linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,255,255,.88)), url(${backdrop});
-      background-size:cover; background-position:center;
+      background:#fff; border-radius:28px; overflow:hidden; position:relative;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      background-image: linear-gradient(135deg, rgba(255,255,255,0.72), rgba(255,255,255,0.68)), url(${backdrop});
+      background-size: cover; background-position: center;
+      animation: bwhs-fade-in 0.4s ease;
     `;
 
     card.innerHTML = `
@@ -49,19 +90,20 @@
           <p style="font-size:13px; color:#475569; line-height:1.45; margin:0 0 10px;">${teaser}</p>
           <div style="background:linear-gradient(90deg,#fef3c7,#fce7f3); border-radius:12px; padding:8px 10px; font-size:12px; font-weight:700; color:#9d174d; font-style:italic;">${controversial}</div>
         </div>
-        ${poster ? `<img src="${poster}" alt="" style="width:110px; height:165px; object-fit:cover; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.2); flex-shrink:0;">` : ''}
+        ${poster ? `<img src="${poster}" alt="" style="width:110px; height:165px; object-fit:cover; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.25); flex-shrink:0;">` : ''}
       </div>
       <div style="padding:0 20px 16px; display:flex; flex-direction:column; gap:8px;">
         <div style="display:flex; gap:8px;">
-          <button id="bwhs-catchup" style="flex:1; padding:12px; border:none; border-radius:14px; background:linear-gradient(90deg,#4f46e5,#ec4899); color:#fff; font-weight:800; font-size:14px; cursor:pointer;">▶️ Catch Up</button>
-          <button id="bwhs-notnow" style="flex:1; padding:12px; border:none; border-radius:14px; background:#f1f5f9; color:#334155; font-weight:800; font-size:14px; cursor:pointer;">Not Now</button>
+          <button id="bwhs-catchup" class="bwhs-btn" style="flex:1; padding:12px; border:none; border-radius:14px; background:linear-gradient(90deg,#4f46e5,#ec4899); color:#fff; font-weight:800; font-size:14px; cursor:pointer;">▶️ Catch Up</button>
+          <button id="bwhs-notnow" class="bwhs-btn" style="flex:1; padding:12px; border:none; border-radius:14px; background:#f1f5f9; color:#334155; font-weight:800; font-size:14px; cursor:pointer;">Not Now</button>
         </div>
-        <button id="bwhs-offmemory" style="width:100%; padding:10px; border:none; border-radius:12px; background:linear-gradient(90deg,#f59e0b,#f97316); color:#fff; font-weight:700; font-size:12px; cursor:pointer;">🔕 Turn Off Save Memory</button>
+        <button id="bwhs-offmemory" class="bwhs-btn" style="width:100%; padding:10px; border:none; border-radius:12px; background:linear-gradient(90deg,#f59e0b,#f97316); color:#fff; font-weight:700; font-size:12px; cursor:pointer;">🔕 Turn Off Save Memory</button>
         <p style="font-size:11px; color:#64748b; text-align:center; margin:4px 0 0;">You can turn this back on anytime in Settings → Save Memory.</p>
       </div>
     `;
 
-    overlay.appendChild(card);
+    borderWrap.appendChild(card);
+    overlay.appendChild(borderWrap);
     document.body.appendChild(overlay);
 
     document.getElementById('bwhs-catchup').onclick = () => {
