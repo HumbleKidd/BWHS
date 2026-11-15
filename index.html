@@ -2566,8 +2566,9 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 28px;
-        z-index: 30;
+        height: 36px;
+        z-index: 50;
+        pointer-events: auto !important;
         cursor: grab;
         align-items: center;
         justify-content: center;
@@ -7290,12 +7291,12 @@
       const vw = window.innerWidth;
       const w = floatDockSize.w;
       const h = w * 9 / 16;
-      // Prefer a spot lower and more toward the center of the free middle area
-      const freeLeft = leftClear + 16;
-      const freeRight = vw - rightClear - 16;
-      const freeWidth = Math.max(200, freeRight - freeLeft);
-      const left = freeLeft + Math.max(0, (freeWidth - w) * 0.45); // a bit left of pure center
-      const top = Math.max(100, vh - h - 140); // lower, not too close to bottom
+      // More toward the middle / right of the free area, lower
+      const freeLeft = leftClear + 24;
+      const freeRight = vw - rightClear - 24;
+      const freeWidth = Math.max(220, freeRight - freeLeft);
+      const left = freeLeft + Math.max(0, (freeWidth - w) * 0.65); // bias right of center
+      const top = Math.max(80, vh - h - 110);
       return { x: Math.round(left), y: Math.round(top) };
     }
 
@@ -7397,15 +7398,22 @@
       const vh = window.innerHeight;
       const isFloating = videoViewport.classList.contains('is-floating-dock');
 
-      // Show when the "More With" shelves (or fallback) have scrolled so their top
-      // is around the middle of the viewport (~half the cover arts visible).
-      // Hysteresis keeps it from flickering.
-      if (!isFloating && tRect.top <= vh * 0.48 && tRect.bottom > vh * 0.15) {
+      // Pop up when the BOTTOM of the "More With" / actor shelves section enters view.
+      // Exit on scroll-up when that bottom starts reappearing and is close to the top of the mini-player.
+      const bottomInView = tRect.bottom > 0 && tRect.bottom < vh + 40;
+      const mostlyBelow = tRect.top > vh * 0.35;
+
+      if (!isFloating && bottomInView && mostlyBelow) {
         enterFloatingDock();
         return;
       }
-      if (isFloating && tRect.top > vh * 0.62) {
-        forceExitFloatingDock();
+
+      if (isFloating) {
+        const miniTop = floatDockPos ? floatDockPos.y : (vh - 300);
+        // Fade away when the artwork bottom rises and nearly touches the top of the mini-player
+        if (tRect.bottom > 0 && tRect.bottom < miniTop + 80) {
+          forceExitFloatingDock();
+        }
       }
     }
 
@@ -7436,8 +7444,11 @@
       if (!handle || handle._dragBound) return;
       handle._dragBound = true;
 
-      handle.addEventListener('pointerdown', (e) => {
+      // Also allow dragging by clicking the top bar area of the mini-player itself
+      const startDrag = (e) => {
         if (!videoViewport || !videoViewport.classList.contains('is-floating-dock')) return;
+        // Ignore if clicking inside the iframe or a resize handle
+        if (e.target && (e.target.tagName === 'IFRAME' || e.target.closest('.float-resize'))) return;
         e.preventDefault();
         e.stopPropagation();
         isDraggingFloat = true;
@@ -7446,7 +7457,19 @@
         dragOriginY = e.clientY;
         dragStartPosX = floatDockPos ? floatDockPos.x : 0;
         dragStartPosY = floatDockPos ? floatDockPos.y : 0;
-        try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+        try { (e.currentTarget || handle).setPointerCapture(e.pointerId); } catch (_) {}
+      };
+      handle.addEventListener('pointerdown', startDrag);
+      // Extra hit area: the video viewport itself (except iframe)
+      videoViewport.addEventListener('pointerdown', (e) => {
+        if (!videoViewport.classList.contains('is-floating-dock')) return;
+        if (e.target === handle || handle.contains(e.target)) return;
+        if (e.target.closest && e.target.closest('.float-resize')) return;
+        // Only start drag if near the top 40px (drag bar zone) or if holding alt/meta
+        const rect = videoViewport.getBoundingClientRect();
+        if (e.clientY - rect.top < 40 || e.altKey || e.metaKey) {
+          startDrag(e);
+        }
       });
 
       document.addEventListener('pointermove', (e) => {
