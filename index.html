@@ -2479,10 +2479,10 @@
       border: none;
       z-index: 4;
       pointer-events: auto !important;
-      transform: translateZ(0);
-      backface-visibility: hidden;
-      will-change: transform;
-      contain: strict;
+      transform: none;
+      will-change: auto;
+      contain: none;
+      backface-visibility: visible;
     }
     .video-viewport {
       isolation: isolate;
@@ -5295,19 +5295,14 @@
 }
 
   
-    /* Playback booster — smoother fullscreen, less freeze */
-    .video-viewport:fullscreen,
-    .video-viewport:-webkit-full-screen,
+    /* Smooth fullscreen — minimal interference for hardware video decode */
     .video-viewport:fullscreen iframe,
     .video-viewport:-webkit-full-screen iframe {
-      transform: translateZ(0) !important;
-      backface-visibility: hidden !important;
-      will-change: transform !important;
-      contain: layout style paint !important;
-    }
-    .video-viewport iframe {
-      transform: translateZ(0);
-      backface-visibility: hidden;
+      transform: none !important;
+      will-change: auto !important;
+      contain: none !important;
+      width: 100% !important;
+      height: 100% !important;
     }
 
   
@@ -5320,6 +5315,16 @@
       opacity: 0 !important;
       visibility: hidden !important;
     }
+
+  
+    body.fs-smooth-mode .video-viewport,
+    body.fs-smooth-mode .video-viewport iframe {
+      transform: none !important;
+      will-change: auto !important;
+      contain: none !important;
+    }
+    body.fs-smooth-mode #neonCursorCanvas,
+    body.fs-smooth-mode #neonCursorRoot { display: none !important; }
 
   </style>
   <link rel="stylesheet" href="./synopsis-popup.css">
@@ -15990,68 +15995,31 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
 
 <script>
-// BWHS Smooth Playback Booster — minimize buffering / spinner in fullscreen & normal
+// BWHS Ultra Smooth Fullscreen Optimizer
 (function() {
   function isFs() {
     return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
   }
-  let wake = null;
-  async function keepAwake() {
-    try {
-      if (navigator.wakeLock) {
-        if (wake) try { await wake.release(); } catch(e){}
-        wake = await navigator.wakeLock.request('screen');
-      }
-    } catch(e){}
-  }
-  function boost() {
-    const vp = document.getElementById('videoViewport');
+  function clean() {
     const iframe = document.getElementById('playerFrame');
-    if (!vp || !iframe) return;
-
-    // Strong GPU layer promotion
-    vp.style.transform = 'translateZ(0)';
-    vp.style.willChange = 'transform, opacity';
-    iframe.style.transform = 'translateZ(0)';
-    iframe.style.willChange = 'transform';
-    iframe.style.backfaceVisibility = 'hidden';
-    iframe.style.contain = 'layout style paint';
-
-    // Prefer high priority
-    iframe.setAttribute('importance', 'high');
-    iframe.setAttribute('fetchpriority', 'high');
-
-    if (isFs()) {
-      keepAwake();
-      // Prevent background throttling hints
-      if (iframe.contentWindow) {
-        try { iframe.contentWindow.focus(); } catch(e){}
-      }
-    }
-  }
-
-  // Hide any local loading overlays over the player once playing
-  function hideLocalSpinners() {
-    const spinners = document.querySelectorAll('.loading-spinner, .fa-spin');
-    spinners.forEach(s => {
-      if (s.closest('#videoViewport, .video-viewport, #playerPageView')) {
-        s.style.display = 'none';
-        s.style.opacity = '0';
-        s.style.visibility = 'hidden';
-      }
+    const vp = document.getElementById('videoViewport');
+    [iframe, vp].forEach(el => {
+      if (!el) return;
+      el.style.transform = 'none';
+      el.style.willChange = 'auto';
+      el.style.contain = 'none';
     });
   }
-
-  document.addEventListener('fullscreenchange', boost);
-  document.addEventListener('webkitfullscreenchange', boost);
-  document.addEventListener('mozfullscreenchange', boost);
-  window.addEventListener('load', () => { boost(); hideLocalSpinners(); });
-  setInterval(() => { hideLocalSpinners(); }, 8000); // boost only on events, not every interval
-
-  // Keep alive on visibility
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') boost();
+  function setMode(on) {
+    document.body.classList.toggle('fs-smooth-mode', on);
+    const canvas = document.getElementById('neonCursorCanvas');
+    if (canvas) canvas.style.display = on ? 'none' : '';
+    if (on) clean();
+  }
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange'].forEach(e => {
+    document.addEventListener(e, () => setMode(isFs()));
   });
+  window.addEventListener('load', () => { clean(); if (isFs()) setMode(true); });
 })();
 </script>
 
