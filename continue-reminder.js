@@ -119,7 +119,8 @@
   }
 
   function injectSettingsToggle() {
-    const sheet = document.querySelector('.mobile-settings-block');
+    // Prefer dedicated settings container if present
+    const sheet = document.getElementById('bwhs-settings-container') || document.querySelector('.mobile-settings-block');
     if (!sheet || document.getElementById('bwhs-save-memory-toggle')) return;
     const on = localStorage.getItem('humble_save_memory') !== '0';
     const div = document.createElement('div');

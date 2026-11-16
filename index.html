@@ -5538,6 +5538,15 @@
             </button>
             
             <div class="theme-popup-menu" id="themePopupMenu">
+
+              <div style="border-top:1px solid var(--border); margin:8px 0; padding-top:8px;">
+                <div style="font-size:0.72rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Settings</div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 8px;">
+                  <span style="font-size:0.78rem; font-weight:700;"><i class="fa-solid fa-floppy-disk"></i> Save Memory</span>
+                  <button id="bwhs-mem-btn-desktop" onclick="toggleSaveMemory()" style="padding:3px 12px; border-radius:999px; border:none; font-size:0.7rem; font-weight:800; cursor:pointer; background:#10b981; color:#fff;">ON</button>
+                </div>
+              </div>
+
               <button class="theme-option-btn selected" id="opt-theme-auto" onclick="previewThemeMode('auto')">
                 <i class="fa-solid fa-circle-half-stroke" style="color:#64748b;"></i> Auto (Day / Night)
               </button>
@@ -5683,6 +5692,9 @@
                   <div class="server-bar-wrap">
                     <div class="server-bar" id="serverBar">
                       <span class="server-tag"><i class="fa-solid fa-server"></i> Server:</span>
+                      
+                      <button class="srv-btn" onclick="forceSmoothReload()" title="Force smooth reload of current source" style="background:var(--accent); color:#fff;"><i class="fa-solid fa-rotate"></i> Reload</button>
+
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-cinesrc" onclick="manualSwitchServer('cinesrc')">CineSrc</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
@@ -6218,6 +6230,15 @@
             <i class="fa-solid fa-arrow-pointer" style="color:#64748b;"></i> Default
           </button>
         </div>
+      
+        <div id="bwhs-settings-container" style="margin-top:8px; padding-top:8px; border-top:1px solid var(--border);">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0;">
+            <span style="font-size:0.78rem; font-weight:700; color:var(--text-main);"><i class="fa-solid fa-floppy-disk"></i> Save Memory (Continue Watching)</span>
+            <button id="bwhs-mem-btn-mobile" onclick="toggleSaveMemory()" style="padding:4px 14px; border-radius:999px; border:none; font-size:0.72rem; font-weight:800; cursor:pointer; background:#10b981; color:#fff;">ON</button>
+          </div>
+          <p style="font-size:0.68rem; color:var(--text-muted); margin:2px 0 0;">Controls the Continue Watching reminder popup.</p>
+        </div>
+
       </div>
 
       <div class="mobile-cw-block" id="mobileCwWrapper" style="display:none; background:var(--surface-subtle); border-radius:12px; padding:10px; flex-direction:column; gap:8px;">
@@ -6929,6 +6950,33 @@
     let activeEpisode = 1;
     let seasonDataCache = {};
     let currentSeasonEpisodes = [];
+    
+    function toggleSaveMemory() {
+      const currently = localStorage.getItem('humble_save_memory') !== '0';
+      const next = currently ? '0' : '1';
+      localStorage.setItem('humble_save_memory', next);
+      const on = next !== '0';
+      ['bwhs-mem-btn-mobile', 'bwhs-mem-btn-desktop'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+          btn.textContent = on ? 'ON' : 'OFF';
+          btn.style.background = on ? '#10b981' : '#94a3b8';
+        }
+      });
+      showToast(on ? 'Save Memory ON — Continue Watching reminder enabled' : 'Save Memory OFF — reminder disabled');
+    }
+    // Sync buttons on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const on = localStorage.getItem('humble_save_memory') !== '0';
+      ['bwhs-mem-btn-mobile', 'bwhs-mem-btn-desktop'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+          btn.textContent = on ? 'ON' : 'OFF';
+          btn.style.background = on ? '#10b981' : '#94a3b8';
+        }
+      });
+    });
+
     let autoFullscreenOn = localStorage.getItem('humble_auto_fs') === '1';
     let cursorStylePref = localStorage.getItem('humble_cursor') || 'neon';
     let autoNextOn = localStorage.getItem('humble_auto_next') !== '0';
@@ -14293,6 +14341,23 @@ const singleLineCastBar = document.getElementById('singleLineCastBar');
       // Disabled automatic soft-refresh to prevent films from restarting unexpectedly.
       // User prefers manual control only; no auto-restart on any film.
     }
+
+    
+    function forceSmoothReload() {
+      if (!playerFrame || !activeMedia) return;
+      const current = PROVIDERS[currentProviderIndex] || PROVIDERS[0];
+      const url = getProviderUrl(current);
+      if (!url) return;
+      // Clean reload without long blank
+      playerFrame.style.opacity = '0.6';
+      playerFrame.src = 'about:blank';
+      setTimeout(() => {
+        playerFrame.src = url;
+        playerFrame.style.opacity = '1';
+        showToast('Reloading source for smoother playback...');
+      }, 120);
+    }
+    window.forceSmoothReload = forceSmoothReload;
 
     function executeStreamLoad() {
       if (!playerFrame || !activeMedia) return;
