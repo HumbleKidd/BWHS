@@ -1,23 +1,10 @@
-// BWHS Smooth Playback Enhancer v3 — Instant start, adaptive quality
+// BWHS Smooth Playback Enhancer v4 — Forced 720p, zero sticking, instant
 (function() {
-  function getSmoothQuality() {
-    try {
-      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      if (conn) {
-        const down = conn.downlink || 10;
-        const type = (conn.effectiveType || '').toLowerCase();
-        if (down < 2 || type.includes('2g') || type === '3g') return '480';
-        if (down < 4) return '720';
-        if (down < 8) return '1080';
-      }
-    } catch(e) {}
-    return '1080';
-  }
+  // Always 720p for buttery smooth, no buffer stalls on regular + fullscreen
+  function getSmoothQuality() { return '720'; }
 
-  const q = getSmoothQuality();
-  console.log('BWHS Instant mode: quality', q + 'p');
+  const q = '720';
 
-  // Force override builders
   window.buildVixsrcParams = function(startAt) {
     const start = Math.max(0, Math.floor(Number(startAt) || 0));
     return [
@@ -33,11 +20,13 @@
     return base.join('&');
   };
 
-  // Instant play helper
+  // Force play helper
   window.instantPlay = function() {
     const frame = document.getElementById('playerFrame');
-    if (frame && frame.src && frame.src !== 'about:blank') {
-      try { frame.contentWindow.postMessage({ event: 'command', func: 'playVideo', args: [] }, '*'); } catch(e){}
-    }
+    if (!frame || !frame.contentWindow) return;
+    try {
+      frame.contentWindow.postMessage({ event: 'command', func: 'playVideo', args: [] }, '*');
+      frame.contentWindow.postMessage({ type: 'play' }, '*');
+    } catch(e) {}
   };
 })();
