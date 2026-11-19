@@ -6564,18 +6564,9 @@
     const VIXSRC_SECONDARY = '0f172a';
 
     function getSmoothQuality() {
-      try {
-        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-        if (conn) {
-          const down = conn.downlink || 10;
-          const type = (conn.effectiveType || '').toLowerCase();
-          if (down < 2 || type.includes('2g') || type === '3g') return '480';
-          if (down < 4) return '720';
-          if (down < 8) return '1080';
-        }
-      } catch(e) {}
-      // Always prefer speed over 4K for instant start + fast seeking (including fullscreen)
-      return '1080';
+      // Force 720p for completely smooth, non-sticking playback on all connections
+      // (1080/4K was causing buffer stalls). Instant start + snappy seek.
+      return '720';
     }
 
     function buildVixsrcParams(startAt) {
@@ -6590,14 +6581,14 @@
         'secondaryColor=' + VIXSRC_SECONDARY,
         'skin=vixsrc',
         'canPlayFHD=1',
-        'quality=' + q,
+        'quality=720',
         'maxQuality=' + q,
         'res=' + q
       ].join('&');
     }
     function hdQuery(extra) {
       const q = getSmoothQuality();
-      const base = ['autoplay=1', 'autoPlay=true', 'quality=' + q, 'maxQuality=' + q, 'res=' + q, 'q=' + q];
+      const base = ['autoplay=1', 'autoPlay=true', 'quality=720', 'maxQuality=' + q, 'res=' + q, 'q=' + q];
       if (extra) base.push(extra);
       return base.join('&');
     }
@@ -16088,6 +16079,8 @@ body.player-fs-active.fs-chrome-on [role="button"] {
       el.style.contain = 'none';
       el.style.backfaceVisibility = 'hidden';
       el.style.perspective = 'none';
+      el.style.transition = 'none';
+      el.style.animation = 'none';
     });
   }
   function forcePlay() {
