@@ -6563,15 +6563,8 @@
     const VIXSRC_PRIMARY = '4f46e5';
     const VIXSRC_SECONDARY = '0f172a';
 
-    function getSmoothQuality() {
-      // Force 720p for completely smooth, non-sticking playback on all connections
-      // (1080/4K was causing buffer stalls). Instant start + snappy seek.
-      return '720';
-    }
-
     function buildVixsrcParams(startAt) {
       const start = Math.max(0, Math.floor(Number(startAt) || 0));
-      const q = getSmoothQuality();
       return [
         'autoplay=1',
         'autoPlay=true',
@@ -6581,14 +6574,13 @@
         'secondaryColor=' + VIXSRC_SECONDARY,
         'skin=vixsrc',
         'canPlayFHD=1',
-        'quality=720',
-        'maxQuality=' + q,
-        'res=' + q
+        'quality=2160',
+        'maxQuality=2160',
+        'res=2160'
       ].join('&');
     }
     function hdQuery(extra) {
-      const q = getSmoothQuality();
-      const base = ['autoplay=1', 'autoPlay=true', 'quality=720', 'maxQuality=' + q, 'res=' + q, 'q=' + q];
+      const base = ['autoplay=1', 'autoPlay=true', 'quality=2160', 'maxQuality=2160', 'res=2160', 'q=2160'];
       if (extra) base.push(extra);
       return base.join('&');
     }
@@ -14340,7 +14332,8 @@ const singleLineCastBar = document.getElementById('singleLineCastBar');
       // Force a reload with current time to refresh session/token and avoid error screens
       const url = getProviderUrl('vixsrc');
       if (!url) return;
-      playerFrame.src = url; // Instant, no blank delay
+      playerFrame.src = 'about:blank';
+      setTimeout(() => { playerFrame.src = url; }, 80);
       lastEmbedKeepAlive = Date.now();
     }
     window.softRefreshVixsrc = softRefreshVixsrc;
@@ -14405,7 +14398,10 @@ const singleLineCastBar = document.getElementById('singleLineCastBar');
         }
         return;
       }
-      // Instant load — no blank delay
+      // Prefer not to blank — keep previous frame if possible for smoother transition
+      if (playerFrame.src && playerFrame.src !== 'about:blank' && playerFrame.src !== '') {
+        // soft switch
+      }
       playerFrame.src = url;
       playerFrame.setAttribute('importance', 'high');
       playerFrame.setAttribute('fetchpriority', 'high');
@@ -16064,7 +16060,7 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
 
 <script>
-// BWHS Ultra Smooth Fullscreen Optimizer v2 — Instant + no lag
+// BWHS Ultra Smooth Fullscreen Optimizer
 (function() {
   function isFs() {
     return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
@@ -16077,30 +16073,13 @@ body.player-fs-active.fs-chrome-on [role="button"] {
       el.style.transform = 'none';
       el.style.willChange = 'auto';
       el.style.contain = 'none';
-      el.style.backfaceVisibility = 'hidden';
-      el.style.perspective = 'none';
-      el.style.transition = 'none';
-      el.style.animation = 'none';
     });
-  }
-  function forcePlay() {
-    const iframe = document.getElementById('playerFrame');
-    if (!iframe || !iframe.contentWindow) return;
-    try {
-      iframe.contentWindow.postMessage({ event: 'command', func: 'playVideo', args: [] }, '*');
-      iframe.contentWindow.postMessage({ type: 'play' }, '*');
-      iframe.contentWindow.postMessage({ action: 'play' }, '*');
-    } catch(e) {}
   }
   function setMode(on) {
     document.body.classList.toggle('fs-smooth-mode', on);
     const canvas = document.getElementById('neonCursorCanvas');
     if (canvas) canvas.style.display = on ? 'none' : '';
-    if (on) {
-      clean();
-      setTimeout(forcePlay, 50);
-      setTimeout(forcePlay, 300);
-    }
+    if (on) clean();
   }
   ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange'].forEach(e => {
     document.addEventListener(e, () => setMode(isFs()));
@@ -16131,7 +16110,6 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 })();
 </script>
 <script src="cinemapulse-listener.js"></script>
-  <script src="./smooth-player.js"></script>
 </body>
 </html>
 
@@ -16169,4 +16147,3 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
 
   
-
