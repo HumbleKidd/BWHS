@@ -470,7 +470,14 @@
       $('clockPill').textContent = nowClock();
       if (loadedId !== film.id) {
         loadedId = film.id;
-        const src = `https://vixsrc.to/movie/${film.id}?autoplay=1&start=${Math.floor(offset)}`;
+        const q = (function(){
+        try {
+          const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+          if (c && (c.downlink < 3 || (c.effectiveType||'').includes('3g'))) return '720';
+        } catch(e){}
+        return '1080';
+      })();
+      const src = `https://vixsrc.to/movie/${film.id}?autoplay=1&start=${Math.floor(offset)}&quality=${q}&maxQuality=${q}&res=${q}`;
         $('player').src = src;
         $('boot').classList.add('hidden');
       }
