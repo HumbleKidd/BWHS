@@ -43,7 +43,7 @@
       #bwhs-announce-root { position: fixed; z-index: 999999; pointer-events: none; }
       #bwhs-announce-root * { pointer-events: auto; }
       .bwhs-ann-banner {
-        position: fixed; left: 0; right: 0; padding: 16px 20px;
+        position: fixed; left: 0; right: 0; padding: 14px 20px;
         background: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899);
         color: #fff; font-family: system-ui, sans-serif; font-size: 0.98rem; font-weight: 600;
         box-shadow: 0 8px 32px rgba(0,0,0,.35); text-align: center; line-height: 1.45;
@@ -51,28 +51,52 @@
       }
       .bwhs-ann-banner.top { top: 0; border-radius: 0 0 18px 18px; }
       .bwhs-ann-banner.bottom { bottom: 0; border-radius: 18px 18px 0 0; animation-name: bwhsSlideUp; }
-      .bwhs-ann-modal-wrap {
+      .bwhs-ann-middle-wrap {
         position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-        background: rgba(0,0,0,.45); backdrop-filter: blur(4px); animation: bwhsFade .3s ease;
+        background: rgba(0,0,0,.5); backdrop-filter: blur(6px); animation: bwhsFade .3s ease;
+        z-index: 999999;
       }
-      .bwhs-ann-modal {
-        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
-        color: #fff; border-radius: 22px; padding: 22px 24px; max-width: 420px; width: 90%;
-        box-shadow: 0 25px 60px rgba(0,0,0,.5); text-align: center; line-height: 1.5;
-        animation: bwhsPop .4s cubic-bezier(.2,.8,.2,1);
-        border: 1px solid rgba(255,255,255,.12);
+      .bwhs-ann-middle {
+        background: linear-gradient(145deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%);
+        color: #fff; border-radius: 24px; padding: 28px 26px 24px; max-width: 440px; width: 92%;
+        box-shadow: 0 30px 70px rgba(0,0,0,.55); text-align: center; line-height: 1.55;
+        animation: bwhsPop .45s cubic-bezier(.2,.8,.2,1);
+        border: 1px solid rgba(255,255,255,.15); position: relative;
       }
       .bwhs-ann-close {
-        position: absolute; top: 8px; right: 12px; background: rgba(255,255,255,.15); border: 0;
-        color: #fff; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: 800;
+        position: absolute; top: 10px; right: 12px; background: rgba(255,255,255,.18); border: 0;
+        color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: 800; font-size: 1.1rem;
       }
-      .ann-text { margin-bottom: 8px; }
-      .ann-img { max-width: 100%; max-height: 220px; border-radius: 12px; margin: 8px auto; display: block; }
-      .ann-movie { transition: transform .15s; }
-      .ann-movie:hover { transform: scale(1.03); }
+      .ann-text { margin-bottom: 10px; }
+      .ann-text b, .ann-text strong { font-weight: 800; }
+      .ann-text i, .ann-text em { font-style: italic; }
+      .ann-text u { text-decoration: underline; }
+      .ann-img { max-width: 100%; max-height: 200px; border-radius: 14px; margin: 10px auto; display: block; }
+      /* Compact circle-art movie link for top / bottom banners */
+      .ann-movie-compact {
+        display: inline-flex; align-items: center; gap: 8px; margin: 8px 4px 0;
+        padding: 4px 12px 4px 4px; background: rgba(255,255,255,.16); border-radius: 999px;
+        text-decoration: none; color: #fff; font-weight: 700; font-size: .88rem;
+        transition: transform .15s, background .15s;
+      }
+      .ann-movie-compact:hover { transform: scale(1.05); background: rgba(255,255,255,.25); }
+      .ann-movie-compact img {
+        width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,.4);
+      }
+      /* Nicer movie card inside middle modal */
+      .ann-movie-modal {
+        display: flex; align-items: center; gap: 14px; margin: 14px auto 0; max-width: 340px;
+        padding: 10px; background: rgba(255,255,255,.1); border-radius: 16px;
+        text-decoration: none; color: #fff; text-align: left;
+        border: 1px solid rgba(255,255,255,.12); transition: transform .15s;
+      }
+      .ann-movie-modal:hover { transform: scale(1.03); }
+      .ann-movie-modal img {
+        width: 64px; height: 92px; object-fit: cover; border-radius: 10px;
+      }
       @keyframes bwhsSlide { from { transform: translateY(-100%); opacity: 0 } to { transform: none; opacity: 1 } }
       @keyframes bwhsSlideUp { from { transform: translateY(100%); opacity: 0 } to { transform: none; opacity: 1 } }
-      @keyframes bwhsPop { from { transform: scale(.85); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+      @keyframes bwhsPop { from { transform: scale(.82); opacity: 0 } to { transform: scale(1); opacity: 1 } }
       @keyframes bwhsFade { from { opacity: 0 } to { opacity: 1 } }
     `;
     var s = document.createElement("style");
@@ -94,10 +118,12 @@
     var pos = data.position || "top";
     var html = data.html || ("<div class='ann-text'>" + (data.text || "").replace(/\n/g, "<br>") + "</div>");
 
-    if (pos === "center") {
+    // Accept both "center" and "middle"
+    var isMiddle = (pos === "center" || pos === "middle");
+    if (isMiddle) {
       root.innerHTML = `
-        <div class="bwhs-ann-modal-wrap" onclick="if(event.target===this) this.parentElement.remove()">
-          <div class="bwhs-ann-modal" style="position:relative">
+        <div class="bwhs-ann-middle-wrap" onclick="if(event.target===this) this.parentElement.remove()">
+          <div class="bwhs-ann-middle">
             <button class="bwhs-ann-close" onclick="this.closest('#bwhs-announce-root').remove()">×</button>
             ${html}
           </div>
@@ -105,7 +131,7 @@
     } else {
       var cls = pos === "bottom" ? "bottom" : "top";
       root.innerHTML = `
-        <div class="bwhs-ann-banner ${cls}" style="position:relative">
+        <div class="bwhs-ann-banner ${cls}">
           <button class="bwhs-ann-close" onclick="this.closest('#bwhs-announce-root').remove()">×</button>
           ${html}
         </div>`;
