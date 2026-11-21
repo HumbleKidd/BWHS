@@ -477,7 +477,7 @@
         } catch(e){}
         return '1080';
       })();
-      const src = `https://vixsrc.to/movie/${film.id}?autoplay=1&start=${Math.floor(offset)}&quality=${q}&maxQuality=${q}&res=${q}`;
+      const src = `https://vixsrc.to/movie/${film.id}?autoplay=1&start=${Math.floor(offset)}&quality=720&maxQuality=720&res=720`;
         $('player').src = src;
         $('boot').classList.add('hidden');
       }

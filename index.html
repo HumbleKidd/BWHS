@@ -6583,11 +6583,12 @@
         if (conn) {
           const down = conn.downlink || 10;
           const type = (conn.effectiveType || '').toLowerCase();
-          if (down < 3 || type.includes('2g') || type === '3g' || type === 'slow-2g') return '720';
-          if (down < 8) return '1080';
+          // Prefer 720 for buttery smooth on most connections (especially mobile / Jamaica)
+          if (down < 5 || type.includes('2g') || type === '3g' || type === 'slow-2g' || type === '4g') return '720';
+          if (down < 12) return '1080';
         }
       } catch(e) {}
-      return '1080'; // Default to clean 1080 for smooth playback on most connections
+      return '720'; // Default to 720p for reliable smooth playback in main view + fullscreen
     }
 
     function buildVixsrcParams(startAt) {
@@ -13592,8 +13593,8 @@ const singleLineCastBar = document.getElementById('singleLineCastBar');
 
         case 'vidlink':
           return isTv
-            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=2160&maxQuality=2160`
-            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=2160&maxQuality=2160`;
+            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=720&maxQuality=720`
+            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=720&maxQuality=720`;
 
         case 'vixsrc':
           return isTv
