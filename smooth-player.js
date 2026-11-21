@@ -1,6 +1,5 @@
-// BWHS Smooth Playback Enhancer v2
-// Forces adaptive/lower quality to stop buffering
-
+// BWHS Smooth Playback Enhancer v3
+// Adaptive quality + regular & fullscreen smoothness
 (function() {
   function getSmoothQuality() {
     try {
@@ -8,44 +7,35 @@
       if (conn) {
         const down = conn.downlink || 10;
         const type = (conn.effectiveType || '').toLowerCase();
-        if (down < 2.5 || type.includes('2g') || type === '3g') return '720';
-        if (down < 6) return '1080';
+        if (down < 3 || type.includes('2g') || type === '3g' || type === 'slow-2g') return '720';
+        if (down < 8) return '1080';
       }
     } catch(e) {}
     return '1080';
   }
 
   const q = getSmoothQuality();
-  console.log('BWHS Smooth mode: quality set to', q + 'p');
+  console.log('BWHS Smooth mode: quality locked to', q + 'p for buttery playback');
 
-  // Override builders if they exist
+  // Force override if functions exist (belt and suspenders)
   if (typeof window.buildVixsrcParams === 'function') {
+    const orig = window.buildVixsrcParams;
     window.buildVixsrcParams = function(startAt) {
-      const start = Math.max(0, Math.floor(Number(startAt) || 0));
-      return [
-        'autoplay=1','autoPlay=true','startAt=' + start,'lang=en',
-        'primaryColor=4f46e5','secondaryColor=0f172a','skin=vixsrc',
-        'canPlayFHD=1','quality=' + q,'maxQuality=' + q,'res=' + q
-      ].join('&');
+      const params = orig(startAt);
+      return params.replace(/quality=\d+/g, 'quality=' + q)
+                   .replace(/maxQuality=\d+/g, 'maxQuality=' + q)
+                   .replace(/res=\d+/g, 'res=' + q);
     };
   }
 
-  if (typeof window.hdQuery === 'function') {
-    window.hdQuery = function(extra) {
-      const base = ['autoplay=1','autoPlay=true','quality=' + q,'maxQuality=' + q,'res=' + q,'q=' + q];
-      if (extra) base.push(extra);
-      return base.join('&');
-    };
-  }
-
-  // Also try to lower quality on existing player if already loaded
+  // Clean up any remaining high-quality params on load
   setTimeout(() => {
     const frame = document.getElementById('playerFrame');
-    if (frame && frame.src && frame.src.includes('quality=2160')) {
-      frame.src = frame.src.replace(/quality=2160/g, 'quality=' + q)
-                           .replace(/maxQuality=2160/g, 'maxQuality=' + q)
-                           .replace(/res=2160/g, 'res=' + q);
-      console.log('Reloaded player with smoother quality');
+    if (frame && frame.src && /quality=(2160|1440)/.test(frame.src)) {
+      frame.src = frame.src.replace(/quality=\d+/g, 'quality=' + q)
+                           .replace(/maxQuality=\d+/g, 'maxQuality=' + q)
+                           .replace(/res=\d+/g, 'res=' + q);
+      console.log('Forced smoother quality on live player');
     }
-  }, 1500);
+  }, 800);
 })();
