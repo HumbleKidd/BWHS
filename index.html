@@ -2651,9 +2651,13 @@
 
     .video-viewport:fullscreen iframe,
     .video-viewport:-webkit-full-screen iframe {
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: cover !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain !important;
+      transform: none !important;
+      will-change: auto !important;
+      contain: none !important;
+      backface-visibility: hidden;
     }
 
     .player-dock {
@@ -5296,6 +5300,13 @@
 
   
     /* Smooth fullscreen — minimal interference for hardware video decode */
+    .video-viewport:fullscreen,
+    .video-viewport:-webkit-full-screen {
+      transform: none !important;
+      will-change: auto !important;
+      contain: none !important;
+      isolation: auto !important;
+    }
     .video-viewport:fullscreen iframe,
     .video-viewport:-webkit-full-screen iframe {
       transform: none !important;
@@ -5303,6 +5314,9 @@
       contain: none !important;
       width: 100% !important;
       height: 100% !important;
+      object-fit: contain !important;
+      backface-visibility: hidden;
+      image-rendering: auto;
     }
 
   
@@ -16076,7 +16090,7 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
 
 <script>
-// BWHS Ultra Smooth Fullscreen Optimizer
+// BWHS Ultra Smooth Fullscreen Optimizer v2 — anti-stutter
 (function() {
   function isFs() {
     return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
@@ -16089,18 +16103,36 @@ body.player-fs-active.fs-chrome-on [role="button"] {
       el.style.transform = 'none';
       el.style.willChange = 'auto';
       el.style.contain = 'none';
+      el.style.filter = 'none';
+      el.style.backdropFilter = 'none';
+      el.style.objectFit = 'contain';
+      el.style.transition = 'none';
     });
+    // Also kill neon cursor hard
+    const canvas = document.getElementById('neonCursorCanvas');
+    const root = document.getElementById('neonCursorRoot');
+    if (canvas) canvas.style.display = 'none';
+    if (root) root.style.display = 'none';
   }
   function setMode(on) {
     document.body.classList.toggle('fs-smooth-mode', on);
-    const canvas = document.getElementById('neonCursorCanvas');
-    if (canvas) canvas.style.display = on ? 'none' : '';
-    if (on) clean();
+    if (on) {
+      clean();
+      // Force a reflow then lock styles again
+      requestAnimationFrame(() => clean());
+    } else {
+      const canvas = document.getElementById('neonCursorCanvas');
+      const root = document.getElementById('neonCursorRoot');
+      if (canvas) canvas.style.display = '';
+      if (root) root.style.display = '';
+    }
   }
   ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange'].forEach(e => {
     document.addEventListener(e, () => setMode(isFs()));
   });
-  window.addEventListener('load', () => { clean(); if (isFs()) setMode(true); });
+  window.addEventListener('load', () => { if (isFs()) setMode(true); });
+  // Also clean on resize while in fullscreen (orientation changes)
+  window.addEventListener('resize', () => { if (isFs()) clean(); });
 })();
 </script>
 
