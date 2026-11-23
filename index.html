@@ -2526,7 +2526,7 @@
       pointer-events: auto !important;
     }
 
-    /* Desktop Floating Mini Player — lower-left, small, menu-safe */
+    /* Desktop Floating Mini Player — bottom-center of main area, menu-safe */
     @media (min-width: 1080px) {
       .video-viewport.is-floating-dock {
         position: fixed !important;
@@ -2537,7 +2537,7 @@
         width: 470px !important;
         max-width: 36vw !important;
         aspect-ratio: 16 / 9 !important;
-        z-index: 45 !important;
+        z-index: 70 !important; /* above sidebar (60) so mini-player is never covered */
         border-radius: 14px !important;
         box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 0 1.5px var(--primary) !important;
         will-change: transform, opacity;
@@ -7362,10 +7362,10 @@
 
     function getFloatSidebarClearance() {
       const sidebar = document.querySelector('.desktop-sidebar');
-      if (!sidebar) return 92;
-      const expanded = 240;
+      if (!sidebar) return 100;
       const live = Math.ceil(sidebar.getBoundingClientRect().width);
-      return Math.max(live, expanded) + 20;
+      // Clear the live sidebar width + a little breathing room
+      return live + 28;
     }
 
     function getFloatRightClearance() {
@@ -7383,15 +7383,14 @@
       const w = floatDockSize.w;
       const h = w * 9 / 16;
 
-      // Middle of the main content area, almost at the bottom
-      // (matches the yellow-outline reference — not hard-left, not absolute viewport center)
-      const leftClear = Math.min(getFloatSidebarClearance(), 180);
-      const rightClear = Math.min(getFloatRightClearance(), 280);
-      const freeLeft = leftClear + 20;
-      const freeRight = vw - rightClear - 20;
-      const freeWidth = Math.max(w + 40, freeRight - freeLeft);
+      // Center of the usable content area (clear of sidebar + right panel), lower on screen
+      const leftClear = getFloatSidebarClearance();
+      const rightClear = getFloatRightClearance();
+      const freeLeft = leftClear + 16;
+      const freeRight = vw - rightClear - 16;
+      const freeWidth = Math.max(w + 32, freeRight - freeLeft);
       const left = Math.round(freeLeft + (freeWidth - w) * 0.5);
-      const top = Math.round(vh - h - 18);
+      const top = Math.round(vh - h - 12); // closer to bottom
 
       return { x: left, y: top };
     }
@@ -7410,9 +7409,10 @@
       const w = floatDockSize.w;
       const h = w * 9 / 16;
       const margin = 12;
+      const minX = getFloatSidebarClearance() + 8; // never under the sidebar
       const maxX = window.innerWidth - w - margin;
       const maxY = window.innerHeight - h - margin;
-      floatDockPos.x = Math.max(margin, Math.min(maxX, floatDockPos.x));
+      floatDockPos.x = Math.max(minX, Math.min(maxX, floatDockPos.x));
       floatDockPos.y = Math.max(margin, Math.min(maxY, floatDockPos.y));
       applyFloatTransform();
     }
