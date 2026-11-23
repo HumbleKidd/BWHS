@@ -7336,18 +7336,10 @@
     let floatObserver = null;
 
     function loadFloatPrefs() {
-      try {
-        const raw = localStorage.getItem(FLOAT_STORAGE_KEY);
-        if (raw) {
-          const p = JSON.parse(raw);
-          if (p && typeof p.x === 'number' && typeof p.y === 'number') {
-            floatDockPos = { x: p.x, y: p.y };
-          }
-          if (p && typeof p.w === 'number' && p.w >= 240 && p.w <= 900) {
-            floatDockSize.w = p.w;
-          }
-        }
-      } catch (_) {}
+      // Intentionally ignore saved position — always start at the new centered default
+      // (old saved left-corner positions were covering the sidebar)
+      try { localStorage.removeItem(FLOAT_STORAGE_KEY); } catch (_) {}
+      floatDockPos = null;
     }
 
     function saveFloatPrefs() {
@@ -7383,14 +7375,16 @@
       const w = floatDockSize.w;
       const h = w * 9 / 16;
 
-      // Center of the usable content area (clear of sidebar + right panel), lower on screen
-      const leftClear = getFloatSidebarClearance();
-      const rightClear = getFloatRightClearance();
-      const freeLeft = leftClear + 16;
-      const freeRight = vw - rightClear - 16;
-      const freeWidth = Math.max(w + 32, freeRight - freeLeft);
+      // Place in the visual center of the main content area (between left sidebar and right panel)
+      // Vertically in the lower-middle zone so it matches the marked "HERE" position
+      const leftClear = Math.max(getFloatSidebarClearance(), 90);
+      const rightClear = Math.min(getFloatRightClearance(), 340);
+      const freeLeft = leftClear + 24;
+      const freeRight = vw - rightClear - 24;
+      const freeWidth = Math.max(w + 40, freeRight - freeLeft);
       const left = Math.round(freeLeft + (freeWidth - w) * 0.5);
-      const top = Math.round(vh - h - 12); // closer to bottom
+      // Lower-middle: about 55-60% down the viewport
+      const top = Math.round(vh * 0.52 - h * 0.5);
 
       return { x: left, y: top };
     }
@@ -7409,8 +7403,8 @@
       const w = floatDockSize.w;
       const h = w * 9 / 16;
       const margin = 12;
-      const minX = getFloatSidebarClearance() + 8; // never under the sidebar
-      const maxX = window.innerWidth - w - margin;
+      const minX = Math.max(getFloatSidebarClearance() + 12, 100); // stay clear of left sidebar
+      const maxX = window.innerWidth - w - Math.max(margin, getFloatRightClearance() * 0.15);
       const maxY = window.innerHeight - h - margin;
       floatDockPos.x = Math.max(minX, Math.min(maxX, floatDockPos.x));
       floatDockPos.y = Math.max(margin, Math.min(maxY, floatDockPos.y));
