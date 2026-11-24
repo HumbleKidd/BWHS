@@ -5709,7 +5709,6 @@
                       
                       <button class="srv-btn" onclick="forceSmoothReload()" title="Force smooth reload of current source" style="background:var(--accent); color:#fff;"><i class="fa-solid fa-rotate"></i> Reload</button>
 
-                      <button class="srv-btn" id="btn-quality" onclick="toggleQuality()" title="Switch between 720p (smooth on all devices) and 1080p" style="background:#10b981;color:#fff;font-weight:800;">720p</button>
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-cinesrc" onclick="manualSwitchServer('cinesrc')">CineSrc</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
@@ -6578,32 +6577,17 @@
     const VIXSRC_PRIMARY = '4f46e5';
     const VIXSRC_SECONDARY = '0f172a';
 
-    /* getSmoothQuality removed - using original high quality */
-
-
     function getPreferredQuality() {
       try {
         const saved = localStorage.getItem('bwhs_quality');
         if (saved === '1080' || saved === '720') return saved;
-      } catch(e) {}
+      } catch (e) {}
       return '720';
     }
     window.getPreferredQuality = getPreferredQuality;
 
-    function toggleQuality() {
-      const current = getPreferredQuality();
-      const next = current === '720' ? '1080' : '720';
-      try { localStorage.setItem('bwhs_quality', next); } catch(e) {}
-      const btn = document.getElementById('btn-quality');
-      if (btn) btn.textContent = next + 'p';
-      if (typeof softRefreshVixsrc === 'function') softRefreshVixsrc();
-      else if (typeof executeStreamLoad === 'function') executeStreamLoad();
-    }
-    window.toggleQuality = toggleQuality;
-
     function buildVixsrcParams(startAt) {
       const start = Math.max(0, Math.floor(Number(startAt) || 0));
-      const q = getPreferredQuality();
       return [
         'autoplay=1',
         'autoPlay=true',
@@ -6613,9 +6597,9 @@
         'secondaryColor=' + VIXSRC_SECONDARY,
         'skin=vixsrc',
         'canPlayFHD=1',
-        'quality=' + q,
-        'maxQuality=' + q,
-        'res=' + q
+        'quality=' + getPreferredQuality(),
+        'maxQuality=' + getPreferredQuality(),
+        'res=' + getPreferredQuality()
       ].join('&');
     }
     function hdQuery(extra) {
@@ -15005,13 +14989,34 @@ body.player-fs-active.fs-chrome-on [role="button"] {
   <script src="bwhs-stats.js"></script>
   <script src="continue-reminder.js"></script>
 
-    setTimeout(function() {
-      const qBtn = document.getElementById('btn-quality');
-      if (qBtn && typeof getPreferredQuality === 'function') qBtn.textContent = getPreferredQuality() + 'p';
-    }, 1000);
+// Safe quality toggle (does not alter existing HTML structure)
+(function() {
+  function addQualityBtn() {
+    if (document.getElementById('bwhs-quality-btn')) return;
+    const bar = document.getElementById('serverBar') || document.querySelector('.server-bar');
+    if (!bar) return;
+    const btn = document.createElement('button');
+    btn.id = 'bwhs-quality-btn';
+    btn.className = 'srv-btn';
+    btn.style.cssText = 'background:#10b981;color:#fff;font-weight:800;';
+    btn.title = 'Switch 720p (smooth) / 1080p';
+    const update = () => { btn.textContent = (window.getPreferredQuality ? getPreferredQuality() : '720') + 'p'; };
+    update();
+    btn.onclick = function() {
+      const cur = getPreferredQuality();
+      const next = cur === '720' ? '1080' : '720';
+      try { localStorage.setItem('bwhs_quality', next); } catch(e) {}
+      update();
+      if (typeof softRefreshVixsrc === 'function') softRefreshVixsrc();
+      else if (typeof executeStreamLoad === 'function') executeStreamLoad();
+    };
+    bar.insertBefore(btn, bar.querySelector('.srv-btn'));
+  }
+  setTimeout(addQualityBtn, 1200);
+  window.addEventListener('load', addQualityBtn);
+})();
 
-  <script src="smooth-player.js?v=5"></script>
-  <!-- smooth-player.js re-enabled for smooth 720p playback -->
+  <!-- smooth-player.js disabled - restored original player -->
   
 
 
@@ -16200,5 +16205,4 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
 
   
-
 
