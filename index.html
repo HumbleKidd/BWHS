@@ -6601,8 +6601,9 @@
     }
     window.toggleQuality = toggleQuality;
 
-        function buildVixsrcParams(startAt) {
+    function buildVixsrcParams(startAt) {
       const start = Math.max(0, Math.floor(Number(startAt) || 0));
+      const q = getPreferredQuality();
       return [
         'autoplay=1',
         'autoPlay=true',
@@ -6612,9 +6613,9 @@
         'secondaryColor=' + VIXSRC_SECONDARY,
         'skin=vixsrc',
         'canPlayFHD=1',
-        'quality=' + getPreferredQuality(),
-        'maxQuality=' + getPreferredQuality(),
-        'res=' + getPreferredQuality()
+        'quality=' + q,
+        'maxQuality=' + q,
+        'res=' + q
       ].join('&');
     }
     function hdQuery(extra) {
@@ -13562,16 +13563,16 @@ const singleLineCastBar = document.getElementById('singleLineCastBar');
       switch (providerName) {
         case 'vidapi':
           return isTv
-            ? `https://vaplayer.ru/embed/tv/${id}/${s}/${e}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=' + getPreferredQuality()`
-            : `https://vaplayer.ru/embed/movie/${id}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=' + getPreferredQuality()`;
+            ? `https://vaplayer.ru/embed/tv/${id}/${s}/${e}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=${getPreferredQuality()}`
+            : `https://vaplayer.ru/embed/movie/${id}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=${getPreferredQuality()}`;
         case 'cinesrc':
           return isTv
-            ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=' + getPreferredQuality()`
-            : `https://cinesrc.st/embed/movie/${id}?autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=' + getPreferredQuality()`;
+            ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=${getPreferredQuality()}`
+            : `https://cinesrc.st/embed/movie/${id}?autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=${getPreferredQuality()}`;
         case 'vidrock':
           return isTv
-            ? `https://vidrock.net/tv/${id}/${s}/${e}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=' + getPreferredQuality()`
-            : `https://vidrock.net/movie/${id}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=' + getPreferredQuality()`;
+            ? `https://vidrock.net/tv/${id}/${s}/${e}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=${getPreferredQuality()}`
+            : `https://vidrock.net/movie/${id}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=${getPreferredQuality()}`;
 
         case 'vidsrc':
           return isTv
@@ -13595,8 +13596,8 @@ const singleLineCastBar = document.getElementById('singleLineCastBar');
 
         case 'vidlink':
           return isTv
-            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=' + getPreferredQuality() + '&maxQuality=' + getPreferredQuality()`
-            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=' + getPreferredQuality() + '&maxQuality=' + getPreferredQuality()`;
+            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=${getPreferredQuality()}&maxQuality=${getPreferredQuality()}`
+            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=${getPreferredQuality()}&maxQuality=${getPreferredQuality()}`;
 
         case 'vixsrc':
           return isTv
