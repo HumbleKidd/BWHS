@@ -13541,16 +13541,16 @@ const singleLineCastBar = document.getElementById('singleLineCastBar');
       switch (providerName) {
         case 'vidapi':
           return isTv
-            ? `https://vaplayer.ru/embed/tv/${id}/${s}/${e}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=1080`
-            : `https://vaplayer.ru/embed/movie/${id}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=1080`;
+            ? `https://vaplayer.ru/embed/tv/${id}/${s}/${e}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=720`
+            : `https://vaplayer.ru/embed/movie/${id}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=720`;
         case 'cinesrc':
           return isTv
-            ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=1080`
-            : `https://cinesrc.st/embed/movie/${id}?autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=1080`;
+            ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=720`
+            : `https://cinesrc.st/embed/movie/${id}?autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=720`;
         case 'vidrock':
           return isTv
-            ? `https://vidrock.net/tv/${id}/${s}/${e}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=1080`
-            : `https://vidrock.net/movie/${id}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=1080`;
+            ? `https://vidrock.net/tv/${id}/${s}/${e}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=720`
+            : `https://vidrock.net/movie/${id}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=720`;
 
         case 'vidsrc':
           return isTv
@@ -14982,6 +14982,32 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
   <script src="bwhs-stats.js"></script>
   <script src="continue-reminder.js"></script>
+
+// BWHS Smooth Player Cleaner — prevent sticking & sketchy fullscreen frames
+(function() {
+  function clean() {
+    const frame = document.getElementById('playerFrame');
+    const vp = document.getElementById('videoViewport');
+    [frame, vp].forEach(function(el) {
+      if (!el) return;
+      el.style.transform = 'none';
+      el.style.willChange = 'auto';
+      el.style.contain = 'none';
+      el.style.filter = 'none';
+      el.style.backfaceVisibility = 'hidden';
+    });
+    if (frame) {
+      frame.style.objectFit = 'contain';
+    }
+  }
+  // Run on load and on fullscreen changes
+  setTimeout(clean, 600);
+  window.addEventListener('load', clean);
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange'].forEach(function(ev) {
+    document.addEventListener(ev, function() { setTimeout(clean, 50); });
+  });
+})();
+
   <!-- smooth-player.js disabled - restored original player -->
   
 
