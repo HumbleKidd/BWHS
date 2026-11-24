@@ -5709,6 +5709,7 @@
                       
                       <button class="srv-btn" onclick="forceSmoothReload()" title="Force smooth reload of current source" style="background:var(--accent); color:#fff;"><i class="fa-solid fa-rotate"></i> Reload</button>
 
+                      <button class="srv-btn" id="btn-quality" onclick="toggleQuality()" title="Switch between 720p (smooth on all devices) and 1080p" style="background:#10b981;color:#fff;font-weight:800;">720p</button>
                       <button class="srv-btn active" id="btn-vixsrc" onclick="manualSwitchServer('vixsrc')">VixSrc</button>
                       <button class="srv-btn" id="btn-cinesrc" onclick="manualSwitchServer('cinesrc')">CineSrc</button>
                       <button class="srv-btn" id="btn-vidapi" onclick="manualSwitchServer('vidapi')">VidAPI</button>
@@ -6580,7 +6581,27 @@
     /* getSmoothQuality removed - using original high quality */
 
 
-    function buildVixsrcParams(startAt) {
+    function getPreferredQuality() {
+      try {
+        const saved = localStorage.getItem('bwhs_quality');
+        if (saved === '1080' || saved === '720') return saved;
+      } catch(e) {}
+      return '720';
+    }
+    window.getPreferredQuality = getPreferredQuality;
+
+    function toggleQuality() {
+      const current = getPreferredQuality();
+      const next = current === '720' ? '1080' : '720';
+      try { localStorage.setItem('bwhs_quality', next); } catch(e) {}
+      const btn = document.getElementById('btn-quality');
+      if (btn) btn.textContent = next + 'p';
+      if (typeof softRefreshVixsrc === 'function') softRefreshVixsrc();
+      else if (typeof executeStreamLoad === 'function') executeStreamLoad();
+    }
+    window.toggleQuality = toggleQuality;
+
+        function buildVixsrcParams(startAt) {
       const start = Math.max(0, Math.floor(Number(startAt) || 0));
       return [
         'autoplay=1',
@@ -6591,13 +6612,13 @@
         'secondaryColor=' + VIXSRC_SECONDARY,
         'skin=vixsrc',
         'canPlayFHD=1',
-        'quality=2160',
-        'maxQuality=2160',
-        'res=2160'
+        'quality=' + getPreferredQuality(),
+        'maxQuality=' + getPreferredQuality(),
+        'res=' + getPreferredQuality()
       ].join('&');
     }
     function hdQuery(extra) {
-      const base = ['autoplay=1', 'autoPlay=true', 'quality=2160', 'maxQuality=2160', 'res=2160', 'q=2160'];
+      const base = ['autoplay=1', 'autoPlay=true', 'quality=' + getPreferredQuality(), 'maxQuality=' + getPreferredQuality(), 'res=' + getPreferredQuality(), 'q=' + getPreferredQuality()];
       if (extra) base.push(extra);
       return base.join('&');
     }
@@ -13541,16 +13562,16 @@ const singleLineCastBar = document.getElementById('singleLineCastBar');
       switch (providerName) {
         case 'vidapi':
           return isTv
-            ? `https://vaplayer.ru/embed/tv/${id}/${s}/${e}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=1080`
-            : `https://vaplayer.ru/embed/movie/${id}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=1080`;
+            ? `https://vaplayer.ru/embed/tv/${id}/${s}/${e}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=' + getPreferredQuality()`
+            : `https://vaplayer.ru/embed/movie/${id}?theme=disney&skin=disney&primaryColor=0063e5&color=0063e5&autoplay=1&lang=en&quality=' + getPreferredQuality()`;
         case 'cinesrc':
           return isTv
-            ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=1080`
-            : `https://cinesrc.st/embed/movie/${id}?autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=1080`;
+            ? `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}&autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=' + getPreferredQuality()`
+            : `https://cinesrc.st/embed/movie/${id}?autoplay=true&muted=false&controls=true&autonext=true&autoskip=true&color=%230063e5&quality=' + getPreferredQuality()`;
         case 'vidrock':
           return isTv
-            ? `https://vidrock.net/tv/${id}/${s}/${e}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=1080`
-            : `https://vidrock.net/movie/${id}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=1080`;
+            ? `https://vidrock.net/tv/${id}/${s}/${e}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=' + getPreferredQuality()`
+            : `https://vidrock.net/movie/${id}?autoplay=1&lang=en&theme=disney&color=0063e5&quality=' + getPreferredQuality()`;
 
         case 'vidsrc':
           return isTv
@@ -13574,8 +13595,8 @@ const singleLineCastBar = document.getElementById('singleLineCastBar');
 
         case 'vidlink':
           return isTv
-            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=2160&maxQuality=2160`
-            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=2160&maxQuality=2160`;
+            ? `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=' + getPreferredQuality() + '&maxQuality=' + getPreferredQuality()`
+            : `https://vidlink.pro/movie/${id}?primaryColor=4f46e5&autoplay=true&autoPlay=true&muted=false&mute=0&volume=1&next=1&quality=' + getPreferredQuality() + '&maxQuality=' + getPreferredQuality()`;
 
         case 'vixsrc':
           return isTv
@@ -14982,7 +15003,14 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
   <script src="bwhs-stats.js"></script>
   <script src="continue-reminder.js"></script>
-  <!-- smooth-player.js disabled - restored original player -->
+
+    setTimeout(function() {
+      const qBtn = document.getElementById('btn-quality');
+      if (qBtn && typeof getPreferredQuality === 'function') qBtn.textContent = getPreferredQuality() + 'p';
+    }, 1000);
+
+  <script src="smooth-player.js?v=5"></script>
+  <!-- smooth-player.js re-enabled for smooth 720p playback -->
   
 
 
@@ -16171,4 +16199,5 @@ body.player-fs-active.fs-chrome-on [role="button"] {
 
 
   
+
 
